@@ -1,0 +1,37 @@
+# Default values for Application Quality Building Block.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+namespace:
+  application-quality
+
+image:
+  repository: nexus.spaceapplications.com/repository/docker-asb-public/eoepca/application-quality
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "0.0.1"
+
+persistence:
+  enabled: true
+  storageClassName: managed-nfs-storage
+  accessMode:
+  - ReadWriteOnce
+  size: 1Gi
+
+ingress:
+  enabled: false
+  className: nginx
+  domain: application-quality.eoepca-testing.spaceapplications.com
+
+service:
+  type: http
+  port: 8080
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+serviceAccount:
+  create: false
