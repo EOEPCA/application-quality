@@ -24,7 +24,7 @@ ingress:
   domain: application-quality.eoepca-testing.spaceapplications.com
 
 service:
-  type: http
+  type: ClusterIP
   port: 80
 
 nodeSelector: {}

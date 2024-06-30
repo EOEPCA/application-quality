@@ -21,7 +21,7 @@ spec:
   {{- end }}
   rules:
     - host: "{{ .Values.ingress.domain }}"
-      {{ .Values.service.type }}:
+      http:
         paths:
           - path: /
             pathType: Prefix
