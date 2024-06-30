@@ -7,7 +7,7 @@ namespace:
 
 image:
   repository: nexus.spaceapplications.com/repository/docker-asb-public/eoepca/application-quality
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "0.0.1"
 
