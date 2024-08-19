@@ -11,8 +11,9 @@ nav:
     #  - getting-started/quick-start.md
     #  - getting-started/more-getting-started.md
     - Design:
-      - design/overview.md
-      - design/more-design.md
+      - design/architecture.md
+      - design/requirements.md
+      - design/use-cases.md
     #- Usage:
     #  - usage/tutorials.md
     #  - usage/howtos.md

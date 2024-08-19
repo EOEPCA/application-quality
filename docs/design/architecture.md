@@ -1,4 +1,4 @@
-# Architecture and Interfaces
+# Architecture
 
 The *Application Quality* BB integrates a number of modules that together implement its three main components: Development Best Practice, Application Quality Tooling and Application Performance.
 
