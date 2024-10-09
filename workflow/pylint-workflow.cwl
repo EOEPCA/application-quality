@@ -17,13 +17,13 @@ steps:
     in:
       source_directory: repo_path
     out: [pylint_report]
-  save_pylint_step:
-    run: tools/save-tool.cwl
-    in:
-      run_id: run_id
-      step_id: pylint_step_id
-      report: pylint_step/pylint_report
-    out: []
+  # save_pylint_step:
+  #   run: tools/save-tool.cwl
+  #   in:
+  #     run_id: run_id
+  #     step_id: pylint_step_id
+  #     report: pylint_step/pylint_report
+  #   out: []
 
 outputs:
   pylint_report:

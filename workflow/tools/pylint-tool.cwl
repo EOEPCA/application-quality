@@ -20,7 +20,9 @@ outputs:
     type: File
     outputBinding:
       glob: pylint_report.json
-stdout: pylint_report.json
+
+baseCommand: pylint
 arguments:
 - --output-format=json
+- --output=pylint_report.json
 - --exit-zero

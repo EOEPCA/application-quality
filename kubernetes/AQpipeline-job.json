@@ -1,0 +1,10 @@
+{
+	"repo_url": {
+		"class": "string",
+		"value": "https://github.com/pypa/sampleproject"
+	},
+	"run_id": {
+		"class": "string",
+		"value": "4242"
+	}
+}
