@@ -4,6 +4,8 @@ cwlVersion: v1.0
 class: CommandLineTool
 
 requirements:
+  DockerRequirement:
+    dockerPull: alpine:3.20
   InlineJavascriptRequirement: {}
 
 inputs:
@@ -18,7 +20,8 @@ outputs: []
 
 baseCommand: curl
 arguments:
-# Rajouter POST
+- prefix: -X
+  valueFrom: POST
 - prefix: -L
   valueFrom: |-
     $('http://127.0.0.1:8000/save/' + inputs.run_id + '/' + inputs.step_id + '_report.json')

@@ -20,4 +20,5 @@ outputs:
     outputBinding:
       glob: $(inputs.repo_url.split('/').pop().replace('.git',''))
 arguments:
+- git
 - clone

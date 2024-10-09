@@ -23,23 +23,17 @@ steps:
       repo_path: clone_step/repo_directory
       run_id: run_id
     out: [pylint_report]
-  flake8_workflow:
-    run: flake8-workflow.cwl
-    in:
-      repo_path: clone_step/repo_directory
-      run_id: run_id
-    out: [flake8_report]
+  # flake8_workflow:
+  #   run: flake8-workflow.cwl
+  #   in:
+  #     repo_path: clone_step/repo_directory
+  #     run_id: run_id
+  #   out: [flake8_report]
 
 outputs:
-#   wrap_up:
-#     type: File
-#     outputSource: # wrap_up_step/wrap_up
-#   repo_directory:
-#     type: Directory
-#     outputSource: clone_step/repo_directory
   pylint_report:
     type: File
     outputSource: pylint_workflow/pylint_report
-  flake8_report:
-    type: File
-    outputSource: flake8_workflow/flake8_report
+  # flake8_report:
+  #   type: File
+  #   outputSource: flake8_workflow/flake8_report

@@ -1,0 +1,58 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: calrissian-aqpipeline
+spec:
+  template:
+    spec:
+      containers:
+      - name: calrissian
+        image: terradue/calrissian:0.14.0
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+        command: ["calrissian"]
+        args:
+          - "--debug"
+          - "--stdout"
+          - "/calrissian/output-data/aqpipeline-output.json"
+          - "--stderr"
+          - "/calrissian/output-data/aqpipeline-stderr.log"
+          - "--max-ram"
+          - "16G"
+          - "--max-cores"
+          - "8"
+          - "--tmp-outdir-prefix"
+          - "/calrissian/tmpout/"
+          - "--outdir"
+          - "/calrissian/output-data/"
+          - "--usage-report"
+          - "/calrissian/output-data/aqpipeline-usage.json"
+          - "/calrissian/input-data/workflow.cwl"
+          - "/calrissian/input-data/AQpipeline-job.json"
+        volumeMounts:
+        - mountPath: /calrissian/input-data
+          name: calrissian-input-data
+          readOnly: true
+        - mountPath: /calrissian/tmpout
+          name: calrissian-tmpout
+        - mountPath: /calrissian/output-data
+          name: calrissian-output-data
+        env:
+        - name: CALRISSIAN_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+      restartPolicy: Never
+      volumes:
+      - name: calrissian-input-data
+        persistentVolumeClaim:
+          claimName: calrissian-input-data
+          readOnly: true
+      - name: calrissian-tmpout
+        persistentVolumeClaim:
+          claimName: calrissian-tmpout
+      - name: calrissian-output-data
+        persistentVolumeClaim:
+          claimName: calrissian-output-data
