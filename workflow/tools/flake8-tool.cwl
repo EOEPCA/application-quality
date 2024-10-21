@@ -5,7 +5,7 @@ class: CommandLineTool
 
 requirements:
   DockerRequirement:
-    dockerPull: flake8-json
+    dockerPull: eoepca/appquality-flake8-json:v0.1.0
 
 inputs:
   source_directory:
@@ -19,3 +19,7 @@ outputs:
     outputBinding:
       glob: flake8_report.json
 stdout: flake8_report.json
+
+baseCommand: flake8
+arguments:
+- --format=json
