@@ -19,6 +19,7 @@ outputs:
     type: Directory
     outputBinding:
       glob: $(inputs.repo_url.split('/').pop().replace('.git',''))
+
+baseCommand: git
 arguments:
-- git
 - clone
