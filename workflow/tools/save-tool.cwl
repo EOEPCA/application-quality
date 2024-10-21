@@ -5,7 +5,7 @@ class: CommandLineTool
 
 requirements:
   DockerRequirement:
-    dockerPull: alpine:3.20
+    dockerPull: curlimages/curl
   InlineJavascriptRequirement: {}
 
 inputs:
