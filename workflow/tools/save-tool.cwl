@@ -9,12 +9,16 @@ requirements:
   InlineJavascriptRequirement: {}
 
 inputs:
-  report:
-    type: File
+  server_url:
+    type: string
+  pipeline_id:
+    type: string
   run_id:
     type: string
   step_id:
     type: string
+  report:
+    type: File
 
 outputs: []
 
@@ -24,7 +28,7 @@ arguments:
   valueFrom: POST
 - prefix: -L
   valueFrom: |-
-    $('http://127.0.0.1:8000/save/' + inputs.run_id + '/' + inputs.step_id + '_report.json')
+    $('http://' + inputs.server_url + '/save/' + inputs.pipeline_id + '-' + inputs.run_id + '/' + inputs.step_id + '_report.json')
 - prefix: -H
   valueFrom: 'Content-Type: application/json'
 - prefix: -d
