@@ -1,31 +1,39 @@
-## Prerequisites
+# Workflow Module: Code Quality Analysis and Reporting
 
-Prerequisites not yet mentioned in this README.md:
-- A server listening to [localhost:8000](localhost:8000) must be running separately to catch the files to save. (ex: FastAPI)
-- A custom docker container with flake8-json must be built prior to the execution of the workflow, in order to have flake8's output formatted correctly.
+This module is a Common Workflow Language (CWL) workflow designed to automate code quality analysis for Python repositories. It is used in a Django application and executed using [pycalrissian](https://terradue.github.io/pycalrissian/), which runs the workflow in a Kubernetes environment. The workflow analyzes a Git repository using **pylint** and **flake8**, generates reports, and sends them to a specified database via POST requests.
 
-## Running the workflow
+## Inputs
 
-To run the workflow, use the [`cwltool`](https://github.com/common-workflow-language/cwltool) command-line tool with the required inputs.
+The workflow requires the following inputs:
 
-### Command
+- **`repo_url`**: The URL to a Git repository that will be cloned and analyzed.
+- **`server_url`**: The address of the database where the pylint and flake8 reports will be saved.
+- **`pipeline_id`**: A unique identifier used for organizing report files in the database.
+- **`run_id`**: A run-specific identifier to distinguish between different runs within the same pipeline.
 
+## Workflow Overview
+
+1. **Clone Repository**: The specified `repo_url` is cloned.
+2. **Run pylint and flake8**: 
+   - Two sub-workflows run pylint and flake8 on the cloned repository.
+   - Both generate code quality reports.
+3. **Post Reports to Database**: Reports are sent to the `server_url` database using POST requests, with `pipeline_id` and `run_id` used to manage report storage.
+
+## Running the Workflow
+
+This workflow is normally executed within a Django app using **pycalrissian**, which handles the orchestration in a Kubernetes environment. Users do not typically run it directly. The app takes care of passing the inputs (`repo_url`, `server_url`, `pipeline_id`, `run_id`), executing the workflow, and processing the reports.
+
+### Manual Execution (Using cwltool)
+
+If manual execution is needed, you can run the workflow using **[cwltool](https://www.commonwl.org/user_guide/introduction/quick-start.html#installing-a-cwl-runner)** by providing inputs through the command line. However, you must modify the tool files to comment out or remove the `baseCommand` lines due to **cwltool** handling Docker ENTRYPOINT differently than Calrissian.
+
+**Example of manual execution:**
 ```bash
-cwltool workflow.cwl --repo_url <repository_url> --run_id <unique_run_id>
+cwltool workflow.cwl \
+--repo_url https://github.com/example.git \
+--server_url http://your-database-url/api/reports \
+--pipeline_id 1234 \
+--run_id run5678
 ```
 
-### Example
-
-```bash
-cwltool workflow.cwl --repo_url https://github.com/your-repo.git --run_id 4242
-```
-
-In this example:
-- `https://github.com/your-repo.git` is the Git repository URL to clone and analyze.
-- `4242` is the unique identifier for the current run.
-
-## Troubleshooting
-
-- Make sure Docker is installed and running on your machine.
-- Ensure you have access to the specified Git repository (public or private with credentials if necessary).
-- If you encounter issues with the workflow execution, check the error messages for clues, such as permission errors or missing dependencies.
+Note: When using **cwltool**, ensure Docker is properly set up on your machine, as the tools rely on Docker containers for execution.
