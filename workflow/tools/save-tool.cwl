@@ -30,6 +30,6 @@ arguments:
   valueFrom: |-
     $('http://' + inputs.server_url + '/save/' + inputs.pipeline_id + '-' + inputs.run_id + '/' + inputs.step_id + '_report.json')
 - prefix: -H
-  valueFrom: 'Content-Type: application/json'
+  valueFrom: Content-Type:application/json
 - prefix: -d
   valueFrom: $('@' + inputs.report.path)
