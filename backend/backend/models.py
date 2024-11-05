@@ -1,0 +1,56 @@
+from django.db import models
+
+
+class Pipeline(models.Model):
+	slug			= models.SlugField(primary_key=True, max_length=50, unique=True)
+	description		= models.TextField(null=True)
+	template		= models.TextField()
+	tools			= models.ManyToManyField("backend.Tool")
+	version			= models.CharField(max_length=50, null=True)
+
+	def __str__(self):
+		return self.slug
+
+
+class PipelineRun(models.Model):
+	pipeline		= models.ForeignKey(Pipeline, related_name="runs", on_delete=models.CASCADE)
+	usage_report	= models.JSONField(blank=True)
+	start_time		= models.DateTimeField(blank=True)
+	completion_time	= models.DateTimeField(blank=True, null=True)
+	status			= models.CharField(max_length=100, blank=True)
+	user			= models.CharField(max_length=100, blank=True, null=True) # ForeignKey?
+	output			= models.JSONField(blank=True)
+	# executed cwl
+
+	def __str__(self):
+		return f"{'✅' if self.status == 'succeeded' else '❌'} Run {self.id}: {self.pipeline.slug}"
+
+
+class PipelineRunJobReport(models.Model):
+	name			= models.SlugField(primary_key=True, max_length=50)
+	output			= models.TextField()
+	run				= models.ForeignKey(PipelineRun, related_name="reports", on_delete=models.CASCADE)
+
+	def __str__(self):
+		return f"{self.name} job for run {self.run.id} ({self.run.pipeline.slug})"
+
+class Tag(models.Model):
+    name			= models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
+class Tool(models.Model):
+	slug			= models.SlugField(primary_key=True, max_length=50, unique=True)
+	name			= models.CharField(max_length=50)
+	description		= models.TextField(null=True)
+	workflow_step	= models.TextField()
+	definition		= models.TextField()
+	tags			= models.ManyToManyField(Tag, related_name="tools")
+	is_cwl			= models.BooleanField()
+	tools			= models.ManyToManyField("self", symmetrical=False, blank=True)
+	version			= models.CharField(max_length=50, null=True)
+
+	def __str__(self):
+		return f"{self.name} {'workflow' if self.is_cwl else 'tool'}"
+
