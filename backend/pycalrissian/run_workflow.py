@@ -15,6 +15,8 @@ AQBB_MAXCORES = os.getenv("AQBB_MAXCORES", "2")
 AQBB_MAXRAM = os.getenv("AQBB_MAXRAM", "2Gi")
 AQBB_SECRET = os.getenv("AQBB_SECRET", None)
 AQBB_SERVICEACCOUNT = os.getenv("AQBB_SERVICEACCOUNT", None)
+BACKEND_SERVICE_HOST = os.getenv("BACKEND_SERVICE_HOST", "10.108.15.157")
+BACKEND_SERVICE_PORT = os.getenv("BACKEND_SERVICE_PORT", "80")
 
 
 def run_workflow(repo_url: str, slug: str, run_id: str, cwl: dict) -> dict:
@@ -74,7 +76,7 @@ def run_workflow(repo_url: str, slug: str, run_id: str, cwl: dict) -> dict:
         "repo_url": repo_url,
         "run_id": run_id,
         "pipeline_id": slug,
-        "server_url": "10.108.15.157:80",
+        "server_url": f"{BACKEND_SERVICE_HOST}:{BACKEND_SERVICE_PORT}",
     }
 
     """
@@ -108,7 +110,7 @@ def run_workflow(repo_url: str, slug: str, run_id: str, cwl: dict) -> dict:
     logging.info(log)
     usage = execution.get_usage_report()
     usage
-    from json.decoder import JSONDecodeError # Can't stay here
+    from json.decoder import JSONDecodeError  # Can't stay here
 
     try:
         output = execution.get_output()

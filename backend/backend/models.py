@@ -21,24 +21,25 @@ class PipelineRun(models.Model):
 	user			= models.CharField(max_length=100, blank=True, null=True) # ForeignKey?
 	output			= models.JSONField(blank=True)
 	# executed cwl
+	# inputs sent
 
 	def __str__(self):
 		return f"{'✅' if self.status == 'succeeded' else '❌'} Run {self.id}: {self.pipeline.slug}"
 
 
 class PipelineRunJobReport(models.Model):
+	run				= models.ForeignKey(PipelineRun, related_name="reports", on_delete=models.CASCADE)
 	name			= models.SlugField(primary_key=True, max_length=50)
 	output			= models.TextField()
-	run				= models.ForeignKey(PipelineRun, related_name="reports", on_delete=models.CASCADE)
 
 	def __str__(self):
 		return f"{self.name} job for run {self.run.id} ({self.run.pipeline.slug})"
 
 class Tag(models.Model):
-    name			= models.CharField(max_length=50, unique=True)
+	name			= models.CharField(max_length=50, unique=True) # primary_key
 
-    def __str__(self):
-        return self.name
+	def __str__(self):
+		return self.name
 
 class Tool(models.Model):
 	slug			= models.SlugField(primary_key=True, max_length=50, unique=True)
@@ -52,5 +53,4 @@ class Tool(models.Model):
 	version			= models.CharField(max_length=50, null=True)
 
 	def __str__(self):
-		return f"{self.name} {'workflow' if self.is_cwl else 'tool'}"
-
+		return self.name

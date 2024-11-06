@@ -15,10 +15,10 @@ router.register(
     basename="pipeline-run",
 )
 router.register(
-    r"pipelines/(?P<pipeline_slug>[^/.]+)/runs/(?P<run_id>[^/.]+)/jobreport",
+    r"pipelines/(?P<pipeline_slug>[^/.]+)/runs/(?P<run_id>[^/.]+)/jobreports",
     PipelineRunJobReportViewSet,
     basename="pipeline-run-jobreport",
 )
-router.register(r"tool", ToolViewSet, basename="tool")
+router.register(r"tools", ToolViewSet, basename="tool")
 
 urlpatterns = router.urls

@@ -12,7 +12,8 @@ from rest_framework import status
 
 # from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, GenericViewSet
+from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
 
 import yaml
 
@@ -65,12 +66,8 @@ class PipelineRunViewSet(ModelViewSet):
         # except BaseException as e:
         #     raise e
 
-        pipeline_run.usage_report = workflow_output.get(
-            "usage_report", "Default usage report"
-        )
-        pipeline_run.completion_time = workflow_output.get(
-            "completion_time", timezone.now()
-        )
+        pipeline_run.usage_report = workflow_output.get("usage_report", "Default usage report")
+        pipeline_run.completion_time = workflow_output.get("completion_time", timezone.now())
         pipeline_run.status = workflow_output.get("status", "active")
         # pipeline_run.executed_cwl = (
         #     yaml.dump(cwl, sort_keys=False)
@@ -84,39 +81,24 @@ class PipelineRunViewSet(ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class PipelineRunJobReportViewSet(ModelViewSet):
-    queryset = PipelineRunJobReport.objects.all()
+class PipelineRunJobReportViewSet(
+    CreateModelMixin, ListModelMixin, RetrieveModelMixin, GenericViewSet
+):
     serializer_class = PipelineRunJobReportSerializer
 
     def get_queryset(self):
-        pipeline_slug = self.kwargs["pipeline_slug"]
+        slug = self.kwargs["pipeline_slug"]
         run_id = self.kwargs["run_id"]
-        return PipelineRunJobReport.objects.filter(run__pipeline__slug=pipeline_slug, run_id=run_id)
+        return PipelineRunJobReport.objects.filter(
+            run__pipeline__slug=slug, run_id=run_id
+        )
 
-    def create(self, request, *args, **kwargs):
-        pipeline_slug = self.kwargs["pipeline_slug"]
+    def perform_create(self, serializer):
+        slug = self.kwargs["pipeline_slug"]
         run_id = self.kwargs["run_id"]
+        run = PipelineRun.objects.get(pipeline__slug=slug, id=run_id)
+        serializer.save(run=run)
 
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            try:
-                pipeline = Pipeline.objects.get(slug=pipeline_slug)
-                pipeline_run = PipelineRun.objects.get(id=run_id, pipeline=pipeline)
-            except Pipeline.DoesNotExist:
-                return Response({"error": "Pipeline not found."}, status=status.HTTP_404_NOT_FOUND)
-            except PipelineRun.DoesNotExist:
-                return Response({"error": "PipelineRun not found."}, status=status.HTTP_404_NOT_FOUND)
-
-            job_report, created = PipelineRunJobReport.objects.update_or_create(
-                name=serializer.validated_data['name'],
-                run=pipeline_run,
-                defaults={"output": serializer.validated_data['output']}
-            )
-
-            message = "Job report created successfully" if created else "Job report updated successfully"
-            return Response({"message": message}, status=status.HTTP_201_CREATED)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ToolViewSet(ModelViewSet):
     queryset = Tool.objects.all()
