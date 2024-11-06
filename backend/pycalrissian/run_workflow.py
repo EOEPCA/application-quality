@@ -13,6 +13,8 @@ AQBB_VOLUMESIZE = os.getenv("AQBB_VOLUMESIZE", "5Gi")
 AQBB_CALRISSIANIMAGE = os.getenv("AQBB_CALRISSIANIMAGE", "terradue/calrissian:0.14.0")
 AQBB_MAXCORES = os.getenv("AQBB_MAXCORES", "2")
 AQBB_MAXRAM = os.getenv("AQBB_MAXRAM", "2Gi")
+AQBB_SECRET = os.getenv("AQBB_SECRET", None)
+AQBB_SERVICEACCOUNT = os.getenv("AQBB_SERVICEACCOUNT", None)
 
 
 def run_workflow(repo_url: str, slug: str, run_id: str, cwl: dict) -> dict:
@@ -63,7 +65,7 @@ def run_workflow(repo_url: str, slug: str, run_id: str, cwl: dict) -> dict:
         namespace=namespace_name,
         storage_class=AQBB_STORAGECLASS,
         volume_size=AQBB_VOLUMESIZE,
-        # image_pull_secrets=secret_config,
+        image_pull_secrets=AQBB_SECRET,
     )
 
     session.initialise()
@@ -87,7 +89,7 @@ def run_workflow(repo_url: str, slug: str, run_id: str, cwl: dict) -> dict:
         runtime_context=session,
         max_cores=AQBB_MAXCORES,
         max_ram=AQBB_MAXRAM,
-        service_account="",  # Create a service account with the desired permissions and use its name as an environment variable
+        service_account=AQBB_SERVICEACCOUNT,
         tool_logs=True,
         debug=True,
     )
@@ -106,7 +108,7 @@ def run_workflow(repo_url: str, slug: str, run_id: str, cwl: dict) -> dict:
     logging.info(log)
     usage = execution.get_usage_report()
     usage
-    from json.decoder import JSONDecodeError
+    from json.decoder import JSONDecodeError # Can't stay here
 
     try:
         output = execution.get_output()

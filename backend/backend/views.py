@@ -1,38 +1,38 @@
-from backend.models import Pipeline, PipelineRun
-from backend.serializers import PipelineSerializer, PipelineRunSerializer
+from backend.models import Pipeline, PipelineRun, PipelineRunJobReport, Tool
+from backend.serializers import (
+    PipelineSerializer,
+    PipelineRunSerializer,
+    PipelineRunJobReportSerializer,
+    ToolSerializer,
+)
 from django.utils import timezone
 from jinja2 import Template
-from rest_framework import status
-from rest_framework.generics import (
-    ListCreateAPIView,
-    RetrieveUpdateDestroyAPIView,
-    RetrieveAPIView,
-)
-from rest_framework.response import Response
 from pycalrissian.run_workflow import run_workflow
+from rest_framework import status
+
+# from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
+
 import yaml
 
 
-class PipelineList(ListCreateAPIView):
-    queryset = Pipeline.objects.all()
-    serializer_class = PipelineSerializer
-
-
-class PipelineDetail(RetrieveUpdateDestroyAPIView):
+class PipelineViewSet(ModelViewSet):
     queryset = Pipeline.objects.all()
     serializer_class = PipelineSerializer
     lookup_field = "slug"
 
 
-class PipelineRunList(ListCreateAPIView):
+class PipelineRunViewSet(ModelViewSet):
     serializer_class = PipelineRunSerializer
+    lookup_field = "id"
 
     def get_queryset(self):
-        slug = self.kwargs["slug"]
+        slug = self.kwargs["pipeline_slug"]
         return PipelineRun.objects.filter(pipeline_id=slug)
 
     def create(self, request, *args, **kwargs):
-        slug = self.kwargs["slug"]
+        slug = self.kwargs["pipeline_slug"]
 
         try:
             pipeline = Pipeline.objects.get(slug=slug)
@@ -84,11 +84,41 @@ class PipelineRunList(ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class PipelineRunDetail(RetrieveAPIView):
-    serializer_class = PipelineRunSerializer
-    lookup_field = "id"
+class PipelineRunJobReportViewSet(ModelViewSet):
+    queryset = PipelineRunJobReport.objects.all()
+    serializer_class = PipelineRunJobReportSerializer
 
     def get_queryset(self):
-        slug = self.kwargs["slug"]
-        id = self.kwargs["id"]
-        return PipelineRun.objects.filter(pipeline_id=slug, id=id)
+        pipeline_slug = self.kwargs["pipeline_slug"]
+        run_id = self.kwargs["run_id"]
+        return PipelineRunJobReport.objects.filter(run__pipeline__slug=pipeline_slug, run_id=run_id)
+
+    def create(self, request, *args, **kwargs):
+        pipeline_slug = self.kwargs["pipeline_slug"]
+        run_id = self.kwargs["run_id"]
+
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                pipeline = Pipeline.objects.get(slug=pipeline_slug)
+                pipeline_run = PipelineRun.objects.get(id=run_id, pipeline=pipeline)
+            except Pipeline.DoesNotExist:
+                return Response({"error": "Pipeline not found."}, status=status.HTTP_404_NOT_FOUND)
+            except PipelineRun.DoesNotExist:
+                return Response({"error": "PipelineRun not found."}, status=status.HTTP_404_NOT_FOUND)
+
+            job_report, created = PipelineRunJobReport.objects.update_or_create(
+                name=serializer.validated_data['name'],
+                run=pipeline_run,
+                defaults={"output": serializer.validated_data['output']}
+            )
+
+            message = "Job report created successfully" if created else "Job report updated successfully"
+            return Response({"message": message}, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ToolViewSet(ModelViewSet):
+    queryset = Tool.objects.all()
+    serializer_class = ToolSerializer
+    lookup_field = "slug"

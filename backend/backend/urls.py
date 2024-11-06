@@ -1,12 +1,24 @@
-from django.urls import path
-from rest_framework.urlpatterns import format_suffix_patterns
-from backend import views
+from rest_framework.routers import DefaultRouter
+from backend.views import (
+    PipelineViewSet,
+    PipelineRunViewSet,
+    PipelineRunJobReportViewSet,
+    ToolViewSet,
+)
 
-urlpatterns = [
-	path("pipelines/", views.PipelineList.as_view()),
-	path("pipelines/<str:slug>/", views.PipelineDetail.as_view()),
-	path("pipelines/<str:slug>/runs/", views.PipelineRunList.as_view()),
-	path("pipelines/<str:slug>/runs/<int:id>/", views.PipelineRunDetail.as_view()),
-]
+router = DefaultRouter()
 
-urlpatterns = format_suffix_patterns(urlpatterns)
+router.register(r"pipelines", PipelineViewSet, basename="pipeline")
+router.register(
+    r"pipelines/(?P<pipeline_slug>[^/.]+)/runs",
+    PipelineRunViewSet,
+    basename="pipeline-run",
+)
+router.register(
+    r"pipelines/(?P<pipeline_slug>[^/.]+)/runs/(?P<run_id>[^/.]+)/jobreport",
+    PipelineRunJobReportViewSet,
+    basename="pipeline-run-jobreport",
+)
+router.register(r"tool", ToolViewSet, basename="tool")
+
+urlpatterns = router.urls
