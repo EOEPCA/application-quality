@@ -26,14 +26,13 @@ class PipelineRun(models.Model):
 	def __str__(self):
 		return f"{'✅' if self.status == 'succeeded' else '❌'} Run {self.id}: {self.pipeline.slug}"
 
-
-class PipelineRunJobReport(models.Model):
-	run				= models.ForeignKey(PipelineRun, related_name="reports", on_delete=models.CASCADE)
-	name			= models.SlugField(primary_key=True, max_length=50)
+class JobReport(models.Model):
+	run				= models.ForeignKey(PipelineRun, related_name="jobreports", on_delete=models.CASCADE)
+	name			= models.SlugField(max_length=50)
 	output			= models.TextField()
 
 	def __str__(self):
-		return f"{self.name} job for run {self.run.id} ({self.run.pipeline.slug})"
+		return f"Run {self.run.id} ({self.run.pipeline.slug}): {self.name} job"
 
 class Tag(models.Model):
 	name			= models.CharField(max_length=50, unique=True) # primary_key

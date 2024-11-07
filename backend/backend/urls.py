@@ -2,7 +2,7 @@ from rest_framework.routers import DefaultRouter
 from backend.views import (
     PipelineViewSet,
     PipelineRunViewSet,
-    PipelineRunJobReportViewSet,
+    JobReportViewSet,
     ToolViewSet,
 )
 
@@ -16,7 +16,7 @@ router.register(
 )
 router.register(
     r"pipelines/(?P<pipeline_slug>[^/.]+)/runs/(?P<run_id>[^/.]+)/jobreports",
-    PipelineRunJobReportViewSet,
+    JobReportViewSet,
     basename="pipeline-run-jobreport",
 )
 router.register(r"tools", ToolViewSet, basename="tool")

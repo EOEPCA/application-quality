@@ -1,4 +1,4 @@
-from backend.models import Pipeline, PipelineRun, PipelineRunJobReport, Tool
+from backend.models import Pipeline, PipelineRun, JobReport, Tool
 from rest_framework.serializers import ModelSerializer
 
 
@@ -14,9 +14,9 @@ class PipelineRunSerializer(ModelSerializer):
         fields = "__all__"
 
 
-class PipelineRunJobReportSerializer(ModelSerializer):
+class JobReportSerializer(ModelSerializer):
     class Meta:
-        model = PipelineRunJobReport
+        model = JobReport
         fields = ["name", "output", "run"]
         read_only_fields = ["run"]
 

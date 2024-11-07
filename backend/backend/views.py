@@ -1,31 +1,27 @@
-from backend.models import Pipeline, PipelineRun, PipelineRunJobReport, Tool
-from backend.serializers import (
-    PipelineSerializer,
-    PipelineRunSerializer,
-    PipelineRunJobReportSerializer,
-    ToolSerializer,
-)
+from . import serializers
+from .models import Pipeline, PipelineRun, JobReport, Tool
+from pycalrissian.run_workflow import run_workflow
+
 from django.utils import timezone
 from jinja2 import Template
-from pycalrissian.run_workflow import run_workflow
-from rest_framework import status
 
-# from rest_framework.decorators import action
+from rest_framework import mixins
+from rest_framework import status
+from rest_framework import viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet, GenericViewSet
-from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
 
 import yaml
 
 
-class PipelineViewSet(ModelViewSet):
+class PipelineViewSet(viewsets.ModelViewSet):
     queryset = Pipeline.objects.all()
-    serializer_class = PipelineSerializer
+    serializer_class = serializers.PipelineSerializer
     lookup_field = "slug"
 
 
-class PipelineRunViewSet(ModelViewSet):
-    serializer_class = PipelineRunSerializer
+class PipelineRunViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.PipelineRunSerializer
     lookup_field = "id"
 
     def get_queryset(self):
@@ -66,8 +62,12 @@ class PipelineRunViewSet(ModelViewSet):
         # except BaseException as e:
         #     raise e
 
-        pipeline_run.usage_report = workflow_output.get("usage_report", "Default usage report")
-        pipeline_run.completion_time = workflow_output.get("completion_time", timezone.now())
+        pipeline_run.usage_report = workflow_output.get(
+            "usage_report", "Default usage report"
+        )
+        pipeline_run.completion_time = workflow_output.get(
+            "completion_time", timezone.now()
+        )
         pipeline_run.status = workflow_output.get("status", "active")
         # pipeline_run.executed_cwl = (
         #     yaml.dump(cwl, sort_keys=False)
@@ -81,26 +81,56 @@ class PipelineRunViewSet(ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class PipelineRunJobReportViewSet(
-    CreateModelMixin, ListModelMixin, RetrieveModelMixin, GenericViewSet
+class JobReportViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
 ):
-    serializer_class = PipelineRunJobReportSerializer
+    serializer_class = serializers.JobReportSerializer
 
     def get_queryset(self):
         slug = self.kwargs["pipeline_slug"]
         run_id = self.kwargs["run_id"]
-        return PipelineRunJobReport.objects.filter(
-            run__pipeline__slug=slug, run_id=run_id
-        )
+        queryset = JobReport.objects.filter(run__pipeline__slug=slug, run_id=run_id)
 
-    def perform_create(self, serializer):
+        tool_name = self.request.query_params.get("name")
+        if tool_name:
+            queryset = queryset.filter(name=tool_name)
+
+        return queryset
+
+    def create(self, request, *args, **kwargs):
         slug = self.kwargs["pipeline_slug"]
         run_id = self.kwargs["run_id"]
-        run = PipelineRun.objects.get(pipeline__slug=slug, id=run_id)
-        serializer.save(run=run)
+
+        tool_name = request.query_params.get("name")
+        if not tool_name:
+            raise ValidationError("Tool 'name' is required as a query parameter.")
+
+        try:
+            run = PipelineRun.objects.get(pipeline__slug=slug, id=run_id)
+        except PipelineRun.DoesNotExist:
+            return Response(
+                {"error": "Pipeline run not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if JobReport.objects.filter(run=run, name=tool_name).exists():
+            return Response(
+                {
+                    "error": f"A job report for '{tool_name}' already exists for this run."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        job_report = JobReport.objects.create(
+            name=tool_name, run=run, output=request.data
+        )
+        serializer = self.get_serializer(job_report)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class ToolViewSet(ModelViewSet):
+class ToolViewSet(viewsets.ModelViewSet):
     queryset = Tool.objects.all()
-    serializer_class = ToolSerializer
+    serializer_class = serializers.ToolSerializer
     lookup_field = "slug"

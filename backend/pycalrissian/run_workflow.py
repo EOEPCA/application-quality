@@ -15,7 +15,7 @@ AQBB_MAXCORES = os.getenv("AQBB_MAXCORES", "2")
 AQBB_MAXRAM = os.getenv("AQBB_MAXRAM", "2Gi")
 AQBB_SECRET = os.getenv("AQBB_SECRET", None)
 AQBB_SERVICEACCOUNT = os.getenv("AQBB_SERVICEACCOUNT", None)
-BACKEND_SERVICE_HOST = os.getenv("BACKEND_SERVICE_HOST", "10.108.15.157")
+BACKEND_SERVICE_HOST = os.getenv("BACKEND_SERVICE_HOST", "django-service.aqbb.svc.cluster.local")
 BACKEND_SERVICE_PORT = os.getenv("BACKEND_SERVICE_PORT", "80")
 
 
