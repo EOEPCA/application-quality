@@ -9,10 +9,10 @@ requirements:
   InlineJavascriptRequirement: {}
 
 inputs:
+  branch:
+    type: string
   repo_url:
     type: string
-    inputBinding:
-      position: 1
 
 outputs:
   repo_directory:
@@ -23,3 +23,6 @@ outputs:
 baseCommand: git
 arguments:
 - clone
+- $(inputs.repo_url)
+- -b
+- $(inputs.branch)
