@@ -11,6 +11,7 @@ requirements:
 inputs:
   branch:
     type: string
+    default: main
   repo_url:
     type: string
 
