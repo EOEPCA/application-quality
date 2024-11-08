@@ -26,6 +26,8 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         slug = self.kwargs["pipeline_slug"]
+        if slug == "_":
+            return PipelineRun.objects.all()
         return PipelineRun.objects.filter(pipeline_id=slug)
 
     def create(self, request, *args, **kwargs):
