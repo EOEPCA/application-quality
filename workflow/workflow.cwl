@@ -8,6 +8,8 @@ requirements:
 inputs:
   repo_url:
     type: string
+  branch:
+    type: string
   pipeline_id:
     type: string
   run_id:
@@ -27,6 +29,7 @@ steps:
   clone_step:
     in:
       repo_url: repo_url
+      branch: branch
     run: tools/clone-tool.cwl
     out:
     - repo_directory
