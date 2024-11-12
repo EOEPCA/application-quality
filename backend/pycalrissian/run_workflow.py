@@ -15,11 +15,13 @@ AQBB_MAXCORES = os.getenv("AQBB_MAXCORES", "2")
 AQBB_MAXRAM = os.getenv("AQBB_MAXRAM", "2Gi")
 AQBB_SECRET = os.getenv("AQBB_SECRET", None)
 AQBB_SERVICEACCOUNT = os.getenv("AQBB_SERVICEACCOUNT", None)
-BACKEND_SERVICE_HOST = os.getenv("BACKEND_SERVICE_HOST", "django-service.aqbb.svc.cluster.local")
+BACKEND_SERVICE_HOST = os.getenv(
+    "BACKEND_SERVICE_HOST", "django-service.aqbb.svc.cluster.local"
+)
 BACKEND_SERVICE_PORT = os.getenv("BACKEND_SERVICE_PORT", "80")
 
 
-def run_workflow(repo_url: str, slug: str, run_id: str, cwl: dict) -> dict:
+def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: dict) -> dict:
     None
     '''
 	"""
@@ -74,6 +76,7 @@ def run_workflow(repo_url: str, slug: str, run_id: str, cwl: dict) -> dict:
 
     params = {
         "repo_url": repo_url,
+        "repo_branch": repo_branch,
         "run_id": run_id,
         "pipeline_id": slug,
         "server_url": f"{BACKEND_SERVICE_HOST}:{BACKEND_SERVICE_PORT}",
@@ -134,7 +137,10 @@ def run_workflow(repo_url: str, slug: str, run_id: str, cwl: dict) -> dict:
         "start_time": execution.get_start_time(),
         "completion_time": execution.get_completion_time(),
         "status": execution.get_status().value,
+        "inputs": params,
         "output": output,
+        "cwl": cwl,
+        # "jobs_run": 0,
     }
 
     # print(workflow_report)

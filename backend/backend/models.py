@@ -5,7 +5,7 @@ class Pipeline(models.Model):
 	slug			= models.SlugField(primary_key=True, max_length=50, unique=True)
 	description		= models.TextField(null=True)
 	template		= models.TextField()
-	tools			= models.ManyToManyField("backend.Tool")
+	tools			= models.ManyToManyField("Tool")
 	version			= models.CharField(max_length=50, null=True)
 
 	def __str__(self):
@@ -18,13 +18,15 @@ class PipelineRun(models.Model):
 	start_time		= models.DateTimeField(blank=True)
 	completion_time	= models.DateTimeField(blank=True, null=True)
 	status			= models.CharField(max_length=100, blank=True)
-	user			= models.CharField(max_length=100, blank=True, null=True) # ForeignKey?
-	output			= models.JSONField(blank=True)
-	# executed cwl
-	# inputs sent
+	user			= models.CharField(max_length=100, blank=True, null=True)
+	inputs			= models.JSONField(blank=True, null=True)
+	output			= models.JSONField(blank=True, null=True)
+	executed_cwl	= models.TextField(blank=True, null=True)
+	# jobs_run		= models.IntegerField(default=0)
 
 	def __str__(self):
 		return f"{'✅' if self.status == 'succeeded' else '❌'} Run {self.id}: {self.pipeline.slug}"
+
 
 class JobReport(models.Model):
 	run				= models.ForeignKey(PipelineRun, related_name="jobreports", on_delete=models.CASCADE)
@@ -39,6 +41,7 @@ class Tag(models.Model):
 
 	def __str__(self):
 		return self.name
+
 
 class Tool(models.Model):
 	slug			= models.SlugField(primary_key=True, max_length=50, unique=True)

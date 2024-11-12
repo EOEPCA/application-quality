@@ -44,19 +44,19 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             pipeline=pipeline,
             usage_report="",
             start_time=timezone.now(),
-            completion_time=None,
-            status="Starting",
+            status="starting",
             user=request.user.username if request.user.is_authenticated else None,
-            output="",
         )
 
         template = Template(pipeline.template)
         context = {"tools": pipeline.tools.all()}
-        cwl = yaml.safe_load(template.render(context))
+        yaml_cwl = template.render(context)
+        cwl = yaml.safe_load(yaml_cwl)
 
         # try:
         workflow_output = run_workflow(
-            repo_url=request.data.get("repo_url", ""),
+            repo_url=request.data.get("repo_url"),
+            repo_branch=request.data.get("repo_branch", "main"),
             slug=slug,
             run_id=str(pipeline_run.id),
             cwl=cwl,
@@ -64,19 +64,17 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         # except BaseException as e:
         #     raise e
 
-        pipeline_run.usage_report = workflow_output.get(
-            "usage_report", "Default usage report"
-        )
-        pipeline_run.completion_time = workflow_output.get(
-            "completion_time", timezone.now()
-        )
+        pipeline_run.usage_report = workflow_output.get("usage_report", None)
+        pipeline_run.completion_time = workflow_output.get("completion_time", timezone.now())
         pipeline_run.status = workflow_output.get("status", "active")
-        # pipeline_run.executed_cwl = (
-        #     yaml.dump(cwl, sort_keys=False)
-        #     if pipeline_run.status == "succeeded"
-        #     else None
-        # )
+        pipeline_run.executed_cwl = (
+            yaml_cwl
+            # if pipeline_run.status == "succeeded"
+            # else None
+        )
+        pipeline_run.inputs = workflow_output.get("inputs")
         pipeline_run.output = workflow_output.get("output", "Workflow output details")
+        # pipeline_run.jobs_run = workflow_output.get("jobs_run", 0)
         pipeline_run.save()
 
         serializer = self.get_serializer(pipeline_run)
