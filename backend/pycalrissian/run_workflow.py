@@ -1,4 +1,5 @@
 # from kubernetes.client.models.v1_job import V1Job
+from backend.models import PipelineRun
 from json.decoder import JSONDecodeError
 from kubernetes import config
 from pycalrissian.context import CalrissianContext
@@ -15,13 +16,14 @@ AQBB_CALRISSIANIMAGE = os.getenv("AQBB_CALRISSIANIMAGE", "terradue/calrissian:0.
 AQBB_MAXCORES = os.getenv("AQBB_MAXCORES", "2")
 AQBB_MAXRAM = os.getenv("AQBB_MAXRAM", "2Gi")
 AQBB_SECRET = os.getenv("AQBB_SECRET", None)
-AQBB_SERVICEACCOUNT = os.getenv("AQBB_SERVICEACCOUNT", None)
+AQBB_SERVICEACCOUNT = os.getenv("AQBB_SERVICEACCOUNT", None)  # Create a ServiceAccount for Calrissian with the right roles and use it here
 BACKEND_SERVICE_HOST = os.getenv("BACKEND_SERVICE_HOST", "django-service.aqbb.svc.cluster.local")
 BACKEND_SERVICE_PORT = os.getenv("BACKEND_SERVICE_PORT", "80")
 
 
 def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: dict) -> dict:
-    None
+    pipeline_run = PipelineRun.objects.get(id=run_id)
+
     '''
 	"""
 	Create the image pull secrets
@@ -72,12 +74,15 @@ def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: d
     session.initialise()
 
     params = {
+        "pipeline_id": slug,
+        "run_id": str(run_id),
         "repo_url": repo_url,
         "repo_branch": repo_branch,
-        "run_id": run_id,
-        "pipeline_id": slug,
         "server_url": f"{BACKEND_SERVICE_HOST}:{BACKEND_SERVICE_PORT}",
     }
+
+    pipeline_run.inputs = params
+    pipeline_run.save(update_fields=['inputs'])  # Overwrite previous value because of server_url
 
     """
 	Create the Calrissian job
@@ -100,6 +105,9 @@ def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: d
 
     execution = CalrissianExecution(job=job, runtime_context=session)
     execution.submit()
+
+    pipeline_run.status = "running"
+    pipeline_run.save(update_fields=['status'])
 
     """
 	Monitoring
@@ -136,15 +144,11 @@ def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: d
         logging.error("execution failed.")
         logging.info(log)
 
-    workflow_report = {
-        "usage_report": usage,
-        "start_time": execution.get_start_time(),
-        "completion_time": execution.get_completion_time(),
-        "status": execution.get_status().value,
-        "inputs": params,
-        "output": output,
-        "cwl": cwl,
-        # "jobs_run": 0,
-    }
+    pipeline_run.refresh_from_db()
+    pipeline_run.usage_report = usage
+    pipeline_run.start_time = execution.get_start_time()
+    pipeline_run.completion_time = execution.get_completion_time()
+    pipeline_run.status = execution.get_status().value
+    pipeline_run.output = output
 
-    return workflow_report
+    pipeline_run.save()

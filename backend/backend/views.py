@@ -9,6 +9,8 @@ from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
+import yaml
+
 
 class PipelineViewSet(viewsets.ModelViewSet):
     queryset = Pipeline.objects.all()
@@ -47,14 +49,24 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         template = Template(pipeline.template)
         context = {"tools": pipeline.tools.all()}
         yaml_cwl = template.render(context)
+        cwl = yaml.safe_load(yaml_cwl)
 
         run_workflow_task.delay(
-            pipeline_run_id=pipeline_run.id,
+            run_id=pipeline_run.id,
             repo_url=request.data.get("repo_url"),
             repo_branch=request.data.get("repo_branch", "main"),
             slug=slug,
-            yaml_cwl=yaml_cwl,
+            cwl=cwl,
         )
+
+        pipeline_run.executed_cwl = yaml_cwl
+        pipeline_run.inputs = {
+            "pipeline_id": slug,
+            "run_id": str(pipeline_run.id),
+            "repo_url": request.data.get("repo_url"),
+            "repo_branch": request.data.get("repo_branch"),
+        }
+        pipeline_run.save()
 
         serializer = self.get_serializer(pipeline_run)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
