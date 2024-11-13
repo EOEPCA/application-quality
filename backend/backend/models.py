@@ -22,7 +22,10 @@ class PipelineRun(models.Model):
 	inputs			= models.JSONField(blank=True, null=True)
 	output			= models.JSONField(blank=True, null=True)
 	executed_cwl	= models.TextField(blank=True, null=True)
-	# jobs_run		= models.IntegerField(default=0)
+
+	@property
+	def job_reports_count(self):
+		return self.jobreports.count()
 
 	def __str__(self):
 		return f"{'✅' if self.status == 'succeeded' else '❌'} Run {self.id}: {self.pipeline.slug}"

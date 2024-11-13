@@ -1,5 +1,5 @@
 from backend.models import Pipeline, PipelineRun, JobReport, Tool
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ModelSerializer, SerializerMethodField
 
 
 class PipelineSerializer(ModelSerializer):
@@ -9,9 +9,26 @@ class PipelineSerializer(ModelSerializer):
 
 
 class PipelineRunSerializer(ModelSerializer):
+    job_reports_count = SerializerMethodField()
+
     class Meta:
         model = PipelineRun
-        fields = "__all__"
+        fields = [
+            "id",
+            "pipeline",
+            "usage_report",
+            "start_time",
+            "completion_time",
+            "status",
+            "user",
+            "inputs",
+            "output",
+            "executed_cwl",
+            "job_reports_count",
+        ]
+
+    def get_job_reports_count(self, obj):
+        return obj.job_reports_count
 
 
 class JobReportSerializer(ModelSerializer):
