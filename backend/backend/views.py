@@ -1,17 +1,13 @@
 from . import serializers
-from .models import Pipeline, PipelineRun, JobReport, Tool
-from pycalrissian.run_workflow import run_workflow
+from backend.models import Pipeline, PipelineRun, JobReport, Tool
+from backend.tasks import run_workflow_task
 
 from django.utils import timezone
 from jinja2 import Template
 
-from rest_framework import mixins
-from rest_framework import status
-from rest_framework import viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-
-import yaml
 
 
 class PipelineViewSet(viewsets.ModelViewSet):
@@ -51,31 +47,14 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         template = Template(pipeline.template)
         context = {"tools": pipeline.tools.all()}
         yaml_cwl = template.render(context)
-        cwl = yaml.safe_load(yaml_cwl)
 
-        # try:
-        workflow_output = run_workflow(
+        run_workflow_task.delay(
+            pipeline_run_id=pipeline_run.id,
             repo_url=request.data.get("repo_url"),
             repo_branch=request.data.get("repo_branch", "main"),
             slug=slug,
-            run_id=str(pipeline_run.id),
-            cwl=cwl,
+            yaml_cwl=yaml_cwl,
         )
-        # except BaseException as e:
-        #     raise e
-
-        pipeline_run.usage_report = workflow_output.get("usage_report", None)
-        pipeline_run.completion_time = workflow_output.get("completion_time", timezone.now())
-        pipeline_run.status = workflow_output.get("status", "active")
-        pipeline_run.executed_cwl = (
-            yaml_cwl
-            # if pipeline_run.status == "succeeded"
-            # else None
-        )
-        pipeline_run.inputs = workflow_output.get("inputs")
-        pipeline_run.output = workflow_output.get("output", "Workflow output details")
-        # pipeline_run.jobs_run = workflow_output.get("jobs_run", 0)
-        pipeline_run.save()
 
         serializer = self.get_serializer(pipeline_run)
         return Response(serializer.data, status=status.HTTP_201_CREATED)

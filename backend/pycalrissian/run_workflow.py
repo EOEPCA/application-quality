@@ -1,5 +1,6 @@
 # from kubernetes.client.models.v1_job import V1Job
-from kubernetes import config, client
+from json.decoder import JSONDecodeError
+from kubernetes import config
 from pycalrissian.context import CalrissianContext
 from pycalrissian.execution import CalrissianExecution
 from pycalrissian.job import CalrissianJob
@@ -15,9 +16,7 @@ AQBB_MAXCORES = os.getenv("AQBB_MAXCORES", "2")
 AQBB_MAXRAM = os.getenv("AQBB_MAXRAM", "2Gi")
 AQBB_SECRET = os.getenv("AQBB_SECRET", None)
 AQBB_SERVICEACCOUNT = os.getenv("AQBB_SERVICEACCOUNT", None)
-BACKEND_SERVICE_HOST = os.getenv(
-    "BACKEND_SERVICE_HOST", "django-service.aqbb.svc.cluster.local"
-)
+BACKEND_SERVICE_HOST = os.getenv("BACKEND_SERVICE_HOST", "django-service.aqbb.svc.cluster.local")
 BACKEND_SERVICE_PORT = os.getenv("BACKEND_SERVICE_PORT", "80")
 
 
@@ -54,15 +53,13 @@ def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: d
     try:
         config.load_incluster_config()  # Not necessary anymore, normally
         logging.info("In-cluster config loaded successfully.")
-        print("In-cluster config loaded successfully")
     except Exception as e:
         logging.error(f"Failed to load in-cluster config: {e}")
-        print("Config failed.")
         raise
 
-    current_context = client.Configuration.get_default_copy()
-    print(f"Kubernetes API Server: {current_context.host}")
-    print(f"Using Authentication: {current_context.verify_ssl}")
+    # current_context = client.Configuration.get_default_copy()
+    # print(f"Kubernetes API Server: {current_context.host}")
+    # print(f"Using Authentication: {current_context.verify_ssl}")
 
     namespace_name = f"applicationqualitypipeline-{run_id}"
     session = CalrissianContext(
@@ -85,9 +82,8 @@ def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: d
     """
 	Create the Calrissian job
 	"""
-    os.environ["CALRISSIAN_IMAGE"] = (
-        AQBB_CALRISSIANIMAGE  # This will maybe turn out superfluous
-    )
+    os.environ["CALRISSIAN_IMAGE"] = AQBB_CALRISSIANIMAGE  # This will maybe turn out superfluous
+
     job = CalrissianJob(
         cwl=cwl,
         params=params,
@@ -109,28 +105,36 @@ def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: d
 	Monitoring
 	"""
     execution.monitor(interval=20)
-    log = execution.get_log()
-    logging.info(log)
-    usage = execution.get_usage_report()
-    usage
-    from json.decoder import JSONDecodeError  # Can't stay here
+    try:
+        usage = execution.get_usage_report()
+    except UnboundLocalError:
+        usage = "Couldn't copy usage report locally"
+        logging.error(usage)
 
     try:
         output = execution.get_output()
     except JSONDecodeError:
-        output = "Output file empty"
-        print(output)
-    logging.info(execution.get_start_time())
-    logging.info(execution.get_completion_time())
+        output = "Output file contains no JSON"
+        logging.error(output)
+    except UnboundLocalError:
+        output = "Couldn't copy output locally"
+        logging.error(output)
+
+    logging.info(f"start time: {execution.get_start_time()}")
+    logging.info(f"completion time: {execution.get_completion_time()}")
     logging.info(f"complete {execution.is_complete()}")
     logging.info(f"succeeded {execution.is_succeeded()}")
-    execution.get_tool_logs()
+    # tool_logs = execution.get_tool_logs()  # We might wanna save that too? Or not, since they are managed by save_tool.
 
     """
 	Delete the Kubernetes namespace (and everything that's associated to it)
 	"""
     if execution.is_succeeded():
         session.dispose()
+    else:
+        log = execution.get_log()
+        logging.error("execution failed.")
+        logging.info(log)
 
     workflow_report = {
         "usage_report": usage,
@@ -142,7 +146,5 @@ def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: d
         "cwl": cwl,
         # "jobs_run": 0,
     }
-
-    # print(workflow_report)
 
     return workflow_report

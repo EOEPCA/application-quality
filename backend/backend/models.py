@@ -36,6 +36,7 @@ class JobReport(models.Model):
 	def __str__(self):
 		return f"Run {self.run.id} ({self.run.pipeline.slug}): {self.name} job"
 
+
 class Tag(models.Model):
 	name			= models.CharField(max_length=50, unique=True) # primary_key
 
