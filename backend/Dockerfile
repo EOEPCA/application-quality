@@ -2,21 +2,17 @@ FROM python:slim
 
 WORKDIR /app
 
-COPY requirements.txt /app/
+COPY requirements.txt .
 
-RUN apt-get update && \
-	apt-get install -y postgresql-client libpq-dev gcc && \
-	rm -rf /var/lib/apt/lists/* && \
-	pip install --no-cache-dir -r requirements.txt
+RUN apt-get update \
+	&& apt-get install -y gcc libpq-dev postgresql-client redis-server supervisor \
+	&& rm -rf /var/lib/apt/lists/* \
+	&& pip install --no-cache-dir -r requirements.txt
 
-COPY . /app/
+COPY . .
 
-ENV DJANGO_SETTINGS_MODULE=application_quality.settings \
-	PYTHONUNBUFFERED=1
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# RUN python manage.py collectstatic --noinput
+EXPOSE 8000 6379
 
-EXPOSE 8000
-
-# CMD ["gunicorn", "--workers=3", "--bind=0.0.0.0:8000", "application_quality.wsgi:application"]
-CMD [ "python", "manage.py", "runserver", "0.0.0.0:8000" ]
+CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
