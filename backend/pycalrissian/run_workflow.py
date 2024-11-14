@@ -18,7 +18,7 @@ AQBB_MAXRAM = os.getenv("AQBB_MAXRAM", "2Gi")
 AQBB_SECRET = os.getenv("AQBB_SECRET", None)
 AQBB_SERVICEACCOUNT = os.getenv("AQBB_SERVICEACCOUNT", None)  # Create a ServiceAccount for Calrissian with the right roles and use it here
 BACKEND_SERVICE_HOST = os.getenv("BACKEND_SERVICE_HOST", "backend-service.aqbb.svc.cluster.local")
-BACKEND_SERVICE_PORT = "80" ## os.getenv("BACKEND_SERVICE_PORT", "80")
+BACKEND_SERVICE_PORT = os.getenv("BACKEND_SERVICE_PORT", "80")
 
 
 def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: dict) -> dict:
