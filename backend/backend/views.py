@@ -115,7 +115,10 @@ class JobReportViewSet(
             )
 
         job_report = JobReport.objects.create(
-            name=tool_name, run=run, output=request.data
+            name=tool_name,
+            run=run,
+            output=request.data,
+            created_at=timezone.now()
         )
         serializer = self.get_serializer(job_report)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
