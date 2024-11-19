@@ -46,8 +46,19 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             user=request.user.username if request.user.is_authenticated else None,
         )
 
+        rendered_subworkflows = []
+
+        for subworkflow in pipeline.tools.all():
+            subtemplate = Template(subworkflow.definition)
+            subcontext = {"tools": list(subworkflow.tools.all())}
+            subtool = {
+                "workflow_step": subworkflow.workflow_step,
+                "definition": subtemplate.render(subcontext),
+            }
+            rendered_subworkflows.append(subtool)
+
         template = Template(pipeline.template)
-        context = {"tools": pipeline.tools.all()}
+        context = {"subworkflows": rendered_subworkflows}
         yaml_cwl = template.render(context)
         cwl = yaml.safe_load(yaml_cwl)
 

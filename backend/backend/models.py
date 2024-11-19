@@ -52,7 +52,7 @@ class Tool(models.Model):
     slug            = models.SlugField(primary_key=True, max_length=50, unique=True)
     name            = models.CharField(max_length=50)
     description     = models.TextField(null=True)
-    workflow_step   = models.TextField()
+    workflow_step   = models.TextField(blank=True)
     definition      = models.TextField()
     tags            = models.ManyToManyField(Tag, related_name="tools")
     is_cwl          = models.BooleanField()
