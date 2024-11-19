@@ -5,7 +5,7 @@ class: Workflow
 inputs:
   name:
     type: string
-    default: pylint
+    default: ruff
   pipeline_id:
     type: string
   repo_path:
@@ -16,22 +16,22 @@ inputs:
     type: string
 
 outputs:
-  pylint_report:
+  ruff_report:
     type: File
-    outputSource: pylint_step/pylint_report
+    outputSource: ruff_step/ruff_report
 
 steps:
-  pylint_step:
+  ruff_step:
     in:
       source_directory: repo_path
-    run: tools/pylint-tool.cwl
+    run: tools/ruff-tool.cwl
     out:
-    - pylint_report
-  save_pylint_step:
+    - ruff_report
+  save_ruff_step:
     in:
       name: name
       pipeline_id: pipeline_id
-      report: pylint_step/pylint_report
+      report: ruff_step/ruff_report
       run_id: run_id
       server_url: server_url
     run: tools/save-tool.cwl

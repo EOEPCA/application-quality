@@ -5,7 +5,8 @@ class: CommandLineTool
 
 requirements:
   DockerRequirement:
-    dockerPull: eoepca/appquality-flake8-json:v0.1.0
+    dockerPull: ghcr.io/astral-sh/ruff:alpine
+  InlineJavascriptRequirement: {}
 
 inputs:
   source_directory:
@@ -14,12 +15,19 @@ inputs:
       position: 1
 
 outputs:
-  flake8_report:
+  ruff_report:
     type: File
     outputBinding:
-      glob: flake8_report.json
+      glob: ruff_report.json
 
-baseCommand: flake8
+baseCommand:
+- ruff
+- check
 arguments:
-- --format=json
-- --output-file=flake8_report.json
+- --exclude
+- .git
+- --output-format
+- json
+- -o
+- ruff_report.json
+- -en

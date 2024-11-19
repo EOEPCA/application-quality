@@ -3,17 +3,17 @@ cwlVersion: v1.0
 class: Workflow
 
 inputs:
-  repo_path:
-    type: Directory
+  name:
+    type: string
+    default: flake8
   pipeline_id:
     type: string
+  repo_path:
+    type: Directory
   run_id:
     type: string
   server_url:
     type: string
-  flake8_step_id:
-    type: string
-    default: 2-flake8
 
 outputs:
   flake8_report:
@@ -29,10 +29,10 @@ steps:
     - flake8_report
   save_flake8_step:
     in:
+      name: name
       pipeline_id: pipeline_id
       report: flake8_step/flake8_report
       run_id: run_id
       server_url: server_url
-      step_id: flake8_step_id
     run: tools/save-tool.cwl
     out: []
