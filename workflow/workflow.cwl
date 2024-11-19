@@ -51,3 +51,12 @@ steps:
     run: flake8-workflow.cwl
     out:
     - flake8_report
+  ruff_workflow:
+    in:
+      repo_path: clone_step/repo_directory
+      pipeline_id: pipeline_id
+      run_id: run_id
+      server_url: server_url
+    run: ruff-workflow.cwl
+    out:
+    - ruff_report
