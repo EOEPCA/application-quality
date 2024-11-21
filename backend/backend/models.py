@@ -5,7 +5,7 @@ class Pipeline(models.Model):
     slug            = models.SlugField(primary_key=True, max_length=50, unique=True)
     description     = models.TextField(null=True)
     template        = models.TextField()
-    tools           = models.ManyToManyField("CommandLineTool") # -> Subworkflow (Change variable if problematic)
+    tools           = models.ManyToManyField("Subworkflow", blank=True) # -> Subworkflow (Change variable if problematic)
     version         = models.CharField(max_length=50, null=True)
 
     def __str__(self):
