@@ -2,5 +2,5 @@
 **/__pycache__
 
 # old fixtures
-**/2024-11-0*.json
-**/2024-11-1*.json
+**/fixtures/2024-11-0*.json
+**/fixtures/2024-11-1*.json
