@@ -24,6 +24,12 @@ outputs:
   flake8_report:
     type: File
     outputSource: flake8_workflow/flake8_report
+  ruff_report:
+    type: File
+    outputSource: ruff_workflow/ruff_report
+  bandit_report:
+    type: File
+    outputSource: bandit_workflow/bandit_report
 
 steps:
   clone_step:
@@ -60,3 +66,12 @@ steps:
     run: ruff-workflow.cwl
     out:
     - ruff_report
+  bandit_workflow:
+    in:
+      repo_path: clone_step/repo_directory
+      pipeline_id: pipeline_id
+      run_id: run_id
+      server_url: server_url
+    run: bandit-workflow.cwl
+    out:
+    - bandit_report
