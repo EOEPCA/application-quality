@@ -72,11 +72,11 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
     def render_cwl(self, pipeline):
         rendered_subworkflows = []
 
-        for subworkflow in pipeline.tools.all(): # Depends on Pipeline.tools
+        for subworkflow in pipeline.tools.all():
             subtemplate = Template(subworkflow.definition)
-            subcontext = {"tools": list(subworkflow.tools.all())} # Depends on Tools.tools -> Subworkflow.tools (Maybe no change necessary)
+            subcontext = {"tools": list(subworkflow.tools.all())}
             subtool = {
-                "workflow_step": subworkflow.workflow_step,
+                "pipeline_step": subworkflow.pipeline_step,
                 "definition": subtemplate.render(subcontext),
             }
             rendered_subworkflows.append(subtool)
