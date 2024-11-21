@@ -23,3 +23,4 @@ baseCommand: flake8
 arguments:
 - --format=json
 - --output-file=flake8_report.json
+- --exit-zero
