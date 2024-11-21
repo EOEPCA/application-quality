@@ -1,5 +1,5 @@
 from . import serializers
-from backend.models import Pipeline, PipelineRun, JobReport, Tool
+from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow
 from backend.tasks import run_workflow_task
 
 from django.utils import timezone
@@ -46,20 +46,7 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             user=request.user.username if request.user.is_authenticated else None,
         )
 
-        rendered_subworkflows = []
-
-        for subworkflow in pipeline.tools.all():
-            subtemplate = Template(subworkflow.definition)
-            subcontext = {"tools": list(subworkflow.tools.all())}
-            subtool = {
-                "workflow_step": subworkflow.workflow_step,
-                "definition": subtemplate.render(subcontext),
-            }
-            rendered_subworkflows.append(subtool)
-
-        template = Template(pipeline.template)
-        context = {"subworkflows": rendered_subworkflows}
-        yaml_cwl = template.render(context)
+        yaml_cwl = self.render_cwl(pipeline)
         cwl = yaml.safe_load(yaml_cwl)
 
         run_workflow_task.delay(
@@ -81,6 +68,22 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(pipeline_run)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def render_cwl(self, pipeline):
+        rendered_subworkflows = []
+
+        for subworkflow in pipeline.tools.all(): # Depends on Pipeline.tools
+            subtemplate = Template(subworkflow.definition)
+            subcontext = {"tools": list(subworkflow.tools.all())} # Depends on Tools.tools -> Subworkflow.tools (Maybe no change necessary)
+            subtool = {
+                "workflow_step": subworkflow.workflow_step,
+                "definition": subtemplate.render(subcontext),
+            }
+            rendered_subworkflows.append(subtool)
+
+        template = Template(pipeline.template)
+        context = {"subworkflows": rendered_subworkflows}
+        return template.render(context)
 
 
 class JobReportViewSet(
@@ -135,7 +138,13 @@ class JobReportViewSet(
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class ToolViewSet(viewsets.ModelViewSet):
-    queryset = Tool.objects.all()
-    serializer_class = serializers.ToolSerializer
+# class ToolViewSet(viewsets.ModelViewSet):
+#     queryset = Tool.objects.all()
+#     serializer_class = serializers.ToolSerializer
+#     lookup_field = "slug"
+
+
+class SubworkflowViewSet(viewsets.ModelViewSet):
+    queryset = Subworkflow.objects.all()
+    serializer_class = serializers.SubworkflowSerializer
     lookup_field = "slug"

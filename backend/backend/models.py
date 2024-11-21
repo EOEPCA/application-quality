@@ -5,7 +5,7 @@ class Pipeline(models.Model):
     slug            = models.SlugField(primary_key=True, max_length=50, unique=True)
     description     = models.TextField(null=True)
     template        = models.TextField()
-    tools           = models.ManyToManyField("Tool")
+    tools           = models.ManyToManyField("CommandLineTool") # -> Subworkflow (Change variable if problematic)
     version         = models.CharField(max_length=50, null=True)
 
     def __str__(self):
@@ -48,15 +48,39 @@ class Tag(models.Model):
         return self.name
 
 
-class Tool(models.Model):
-    slug            = models.SlugField(primary_key=True, max_length=50, unique=True)
+# class Tool(models.Model): # Delete and make 2 classes: Subworkflow and CommandLineTool
+#     slug            = models.SlugField(primary_key=True, max_length=50, unique=True) # Both
+#     name            = models.CharField(max_length=50) # Both
+#     description     = models.TextField(null=True) # Subworkflow
+#     workflow_step   = models.TextField(blank=True) # Subworkflow
+#     definition      = models.TextField() # Both
+#     tags            = models.ManyToManyField(Tag, related_name="tools") # Subworkflow
+#     is_cwl          = models.BooleanField() # None
+#     tools           = models.ManyToManyField("self", symmetrical=False, blank=True) # Subworkflow -> CLT
+#     version         = models.CharField(max_length=50, null=True) # Both
+
+#     def __str__(self):
+#         return self.name
+
+
+class Subworkflow(models.Model):
+    slug            = models.SlugField(primary_key=True, max_length=50)
     name            = models.CharField(max_length=50)
     description     = models.TextField(null=True)
-    workflow_step   = models.TextField(blank=True)
+    pipeline_step   = models.TextField(blank=True)
     definition      = models.TextField()
-    tags            = models.ManyToManyField(Tag, related_name="tools")
-    is_cwl          = models.BooleanField()
-    tools           = models.ManyToManyField("self", symmetrical=False, blank=True)
+    tags            = models.ManyToManyField(Tag, related_name="subworkflows", blank=True)
+    tools           = models.ManyToManyField("CommandLineTool", related_name="subworkflows")
+    version         = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.name
+
+
+class CommandLineTool(models.Model):
+    slug            = models.SlugField(primary_key=True, max_length=50)
+    name            = models.CharField(max_length=50)
+    definition      = models.TextField()
     version         = models.CharField(max_length=50, null=True)
 
     def __str__(self):

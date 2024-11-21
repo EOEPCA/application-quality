@@ -3,7 +3,7 @@ from backend.views import (
     PipelineViewSet,
     PipelineRunViewSet,
     JobReportViewSet,
-    ToolViewSet,
+    SubworkflowViewSet,
 )
 
 router = DefaultRouter()
@@ -19,6 +19,6 @@ router.register(
     JobReportViewSet,
     basename="pipeline-run-jobreport",
 )
-router.register(r"tools", ToolViewSet, basename="tool")
+router.register(r"tools", SubworkflowViewSet, basename="tool")
 
 urlpatterns = router.urls
