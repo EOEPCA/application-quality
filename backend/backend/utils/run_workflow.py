@@ -1,5 +1,6 @@
 # from kubernetes.client.models.v1_job import V1Job
 from backend.models import PipelineRun
+from backend.utils.opensearch import index_pipeline_run
 from json.decoder import JSONDecodeError
 from kubernetes import config
 from pycalrissian.context import CalrissianContext
@@ -25,32 +26,34 @@ def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: d
     pipeline_run = PipelineRun.objects.get(id=run_id)
 
     '''
-	"""
-	Create the image pull secrets
-	"""
-	username = ""
-	password = ""
+    """
+    Create the image pull secrets
+    """
+    username = ""
+    password = ""
 
-
-	"""	
-	Make a string with the username and the password,
-	turn it into a string literal (encode()),
-	encode the literal in base 64,
-	turn the encoded string literal back into a regular string (decode()).
-	"""	
-	auth = base64.b64encode(f"{username}:{password}".encode()).decode()
-
-	secret_config = {
-		"auths": {
-			"registry.gitlab.com": {"auth": ""},
-			"https://index.docker.io/v1/": {"auth": ""},
-		}
-	}
-	'''
 
     """
-	Create the kubernetes namespace on the cluster
-	"""
+    Make a string with the username and the password,
+    turn it into a string literal (encode()),
+    encode the literal in base 64,
+    turn the encoded string literal back into a regular string (decode()).
+    """
+    auth = base64.b64encode(f"{username}:{password}".encode()).decode()
+
+    secret_config = {
+        "auths": {
+            "registry.gitlab.com": {"auth": ""},
+            "https://index.docker.io/v1/": {"auth": ""},
+        }
+    }
+    '''
+
+    index_pipeline_run(pipeline_run)
+
+    """
+    Create the kubernetes namespace on the cluster
+    """
 
     try:
         config.load_incluster_config()  # Not necessary anymore, normally
@@ -83,10 +86,11 @@ def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: d
 
     pipeline_run.inputs = params
     pipeline_run.save(update_fields=['inputs'])  # Overwrite previous value because of server_url
+    index_pipeline_run(pipeline_run)
 
     """
-	Create the Calrissian job
-	"""
+    Create the Calrissian job
+    """
     os.environ["CALRISSIAN_IMAGE"] = AQBB_CALRISSIANIMAGE  # This will maybe turn out superfluous
 
     job = CalrissianJob(
@@ -108,10 +112,11 @@ def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: d
 
     pipeline_run.status = "running"
     pipeline_run.save(update_fields=['status'])
+    index_pipeline_run(pipeline_run)
 
     """
-	Monitoring
-	"""
+    Monitoring
+    """
     execution.monitor(interval=20)
     try:
         usage = execution.get_usage_report()
@@ -132,11 +137,11 @@ def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: d
     logging.info(f"completion time: {execution.get_completion_time()}")
     logging.info(f"complete {execution.is_complete()}")
     logging.info(f"succeeded {execution.is_succeeded()}")
-    # tool_logs = execution.get_tool_logs()  # We might wanna save that too? Or not, since they are managed by save_tool.
+    # tool_logs = execution.get_tool_logs()  # Can be useful to avoid using save_tool
 
     """
-	Delete the Kubernetes namespace (and everything that's associated to it)
-	"""
+    Delete the Kubernetes namespace (and everything that's associated to it)
+    """
     if execution.is_succeeded():
         session.dispose()
     else:
@@ -152,3 +157,4 @@ def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: d
     pipeline_run.output = output
 
     pipeline_run.save()
+    index_pipeline_run(pipeline_run)

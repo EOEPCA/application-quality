@@ -1,6 +1,7 @@
 from . import serializers
 from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow
 from backend.tasks import run_workflow_task
+from backend.utils.opensearch import index_pipeline_job_report
 
 from django.utils import timezone
 from jinja2 import Template
@@ -134,6 +135,9 @@ class JobReportViewSet(
             output=request.data,
             created_at=timezone.now()
         )
+
+        index_pipeline_job_report(job_report)
+        
         serializer = self.get_serializer(job_report)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 

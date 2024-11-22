@@ -1,5 +1,5 @@
 from celery import shared_task
-from pycalrissian.run_workflow import run_workflow
+from backend.utils.run_workflow import run_workflow
 
 
 @shared_task
