@@ -60,9 +60,9 @@ def index_pipeline_job_report(pipeline_job_report: JobReport):
         job_report_id = job_report_json["run"] + "_" + job_report_json["name"]
         logging.info(f"Indexing pipeline job report {job_report_id} in OpenSearch")
         OPENSEARCH_CLIENT.index(
-            index=OPENSEARCH_INDEX_RUNS,
+            index=OPENSEARCH_INDEX_REPORTS,
             body=job_report_json,
-            id=pipeline_job_report.run,
+            id=job_report_id,
             refresh=True,
         )
     except Exception as e:

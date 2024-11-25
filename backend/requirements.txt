@@ -6,4 +6,5 @@ djangorestframework
 Jinja2
 kubernetes==28.1.0
 loguru
+opensearch-py
 psycopg2
