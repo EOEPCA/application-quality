@@ -34,7 +34,7 @@ class PipelineRun(models.Model):
 class JobReport(models.Model):
     run             = models.ForeignKey(PipelineRun, related_name="jobreports", on_delete=models.CASCADE)
     name            = models.SlugField(max_length=50)
-    output          = models.TextField()
+    output          = models.JSONField()
     created_at      = models.DateTimeField(null=True)
 
     def __str__(self):
