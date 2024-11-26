@@ -21,6 +21,8 @@ AQBB_SERVICEACCOUNT = os.getenv("AQBB_SERVICEACCOUNT", None)  # Create a Service
 BACKEND_SERVICE_HOST = os.getenv("BACKEND_SERVICE_HOST", "backend-service.aqbb.svc.cluster.local")
 BACKEND_SERVICE_PORT = os.getenv("BACKEND_SERVICE_PORT", "80")
 
+logger = logging.getLogger(__name__)
+
 
 def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: dict) -> dict:
     pipeline_run = PipelineRun.objects.get(id=run_id)
@@ -57,9 +59,9 @@ def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: d
 
     try:
         config.load_incluster_config()  # Not necessary anymore, normally
-        logging.info("In-cluster config loaded successfully.")
+        logger.debug("In-cluster config loaded successfully.")
     except Exception as e:
-        logging.error(f"Failed to load in-cluster config: {e}")
+        logger.error(f"Failed to load in-cluster config: {e}")
         raise
 
     # current_context = client.Configuration.get_default_copy()
@@ -87,6 +89,7 @@ def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: d
     pipeline_run.inputs = params
     pipeline_run.save(update_fields=['inputs'])  # Overwrite previous value because of server_url
     index_pipeline_run(pipeline_run)
+    logger.debug(f"Run {pipeline_run.id} updated with server url")
 
     """
     Create the Calrissian job
@@ -113,6 +116,7 @@ def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: d
     pipeline_run.status = "running"
     pipeline_run.save(update_fields=['status'])
     index_pipeline_run(pipeline_run)
+    logger.debug(f"Run {pipeline_run.id} status updated: running")
 
     """
     Monitoring
@@ -122,21 +126,21 @@ def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: d
         usage = execution.get_usage_report()
     except UnboundLocalError:
         usage = "Couldn't copy usage report locally"
-        logging.error(usage)
+        logger.error(usage)
 
     try:
         output = execution.get_output()
     except JSONDecodeError:
         output = "Output file contains no JSON"
-        logging.error(output)
+        logger.error(output)
     except UnboundLocalError:
         output = "Couldn't copy output locally"
-        logging.error(output)
+        logger.error(output)
 
-    logging.info(f"start time: {execution.get_start_time()}")
-    logging.info(f"completion time: {execution.get_completion_time()}")
-    logging.info(f"complete {execution.is_complete()}")
-    logging.info(f"succeeded {execution.is_succeeded()}")
+    logger.info(f"start time: {execution.get_start_time()}")
+    logger.info(f"completion time: {execution.get_completion_time()}")
+    logger.info(f"complete {execution.is_complete()}")
+    logger.info(f"succeeded {execution.is_succeeded()}")
     # tool_logs = execution.get_tool_logs()  # Can be useful to avoid using save_tool
 
     """
@@ -146,8 +150,8 @@ def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: d
         session.dispose()
     else:
         log = execution.get_log()
-        logging.error("execution failed.")
-        logging.info(log)
+        logger.error(f"Execution failed for run {pipeline_run.id}")
+        logger.info(log)
 
     pipeline_run.refresh_from_db()
     pipeline_run.usage_report = usage
@@ -158,3 +162,5 @@ def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: d
 
     pipeline_run.save()
     index_pipeline_run(pipeline_run)
+    logger.info(f"Run {pipeline_run.id} completed")
+

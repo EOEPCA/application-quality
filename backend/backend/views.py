@@ -10,7 +10,10 @@ from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
+import logging
 import yaml
+
+logger = logging.getLogger(__name__)
 
 
 class PipelineViewSet(viewsets.ModelViewSet):
@@ -31,12 +34,15 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         slug = self.kwargs["pipeline_slug"]
+        logger.info(f"Creating a new run for pipeline '{slug}'")
 
         try:
             pipeline = Pipeline.objects.get(slug=slug)
         except Pipeline.DoesNotExist:
+            logger.warning(f"Couldn't create a new run: Pipeline {slug} not found")
             return Response(
-                {"error": "Pipeline not found."}, status=status.HTTP_404_NOT_FOUND
+                {"error": "Pipeline not found."},
+                status=status.HTTP_404_NOT_FOUND
             )
 
         pipeline_run = PipelineRun.objects.create(
@@ -46,10 +52,12 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             status="starting",
             user=request.user.username if request.user.is_authenticated else None,
         )
+        logger.info(f"Pipeline run created with id {pipeline_run.id}")
 
         yaml_cwl = self.render_cwl(pipeline)
         cwl = yaml.safe_load(yaml_cwl)
 
+        logger.info(f"Running workflow with id {pipeline_run.id}")
         run_workflow_task.delay(
             run_id=pipeline_run.id,
             repo_url=request.data.get("repo_url"),
@@ -66,14 +74,20 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             "repo_branch": request.data.get("repo_branch"),
         }
         pipeline_run.save()
+        logger.debug(f"Run {pipeline_run.id} updated with CWL and inputs")
 
         serializer = self.get_serializer(pipeline_run)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED
+        )
 
     def render_cwl(self, pipeline):
+        logger.debug(f"Rendering CWL for pipeline '{pipeline.slug}'")
         rendered_subworkflows = []
 
         for subworkflow in pipeline.tools.all():
+            logger.debug(f"Rendering subworkflow '{subworkflow}'")
             subtemplate = Template(subworkflow.definition)
             subcontext = {"tools": list(subworkflow.tools.all())}
             subtool = {
@@ -84,7 +98,9 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
 
         template = Template(pipeline.template)
         context = {"subworkflows": rendered_subworkflows}
-        return template.render(context)
+        result = template.render(context)
+        logger.debug(f"CWL rendered for pipeline '{pipeline.slug}'")
+        return result
 
 
 class JobReportViewSet(
@@ -109,6 +125,7 @@ class JobReportViewSet(
     def create(self, request, *args, **kwargs):
         slug = self.kwargs["pipeline_slug"]
         run_id = self.kwargs["run_id"]
+        logger.info(f"Creating a new job report for '{slug}' pipeline, run_id {run_id}")
 
         tool_name = request.query_params.get("name")
         if not tool_name:
@@ -117,15 +134,16 @@ class JobReportViewSet(
         try:
             run = PipelineRun.objects.get(pipeline__slug=slug, id=run_id)
         except PipelineRun.DoesNotExist:
+            logger.warning(f"Couln't create a job report: Run {run_id} for pipeline '{slug}' not found")
             return Response(
-                {"error": "Pipeline run not found."}, status=status.HTTP_404_NOT_FOUND
+                {"error": "Pipeline run not found."},
+                status=status.HTTP_404_NOT_FOUND
             )
 
         if JobReport.objects.filter(run=run, name=tool_name).exists():
+            logger.warning(f"Couln't create a job report: A job report for '{tool_name}' already exists in run {run_id}")
             return Response(
-                {
-                    "error": f"A job report for '{tool_name}' already exists for this run."
-                },
+                {"error": f"A job report for '{tool_name}' already exists for this run."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -137,15 +155,13 @@ class JobReportViewSet(
         )
 
         index_pipeline_job_report(job_report)
-        
+        logger.info(f"Job report created for tool '{tool_name}' in run {run_id}")
+
         serializer = self.get_serializer(job_report)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-# class ToolViewSet(viewsets.ModelViewSet):
-#     queryset = Tool.objects.all()
-#     serializer_class = serializers.ToolSerializer
-#     lookup_field = "slug"
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED
+        )
 
 
 class SubworkflowViewSet(viewsets.ModelViewSet):
