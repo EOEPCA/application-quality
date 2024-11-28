@@ -5,7 +5,7 @@ class Pipeline(models.Model):
     slug            = models.SlugField(primary_key=True, max_length=50, unique=True)
     description     = models.TextField(null=True)
     template        = models.TextField()
-    tools           = models.ManyToManyField("Subworkflow", blank=True) # -> Subworkflow (Change variable if problematic)
+    tools           = models.ManyToManyField("Subworkflow", blank=True)
     version         = models.CharField(max_length=50, null=True)
 
     def __str__(self):
@@ -42,25 +42,10 @@ class JobReport(models.Model):
 
 
 class Tag(models.Model):
-    name            = models.CharField(max_length=50, unique=True) # primary_key
+    name            = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name
-
-
-# class Tool(models.Model): # Delete and make 2 classes: Subworkflow and CommandLineTool
-#     slug            = models.SlugField(primary_key=True, max_length=50, unique=True) # Both
-#     name            = models.CharField(max_length=50) # Both
-#     description     = models.TextField(null=True) # Subworkflow
-#     workflow_step   = models.TextField(blank=True) # Subworkflow
-#     definition      = models.TextField() # Both
-#     tags            = models.ManyToManyField(Tag, related_name="tools") # Subworkflow
-#     is_cwl          = models.BooleanField() # None
-#     tools           = models.ManyToManyField("self", symmetrical=False, blank=True) # Subworkflow -> CLT
-#     version         = models.CharField(max_length=50, null=True) # Both
-
-#     def __str__(self):
-#         return self.name
 
 
 class Subworkflow(models.Model):
