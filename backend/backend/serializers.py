@@ -1,15 +1,17 @@
 from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow
-from rest_framework.serializers import ModelSerializer, SerializerMethodField
+from rest_framework import serializers
 
 
-class PipelineSerializer(ModelSerializer):
+class PipelineSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source="owner.username")
+
     class Meta:
         model = Pipeline
         fields = "__all__"
 
 
-class PipelineRunSerializer(ModelSerializer):
-    job_reports_count = SerializerMethodField()
+class PipelineRunSerializer(serializers.ModelSerializer):
+    job_reports_count = serializers.SerializerMethodField()
 
     class Meta:
         model = PipelineRun
@@ -31,20 +33,14 @@ class PipelineRunSerializer(ModelSerializer):
         return obj.job_reports_count
 
 
-class JobReportSerializer(ModelSerializer):
+class JobReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobReport
         fields = ["name", "output", "run"]
         read_only_fields = ["run"]
 
 
-# class ToolSerializer(ModelSerializer):
-#     class Meta:
-#         model = Tool
-#         fields = "__all__"
-
-
-class SubworkflowSerializer(ModelSerializer):
+class SubworkflowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subworkflow
         fields = "__all__"

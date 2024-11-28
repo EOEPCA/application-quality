@@ -6,7 +6,7 @@ from backend.utils.opensearch import index_pipeline_job_report
 from django.utils import timezone
 from jinja2 import Template
 
-from rest_framework import mixins, status, viewsets
+from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
@@ -16,10 +16,34 @@ import yaml
 logger = logging.getLogger(__name__)
 
 
+class IsOwnerOrAdmin(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.user.is_staff:
+            return True
+        return obj.owner == request.user
+
+
 class PipelineViewSet(viewsets.ModelViewSet):
-    queryset = Pipeline.objects.all()
     serializer_class = serializers.PipelineSerializer
     lookup_field = "slug"
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return Pipeline.objects.all()
+        return (
+            Pipeline.objects.filter(owner=self.request.user)
+            | Pipeline.objects.filter(owner__isnull=True)
+        )
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+    def get_permissions(self):
+        if self.action in ["list", "retrieve"]:
+            return [permissions.IsAuthenticated()]
+        elif self.action in ["create", "update", "partial_update", "destroy"]:
+            return [permissions.IsAuthenticated(), IsOwnerOrAdmin()]
+        return super().get_permissions()
 
 
 class PipelineRunViewSet(viewsets.ModelViewSet):
