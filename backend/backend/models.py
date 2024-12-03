@@ -24,6 +24,7 @@ class PipelineRun(models.Model):
     inputs          = models.JSONField(blank=True, null=True)
     output          = models.JSONField(blank=True, null=True)
     executed_cwl    = models.TextField(blank=True, null=True)
+    started_by      = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name="pipeline_runs")
 
     @property
     def job_reports_count(self):

@@ -49,12 +49,13 @@ class PipelineViewSet(viewsets.ModelViewSet):
 class PipelineRunViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.PipelineRunSerializer
     lookup_field = "id"
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         slug = self.kwargs["pipeline_slug"]
         if slug == "_":
-            return PipelineRun.objects.all()
-        return PipelineRun.objects.filter(pipeline_id=slug)
+            return PipelineRun.objects.filter(started_by=self.request.user)
+        return PipelineRun.objects.filter(pipeline_id=slug, started_by=self.request.user)
 
     def create(self, request, *args, **kwargs):
         slug = self.kwargs["pipeline_slug"]
@@ -74,7 +75,7 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             usage_report="",
             start_time=timezone.now(),
             status="starting",
-            user=request.user.username if request.user.is_authenticated else None,
+            started_by=request.user,
         )
         logger.info(f"Pipeline run created with id {pipeline_run.id}")
 

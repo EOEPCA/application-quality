@@ -12,6 +12,7 @@ class PipelineSerializer(serializers.ModelSerializer):
 
 class PipelineRunSerializer(serializers.ModelSerializer):
     job_reports_count = serializers.SerializerMethodField()
+    started_by = serializers.ReadOnlyField(source="started_by.username")
 
     class Meta:
         model = PipelineRun
@@ -26,6 +27,7 @@ class PipelineRunSerializer(serializers.ModelSerializer):
             "inputs",
             "output",
             "executed_cwl",
+            "started_by",
             "job_reports_count",
         ]
 
