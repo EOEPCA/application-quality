@@ -90,6 +90,7 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             repo_branch=request.data.get("repo_branch", "main"),
             slug=slug,
             cwl=cwl,
+            user=request.user
         )
 
         pipeline_run.executed_cwl = yaml_cwl

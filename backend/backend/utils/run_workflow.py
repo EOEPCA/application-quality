@@ -1,5 +1,6 @@
 # from kubernetes.client.models.v1_job import V1Job
 from backend.models import PipelineRun
+from django.contrib.auth.models import User
 from backend.utils.opensearch import index_pipeline_run
 from json.decoder import JSONDecodeError
 from kubernetes import config
@@ -24,7 +25,14 @@ BACKEND_SERVICE_PORT = os.getenv("BACKEND_SERVICE_PORT", "80")
 logger = logging.getLogger(__name__)
 
 
-def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: dict) -> dict:
+def run_workflow(
+        repo_url: str,
+        repo_branch: str,
+        slug: str,
+        run_id: str,
+        cwl: dict,
+        user: User,
+    ) -> dict:
     pipeline_run = PipelineRun.objects.get(id=run_id)
 
     '''
@@ -78,12 +86,17 @@ def run_workflow(repo_url: str, repo_branch: str, slug: str, run_id: str, cwl: d
 
     session.initialise()
 
+    sonarqube_project = f'{user.username}-{slug}-{str(run_id)}'
     params = {
         "pipeline_id": slug,
         "run_id": str(run_id),
         "repo_url": repo_url,
         "repo_branch": repo_branch,
         "server_url": f"{BACKEND_SERVICE_HOST}:{BACKEND_SERVICE_PORT}",
+        "sonarqube_project_key": sonarqube_project,
+        "sonarqube_project_name": sonarqube_project,
+        "sonarqube_server": '',
+        "sonarqube_token": '',
     }
 
     pipeline_run.inputs = params
