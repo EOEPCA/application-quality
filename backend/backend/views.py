@@ -7,6 +7,7 @@ from django.utils import timezone
 from jinja2 import Template
 
 from rest_framework import mixins, permissions, status, viewsets
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
@@ -45,10 +46,10 @@ class PipelineViewSet(viewsets.ModelViewSet):
             return [permissions.IsAuthenticated(), IsOwnerOrAdmin()]
         return super().get_permissions()
 
-
 class PipelineRunViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.PipelineRunSerializer
     lookup_field = "id"
+    authentication_classes = [TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
