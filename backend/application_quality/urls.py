@@ -19,6 +19,7 @@ from django.contrib import admin
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path, include
 from rest_framework.authtoken.views import ObtainAuthToken
+import os
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -26,5 +27,7 @@ urlpatterns = [
     path("login/", LoginView.as_view(), name="login"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("api/token-auth/", ObtainAuthToken.as_view(), name="token-auth"),
-    path("oidc/", include("mozilla_django_oidc.urls")),
 ]
+
+if os.getenv("OIDC_ENABLED") in ["true", "True"]:
+    urlpatterns.append(path("oidc/", include("mozilla_django_oidc.urls")))
