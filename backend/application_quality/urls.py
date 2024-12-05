@@ -26,4 +26,5 @@ urlpatterns = [
     path("login/", LoginView.as_view(), name="login"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("api/token-auth/", ObtainAuthToken.as_view(), name="token-auth"),
+    path("oidc/", include("mozilla_django_oidc.urls")),
 ]
