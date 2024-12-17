@@ -30,6 +30,6 @@ urlpatterns = [
     path("api/token-auth/", ObtainAuthToken.as_view(), name="token-auth"),
 ]
 
-if os.getenv("OIDC_ENABLED") in ["true", "True"]:
+if os.getenv("OIDC_ENABLED").lower() == "true":
     urlpatterns.append(path("oidc/", include("mozilla_django_oidc.urls")))
     urlpatterns.append(path("oidc/user-details/", user_details, name="user_details"))

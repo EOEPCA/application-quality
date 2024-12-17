@@ -14,10 +14,13 @@ def user_details(request):
     logging.info("Retrieving details of user with ID", user_id)
     user = User.objects.get(pk=user_id)
     user_info = {
-        "id": user.id,
-        "username": user.username,
-        "email": user.email,
-        "first_name": user.first_name,
-        "last_name": user.last_name,
+        'id': user.id,
+        'username': user.username,
+        'email': user.email,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'is_active': user.is_active,
+        'is_admin': user.is_staff,
+        'is_superuser': user.is_superuser,
     }
     return JsonResponse(user_info)

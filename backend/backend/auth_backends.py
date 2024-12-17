@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.utils.crypto import get_random_string
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 import logging
 
@@ -13,3 +15,15 @@ class CustomOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         logger.info(f"Creating user with username '{user.username}'")
         user.save()
         return user
+
+
+def logout_next_url(request):
+    url = (
+        f'{settings.OIDC_OP_USER_ENDPOINT.replace("userinfo", "logout")}'
+        "?response_type=code"
+        f"&client_id={settings.OIDC_RP_CLIENT_ID}"
+        f"&post_logout_redirect_uri={settings.OIDC_POST_LOGOUT_REDIRECT_URL}"
+        f"&state={get_random_string(32)}"
+    )
+    logger.info("Logout next URL: %s", url)
+    return url

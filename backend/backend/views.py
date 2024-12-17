@@ -7,15 +7,19 @@ from django.utils import timezone
 from jinja2 import Template
 
 from rest_framework import mixins, permissions, status, viewsets
-from rest_framework.authentication import TokenAuthentication
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 import logging
+import os
 import yaml
 
 logger = logging.getLogger(__name__)
 
+if os.getenv("OIDC_ENABLED").lower() == "true":
+    logger.info("OIDC is ENABLED")
+else:
+    logger.info("OIDC is DISABLED")
 
 class IsOwnerOrAdmin(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
@@ -46,14 +50,20 @@ class PipelineViewSet(viewsets.ModelViewSet):
             return [permissions.IsAuthenticated(), IsOwnerOrAdmin()]
         return super().get_permissions()
 
+
 class PipelineRunViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.PipelineRunSerializer
     lookup_field = "id"
-    authentication_classes = [TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        user = self.request.user
+        logger.info(f"User {user} is requesting pipeline runs (admin={user.is_staff})")
         slug = self.kwargs["pipeline_slug"]
+        if user.is_staff:
+            if slug == "_":
+                return PipelineRun.objects
+            return PipelineRun.objects.filter(pipeline_id=slug)
         if slug == "_":
             return PipelineRun.objects.filter(started_by=self.request.user)
         return PipelineRun.objects.filter(pipeline_id=slug, started_by=self.request.user)
