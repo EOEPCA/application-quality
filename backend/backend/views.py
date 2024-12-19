@@ -94,21 +94,22 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         cwl = yaml.safe_load(yaml_cwl)
 
         logger.info(f"Running workflow with id {pipeline_run.id}")
+        payload = request.data  # dict
         run_workflow_task.delay(
             run_id=pipeline_run.id,
-            repo_url=request.data.get("repo_url"),
-            repo_branch=request.data.get("repo_branch", "main"),
+            repo_url=payload.get("repo_url"),
+            repo_branch=payload.get("repo_branch", "main"),
             slug=slug,
             cwl=cwl,
-            user=request.user
+            username=request.user.username,
         )
 
         pipeline_run.executed_cwl = yaml_cwl
         pipeline_run.inputs = {
             "pipeline_id": slug,
             "run_id": str(pipeline_run.id),
-            "repo_url": request.data.get("repo_url"),
-            "repo_branch": request.data.get("repo_branch"),
+            "repo_url": payload.get("repo_url"),
+            "repo_branch": payload.get("repo_branch"),
         }
         pipeline_run.save()
         logger.debug(f"Run {pipeline_run.id} updated with CWL and inputs")
