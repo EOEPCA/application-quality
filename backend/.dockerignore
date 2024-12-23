@@ -1,7 +1,5 @@
-venv/
-
 # python cache
-__pycache__
+**/__pycache__
 
 # old fixtures
 **/fixtures/2024-11-0*.json
