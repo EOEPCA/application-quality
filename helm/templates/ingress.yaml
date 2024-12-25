@@ -29,11 +29,32 @@ spec:
                 name: {{ include "application-quality.fullname" . }}-web
                 port:
                   number: {{ .Values.web.servicePort }}
-          #- path: /api
-          #  pathType: Prefix
-          #  backend:
-          #    service:
-          #      name: {{ include "application-quality.fullname" . }}-api
-          #      port:
-          #        number: {{ .Values.api.servicePort }}
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "application-quality.fullname" . }}-api
+                port:
+                  number: {{ .Values.api.servicePort }}
+          - path: /oidc
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "application-quality.fullname" . }}-api
+                port:
+                  number: {{ .Values.api.servicePort }}
+          - path: /static
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "application-quality.fullname" . }}-api
+                port:
+                  number: {{ .Values.api.servicePort }}
+          - path: /admin
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "application-quality.fullname" . }}-api
+                port:
+                  number: {{ .Values.api.servicePort }}
 {{- end }}
