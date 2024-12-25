@@ -9,10 +9,11 @@ ingress:
 
 web:
   image:
-    repository: nexus.spaceapplications.com/repository/docker-eoepca/eoepca-appquality-frontend
+    repository: nexus.spaceapplications.com/repository/docker-asb-public/eoepca/eoepca-appquality-frontend
     tag: develop
     pullPolicy: IfNotPresent
-    pullSecrets: spaceapps-nexus-asb-ro
+    #pullSecrets:
+    #  - name: spaceapps-nexus-asb-ro
   serviceType: NodePort
   servicePort: 80
   containerPort: 80
@@ -26,10 +27,11 @@ web:
 
 api:
   image:
-    repository: nexus.spaceapplications.com/repository/docker-eoepca/eoepca-appquality-backend
+    repository: nexus.spaceapplications.com/repository/docker-asb-public/eoepca/eoepca-appquality-backend
     tag: develop
     pullPolicy: IfNotPresent
-    pullSecrets: spaceapps-nexus-asb-ro
+    #pullSecrets:
+    #  - name: spaceapps-nexus-asb-ro
   serviceType: NodePort
   servicePort: 80
   containerPort: 8000
