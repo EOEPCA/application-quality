@@ -36,7 +36,7 @@ spec:
             - containerPort: {{ .Values.web.containerPort }}
           env:
             - name: VITE_API_PORT
-              value: {{ .Values.web.containerPort }}
+              value: {{ .Values.web.containerPort | quote }}
           resources:
             requests:
               memory: "256Mi"
