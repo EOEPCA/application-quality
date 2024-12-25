@@ -19,12 +19,6 @@ web:
   containerPort: 80
   replicaCount: 1
 
-  # service:
-  #   name: frontend
-  #   namespace: application-quality
-  #   containerPort: 80
-  #   nodePort: 30002
-
 api:
   image:
     repository: nexus.spaceapplications.com/repository/docker-asb-public/eoepca/eoepca-appquality-backend
@@ -33,15 +27,9 @@ api:
     #pullSecrets:
     #  - name: spaceapps-nexus-asb-ro
   serviceType: NodePort
-  servicePort: 80
+  servicePort: 8000
   containerPort: 8000
   replicaCount: 1
-  
-  # service:
-  #   name: backend
-  #   namespace: application-quality
-  #   containerPort : 8000
-  #   #nodePort: 30001
 
 persistence:
   enabled: true
@@ -122,8 +110,8 @@ nodeSelector: {}
 oidc:
   enabled: false
   realmBaseUrl: ".../realms/master"
+  # Client ID and Secret set in SealedSecret
   clientId: ""
-  # TODO: Move to kubernetes secret
   clientSecret: ""
   preferredUsernameClaimField: "preferred_username"
   logoutEndpointPath: "end_session"
