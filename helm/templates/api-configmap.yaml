@@ -32,9 +32,8 @@ data:
 
   OIDC_ENABLED: {{ .Values.oidc.enabled | default false | quote }}
   {{- if eq .Values.oidc.enabled true }}
-  # From Sealed Secret
-  #OIDC_RP_CLIENT_ID: {{ .Values.oidc.clientId }}
-  #OIDC_RP_CLIENT_SECRET: {{ .Values.oidc.clientSecret }}
+  # From Sealed Secret: OIDC_RP_CLIENT_ID: {{ .Values.oidc.clientId }}
+  # From Sealed Secret: OIDC_RP_CLIENT_SECRET: {{ .Values.oidc.clientSecret }}
   OIDC_CONNECT_CONFIG_URL: {{ .Values.oidc.realmBaseUrl }}/.well-known/openid-configuration
   LOGIN_URL: {{ .Values.oidc.loginUrl }}
   LOGIN_REDIRECT_URL: {{ .Values.oidc.loginRedirectUrl }}

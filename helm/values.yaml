@@ -75,18 +75,6 @@ entrypoint:
   migrate_db: "true"
   load_data_on_init_db: "true"
 
-#oidc:
-#  enabled: "false"
-#  client_id: appquality
-#  client_secret: notanactualsecret
-#  connect_base_url: http://appquality.eoepca.spaceapplications.com
-#  rp_sign_algo: RS256
-#  verify_ssl: "true"
-#  preferred_username_claim_field: "user_name"
-#  logout_endpoint_path: end_session
-#  logout_redirect_uri_parameter_name: post_logout_redirect_uri
-#  logout_redirect_url: "/"
-
 db:
   image:
     repository: postgres
