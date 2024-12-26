@@ -7,7 +7,7 @@ namespace:
 # Application Quality backend
 api:
   image:
-    tag: 2024-12-05.3
+    tag: 2024-12-26.1
 
 # Application Quality frontend
 web:
@@ -22,12 +22,11 @@ persistence:
   - ReadWriteOnce
   size: 2Gi
 
-db:
-  name: aqbb_db
+#db:
 
 opensearch:
   enabled: false
-  url: "https://opensearch-cluster-master.application-quality-opensearch.svc.cluster.local:9200"
+  url: "http://opensearch-cluster-master.application-quality.svc.cluster.local:9200"
   #indexRuns:
   #indexReports:
   username: appquality-backend-rw
@@ -44,7 +43,7 @@ oidc:
 
 sonarqube:
   enabled: false
-  serverUrl: application-quality-sonarqube-sonarqube.application-quality-sonarqube.svc.cluster.local:9000
+  serverUrl: application-quality-sonarqube-sonarqube.application-quality.svc.cluster.local:9000
   accessToken: ""
 
 # image:

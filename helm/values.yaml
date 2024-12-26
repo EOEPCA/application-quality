@@ -95,7 +95,6 @@ db:
   name: "appquality"
   user: "admin"
   password: "changeme"
-  host: "postgres"
   serviceType: NodePort
   servicePort: 5432
   containerPort: 5432

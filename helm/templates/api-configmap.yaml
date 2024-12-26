@@ -8,7 +8,7 @@ data:
 
   # Database
   DB_NAME: {{ .Values.db.name }}
-  DB_HOST: {{ .Values.db.host }}
+  DB_HOST: {{ include "application-quality.fullname" . }}-db
   DB_PORT: {{ .Values.db.containerPort | quote }}
   # TODO: From secret
   DB_USER: {{ .Values.db.user }}
