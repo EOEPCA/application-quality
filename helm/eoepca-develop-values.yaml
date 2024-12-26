@@ -7,7 +7,7 @@ namespace:
 # Application Quality backend
 api:
   image:
-    tag: 2024-12-26.2
+    tag: 2024-12-26.3
 
 # Application Quality frontend
 web:
