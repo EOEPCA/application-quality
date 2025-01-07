@@ -44,3 +44,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: {{ include "application-quality.fullname" . }}-serviceaccount
+  namespace: {{ .Release.Namespace }}
