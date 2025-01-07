@@ -6,6 +6,10 @@ data:
   BACKEND_SERVICE_HOST: {{ include "application-quality.fullname" . }}-api.{{ .Release.Namespace }}.svc.cluster.local
   BACKEND_SERVICE_PORT: {{ .Values.api.containerPort | quote }}
 
+  BACKEND_SERVICE_ADMIN_USER: {{ .Values.api.adminUser | quote }}
+  BACKEND_SERVICE_ADMIN_PASSWORD: {{ .Values.api.adminPassword | quote }}
+  BACKEND_SERVICE_ADMIN_EMAIL: {{ .Values.api.adminEmail | quote }}
+  
   # Database
   DB_NAME: {{ .Values.db.name }}
   DB_HOST: {{ include "application-quality.fullname" . }}-db

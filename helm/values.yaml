@@ -30,6 +30,9 @@ api:
   servicePort: 8000
   containerPort: 8000
   replicaCount: 1
+  adminUser: ""
+  adminPassword: ""
+  adminEmail: ""
 
 persistence:
   enabled: true

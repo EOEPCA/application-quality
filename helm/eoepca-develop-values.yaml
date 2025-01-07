@@ -53,12 +53,6 @@ sonarqube:
   serverUrl: application-quality-sonarqube-sonarqube.application-quality.svc.cluster.local:9000
   accessToken: ""
 
-# image:
-#   repository: nexus.spaceapplications.com/repository/docker-asb-public/eoepca/application-quality
-#   pullPolicy: Always
-#   # Overrides the image tag whose default is the chart appVersion.
-#   tag: "0.0.1"
-
 ingress:
   enabled: true
   className: nginx
@@ -75,12 +69,3 @@ ingress:
 service:
   type: ClusterIP
   port: 80
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
-
-serviceAccount:
-  create: false
