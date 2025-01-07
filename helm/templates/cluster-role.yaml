@@ -1,0 +1,46 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "application-quality.fullname" . }}:namespace-manager-role
+rules:
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["get", "list", "watch", "create", "delete"]
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["roles", "rolebindings"]
+  verbs: ["get", "list", "watch", "create"]
+- apiGroups: ["*"]
+  resources: ["pods"]
+  verbs: ["get", "create", "patch", "delete", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods/exec"]
+  verbs: ["get"]
+- apiGroups: ["*"]
+  resources: ["pods/log"]
+  verbs: ["get", "create", "patch", "delete", "list", "watch"]
+- apiGroups: [""]
+  resources: ["persistentvolumeclaims"]
+  verbs: ["get", "list", "watch", "create"]
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch", "create"]
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["get", "list", "watch", "create"]
+- apiGroups: ["batch"]
+  resources: ["jobs/status"]
+  verbs: ["get", "list"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "application-quality.fullname" . }}:namespace-manager-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "application-quality.fullname" . }}:namespace-manager-role
+subjects:
+- kind: ServiceAccount
+  name: {{ include "application-quality.fullname" . }}-serviceaccount
