@@ -1,0 +1,80 @@
+global:
+
+
+application-quality:
+  # Values for deploying the Application Quality Building Block in the EOEPCA Develop cluster.
+
+  namespace:
+    application-quality
+
+  # Application Quality backend
+  api:
+    image:
+      tag: 2025-01-07.2
+
+  # Application Quality frontend
+  web:
+    image:
+      tag: 2024-12-25.1
+
+  persistence:
+    enabled: true
+    storageClass: managed-nfs-storage-retain
+    createStorageClass: false
+    accessMode:
+    - ReadWriteOnce
+    size: 2Gi
+
+  calrissian:
+    image: "terradue/calrissian:0.14.0"
+    volumeSize: "2Gi"
+    maxCores: "2"
+    maxRam: "2Gi"
+    storageClassName: managed-nfs-storage-retain
+
+  #db:
+
+  opensearch:
+    enabled: false
+    url: "http://opensearch-cluster-master.application-quality.svc.cluster.local:9200"
+    #indexRuns:
+    #indexReports:
+    username: appquality-backend-rw
+    password: ""
+
+  oidc:
+    enabled: true
+    realmBaseUrl: "https://auth.eoepca-testing.spaceapplications.com/realms/eoepca"
+    clientId: application-quality-develop
+    clientSecret: ""
+    postLogoutRedirectUrl: "https://application-quality.develop.eoepca.org/"
+    loginRedirectUrl: "https://application-quality.develop.eoepca.org/"
+    rpRedirectUri: "https://application-quality.develop.eoepca.org/"
+
+  sonarqube:
+    enabled: false
+    serverUrl: application-quality-sonarqube-sonarqube.application-quality.svc.cluster.local:9000
+    accessToken: ""
+
+  ingress:
+    enabled: true
+    className: nginx
+    domain: application-quality.develop.eoepca.org
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      ingress.kubernetes.io/ssl-redirect: 'true'
+      nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+    tls:
+      - hosts:
+        - application-quality.develop.eoepca.org
+        secretName: application-quality-tls
+
+  service:
+    type: ClusterIP
+    port: 80
+
+
+opensearch:
+
+
+opensearch-dashboards:
