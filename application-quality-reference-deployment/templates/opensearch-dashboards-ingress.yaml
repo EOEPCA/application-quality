@@ -1,4 +1,4 @@
-{{- if .Values.ingress.enabled -}}
+{{- if .Values.opensearch-dashboards.ingress.enabled -}}
 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -7,13 +7,20 @@ metadata:
   labels:
     app.kubernetes.io/component: "opensearch-dashboards"
     {{- include "application-quality-reference-deployment.labels" . | nindent 4 }}
-  {{- with .Values.ingress.annotations }}
+  {{- with .Values.opensearch-dashboards.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
+  {{- with .Values.opensearch-dashboards.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- with .Values.opensearch-dashboards.ingress.tls }}
+  tls:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   rules:
-   - host: {{ .Values.ingress.domain | quote }}
+   - host: {{ .Values.opensearch-dashboards.ingress.domain | quote }}
      http:
        paths:
           - path: /dashboards(/|$)(.*)
