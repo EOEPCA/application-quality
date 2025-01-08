@@ -1,0 +1,26 @@
+{{- if .Values.ingress.enabled -}}
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "application-quality-reference-deployment.fullname" . }}-opensearch-dashboards
+  labels:
+    app.kubernetes.io/component: "opensearch-dashboards"
+    {{- include "application-quality-reference-deployment.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  rules:
+   - host: {{ .Values.ingress.domain | quote }}
+     http:
+       paths:
+          - path: /dashboards(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "application-quality-reference-deployment.fullname" . }}-opensearch-dashboards
+                port:
+                  number: {{ .Values.service.port }}
+{{- end }}

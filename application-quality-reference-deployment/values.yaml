@@ -8,6 +8,11 @@ global:
   defaultInternalIssuerRef:
     kind: ClusterIssuer
     ## INSTRUCTION: Set to name of certificate issuer for the internal cluster domain
+    name: eoepca-ca-clusterissuer
+
+  defaultExternalIssuerRef:
+    kind: ClusterIssuer
+    ## INSTRUCTION: Set to name of certificate issuer for published services
     name: letsencrypt-prod
 
 application-quality:
@@ -400,6 +405,21 @@ opensearch-dashboards:
 
   # Needed for predictable DNS and resource names
   fullnameOverride: "application-quality-opensearch-dashboards"
+
+  ingress:
+    enabled: true
+    className: nginx
+    domain: application-quality.develop.eoepca.org
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      ingress.kubernetes.io/ssl-redirect: 'true'
+      nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+      nginx.ingress.kubernetes.io/use-regex: 'true'
+      nginx.ingress.kubernetes.io/rewrite-target: /$2
+    tls:
+      - hosts:
+        - application-quality.develop.eoepca.org
+        secretName: application-quality-tls
 
   config:
     opensearch_dashboards.yml:
