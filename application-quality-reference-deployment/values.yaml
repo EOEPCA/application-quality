@@ -8,7 +8,7 @@ global:
   defaultInternalIssuerRef:
     kind: ClusterIssuer
     ## INSTRUCTION: Set to name of certificate issuer for the internal cluster domain
-    name: eoepca-ca-clusterissuer
+    name: letsencrypt-prod
 
 application-quality:
   # Values for deploying the Application Quality Building Block in the EOEPCA Develop cluster.
@@ -53,8 +53,8 @@ application-quality:
 
   oidc:
     enabled: true
-    realmBaseUrl: "https://auth.eoepca-testing.spaceapplications.com/realms/eoepca"
-    clientId: application-quality-develop
+    realmBaseUrl: "https://iam-auth.apx.develop.eoepca.org/realms/eoepca"
+    clientId: application-quality-bb
     clientSecret: ""
     postLogoutRedirectUrl: "https://application-quality.develop.eoepca.org/"
     loginRedirectUrl: "https://application-quality.develop.eoepca.org/"
