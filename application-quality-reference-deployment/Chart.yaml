@@ -27,10 +27,10 @@ appVersion: "0.1.0"
 
 dependencies:
 - name: opensearch
-  version: "2.21.0"
+  version: "2.27.0"
   repository: "https://opensearch-project.github.io/helm-charts/"
 - name: opensearch-dashboards
-  version: "2.19.1"
+  version: "2.25.0"
   repository: "https://opensearch-project.github.io/helm-charts/"
 - name: application-quality
   version: "0.1.0"
