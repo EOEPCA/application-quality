@@ -408,18 +408,26 @@ opensearch-dashboards:
 
   ingress:
     enabled: true
-    className: nginx
-    domain: application-quality.develop.eoepca.org
+    ingressClassName: nginx
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-prod
       ingress.kubernetes.io/ssl-redirect: 'true'
       nginx.ingress.kubernetes.io/ssl-redirect: 'true'
       nginx.ingress.kubernetes.io/use-regex: 'true'
       nginx.ingress.kubernetes.io/rewrite-target: /$2
+    labels: {}
+    hosts:
+      - host: application-quality.develop.eoepca.org
+        paths:
+          - path: /dashboards(/|$)(.*)
+            pathType: Prefix
+            backend:
+              serviceName: application-quality-opensearch-dashboards
+              servicePort: 5601
     tls:
-      - hosts:
-        - application-quality.develop.eoepca.org
-        secretName: application-quality-tls
+      - secretName: application-quality-tls
+        hosts:
+          - application-quality.develop.eoepca.org
 
   config:
     opensearch_dashboards.yml:
