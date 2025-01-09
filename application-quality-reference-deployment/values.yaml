@@ -413,13 +413,11 @@ opensearch-dashboards:
       cert-manager.io/cluster-issuer: letsencrypt-prod
       ingress.kubernetes.io/ssl-redirect: 'true'
       nginx.ingress.kubernetes.io/ssl-redirect: 'true'
-      nginx.ingress.kubernetes.io/use-regex: 'true'
-      nginx.ingress.kubernetes.io/rewrite-target: /$2
     labels: {}
     hosts:
       - host: application-quality.develop.eoepca.org
         paths:
-          - path: /dashboards(/|$)(.*)
+          - path: /dashboards
             pathType: Prefix
             backend:
               serviceName: application-quality-opensearch-dashboards
@@ -434,6 +432,9 @@ opensearch-dashboards:
       server:
         name: "Application Quality Dashboards"
         host: 0.0.0.0
+        # Change the entry point/base URL of opensearch-dashboards
+        basePath: /dashboards
+        rewriteBasePath: true
         maxPayloadBytes: 1048576
         ssl:
           # Enables SSL communication between the OpenSearch Dashboards server and the user’s web browser.
