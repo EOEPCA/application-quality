@@ -29,6 +29,6 @@ spec:
               service:
                 name: {{ include "application-quality-reference-deployment.fullname" $ }}-opensearch-dashboards
                 port:
-                  number: {{ $.Values.service.port }}
+                  number: {{ .service.port }}
 {{- end }}
 {{- end }}
