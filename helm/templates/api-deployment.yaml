@@ -44,7 +44,7 @@ spec:
             #- secretRef:
             #    name: {{ include "application-quality.fullname" . }}-db-secret
             - secretRef:
-                name: {{ include "application-quality.fullname" . }}-oidc-secret
+                name: {{ include "application-quality.fullname" . }}-auth-client
             {{- if .Values.opensearch.enabled }}
             - secretRef:
                 name: {{ include "application-quality.fullname" . }}-opensearch
