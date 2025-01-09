@@ -1,33 +1,34 @@
-{{- if .Values.opensearch-dashboards.ingress.enabled -}}
-
+{{- with (index .Values "opensearch-dashboards") -}}
+{{- if .ingress.enabled -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "application-quality-reference-deployment.fullname" . }}-opensearch-dashboards
+  name: {{ include "application-quality-reference-deployment.fullname" $ }}-opensearch-dashboards
   labels:
     app.kubernetes.io/component: "opensearch-dashboards"
-    {{- include "application-quality-reference-deployment.labels" . | nindent 4 }}
-  {{- with .Values.opensearch-dashboards.ingress.annotations }}
+    {{- include "application-quality-reference-deployment.labels" $ | nindent 4 }}
+  {{- with .ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  {{- with .Values.opensearch-dashboards.ingress.className }}
+  {{- with .ingress.className }}
   ingressClassName: {{ . }}
   {{- end }}
-  {{- with .Values.opensearch-dashboards.ingress.tls }}
+  {{- with .ingress.tls }}
   tls:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   rules:
-   - host: {{ .Values.opensearch-dashboards.ingress.domain | quote }}
+   - host: {{ .ingress.domain | quote }}
      http:
        paths:
           - path: /dashboards(/|$)(.*)
             pathType: Prefix
             backend:
               service:
-                name: {{ include "application-quality-reference-deployment.fullname" . }}-opensearch-dashboards
+                name: {{ include "application-quality-reference-deployment.fullname" $ }}-opensearch-dashboards
                 port:
-                  number: {{ .Values.service.port }}
+                  number: {{ $.Values.service.port }}
+{{- end }}
 {{- end }}
