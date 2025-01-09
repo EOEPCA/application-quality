@@ -447,7 +447,7 @@ opensearch-dashboards:
 
         ssl:
           # Establishes communication between OpenSearch and OpenSearch Dashboards. Valid values are full, certificate, or none.
-          verificationMode: full
+          verificationMode: none
           certificateAuthorities: [ "/usr/share/opensearch-dashboards/clientcerts/ca.crt" ]
           certificate: /usr/share/opensearch-dashboards/clientcerts/tls.crt
           key: /usr/share/opensearch-dashboards/clientcerts/tls.key
@@ -463,9 +463,9 @@ opensearch-dashboards:
 
         openid:
           connect_url: https://auth.eoepca-testing.spaceapplications.com/realms/eoepca/.well-known/openid-configuration
-          base_redirect_url: https://application-quality-dashboards.develop.eoepca.org/
-          client_id: application-quality-dashboards
-          client_secret: 0YVtTE6mqANkvZu7hmwM3VuuELZZmSsa
+          base_redirect_url: https://application-quality.develop.eoepca.org/dashboards/
+          client_id: application-quality-develop-dashboards
+          client_secret: 2Oz8olwAgHD5oRuEmtFsYsnrdkeWEAln
           # scope: openid profile email
           scope: openid roles profile user_name email
           header: Authorization
