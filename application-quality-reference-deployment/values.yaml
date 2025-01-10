@@ -24,7 +24,7 @@ application-quality:
   # Application Quality backend
   api:
     image:
-      tag: 2025-01-07.2
+      tag: 2025-01-10.1
 
   # Application Quality frontend
   web:
