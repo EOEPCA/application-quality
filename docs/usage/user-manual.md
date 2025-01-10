@@ -43,7 +43,7 @@ Analysis tools may not be executed indivitually. They must be integrated in anal
 
 ![Analysis Tools Page](img/user-manual/app-analysis-tools.png)
 
-Next to each tool an <img src="img/user-manual/mdi-information-blue.png" style="height:20px; width:20px"/> icon allows displaying the tool properties.
+Next to each tool an <img src="../img/user-manual/mdi-information-blue.png" style="height:20px; width:20px"/> icon allows displaying the tool properties.
 
 ![Details of the "Ruff" Analysis Tool](img/user-manual/app-analysis-tool-details-ruff.png)
 
@@ -54,9 +54,9 @@ A pipeline integrates one or more analysis tools. It may be executed on a given 
 
 Each row provides the name and version a pipeline as well as a series of action icons:
 
-- Use <img src="img/user-manual/mdi-information-blue.png" style="height:20px; width:20px"/> to display the pipeline properties, including the list of integrated tools.
-- Use <img src="img/user-manual/mdi-monitor-eye-blue.png" style="height:20px; width:20px"/> to navigate to the **Monitoring** page and inspect the past and on-going executions of the related pipeline.
-- Use <img src="img/user-manual/mdi-flash-red.png" style="height:20px; width:20px"/> to execute the analysis pipeline.
+- Use <img src="../img/user-manual/mdi-information-blue.png" style="height:20px; width:20px"/> to display the pipeline properties, including the list of integrated tools.
+- Use <img src="../img/user-manual/mdi-monitor-eye-blue.png" style="height:20px; width:20px"/> to navigate to the **Monitoring** page and inspect the past and on-going executions of the related pipeline.
+- Use <img src="../img/user-manual/mdi-flash-red.png" style="height:20px; width:20px"/> to execute the analysis pipeline.
 
 ![Analysis Pipelines Page](img/user-manual/app-analysis-pipelines.png)
 
@@ -67,7 +67,7 @@ Each row provides the name and version a pipeline as well as a series of action 
 
 Note: The Application Quality service currently supports on-demand pipeline executions. In a future release, it will be possible to configure unattended executions triggered by external events.
 
-In order to execute an analysis pipeline, navigate to the **Pipelines** page, identify the pipeline to be executed and click on its <img src="img/user-manual/mdi-flash-red.png" style="height:20px; width:20px"/> icon. A dialog box is displayed.
+In order to execute an analysis pipeline, navigate to the **Pipelines** page, identify the pipeline to be executed and click on its <img src="../img/user-manual/mdi-flash-red.png" style="height:20px; width:20px"/> icon. A dialog box is displayed.
 
 Enter the URL of a Git repository and a Git branch (`main` is used by default).
 
@@ -94,19 +94,19 @@ Upon successful completion of the pipeline execution, the status becomes **Succe
 
 Each row provides the name and version of the pipeline as well as action icons:
 
-- Use <img src="img/user-manual/mdi-information-blue.png" style="height:20px; width:20px"/> to display the pipeline execution properties.
-- Use <img src="img/user-manual/mdi-file-chart-blue.png" style="height:20px; width:20px"/> to navigate to the **Reports** page and inspect the execution report of each tool integrated in the pipeline.
+- Use <img src="../img/user-manual/mdi-information-blue.png" style="height:20px; width:20px"/> to display the pipeline execution properties.
+- Use <img src="../img/user-manual/mdi-file-chart-blue.png" style="height:20px; width:20px"/> to navigate to the **Reports** page and inspect the execution report of each tool integrated in the pipeline.
 
 
 ### Inspection of the execution reports
 
-Select **Monitoring** in the side menu to access the list of past and on-going executions. Select an analysis pipeline in the list above the page to reveal its most recent executions in the table, then identify an execution and click on its associated <img src="img/user-manual/mdi-file-chart-blue.png" style="height:20px; width:20px"/> icon. The **Reports** page is then displayed, showing the list of reports generated during the pipeline execution.
+Select **Monitoring** in the side menu to access the list of past and on-going executions. Select an analysis pipeline in the list above the page to reveal its most recent executions in the table, then identify an execution and click on its associated <img src="../img/user-manual/mdi-file-chart-blue.png" style="height:20px; width:20px"/> icon. The **Reports** page is then displayed, showing the list of reports generated during the pipeline execution.
 
 Alternatively, select **Reports** in the side menu and select on the page the pipeline and the execution start time to reveal the generated reports.
 
 ![Pipeline Execution Reports](img/user-manual/app-analysis-pipeline-execution-reports.png)
 
-Individual reports may be displayed by clicking on their <img src="img/user-manual/mdi-information-blue.png" style="height:20px; width:20px"/> icon.
+Individual reports may be displayed by clicking on their <img src="../img/user-manual/mdi-information-blue.png" style="height:20px; width:20px"/> icon.
 
 ![Execution Report of the "pylint" Analysis Tool](img/user-manual/app-analysis-pipeline-execution-report.png)
 
