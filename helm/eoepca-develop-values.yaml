@@ -16,7 +16,7 @@ web:
 
 persistence:
   enabled: true
-  storageClass: managed-nfs-storage-retain
+  storageClassName: managed-nfs-storage-retain
   createStorageClass: false
   accessMode:
   - ReadWriteOnce
@@ -24,10 +24,10 @@ persistence:
 
 calrissian:
   image: "terradue/calrissian:0.14.0"
+  storageClassName: managed-nfs-storage-retain
   volumeSize: "2Gi"
   maxCores: "2"
   maxRam: "2Gi"
-  storageClassName: managed-nfs-storage-retain
 
 #db:
 

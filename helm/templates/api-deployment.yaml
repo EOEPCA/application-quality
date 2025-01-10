@@ -42,7 +42,7 @@ spec:
             - configMapRef:
                 name: {{ include "application-quality.fullname" . }}-api-env
             #- secretRef:
-            #    name: {{ include "application-quality.fullname" . }}-db-secret
+            #    name: application-quality-db-creds
             - secretRef:
                 name: application-quality-auth-client
             {{- if .Values.opensearch.enabled }}
