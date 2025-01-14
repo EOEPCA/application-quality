@@ -406,6 +406,7 @@ opensearch-dashboards:
       cert-manager.io/cluster-issuer: letsencrypt-prod
       ingress.kubernetes.io/ssl-redirect: 'true'
       nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+      nginx.ingress.kubernetes.io/backend-protocol: 'HTTPS'
     labels: {}
     hosts:
       - host: application-quality.develop.eoepca.org
@@ -455,21 +456,22 @@ opensearch-dashboards:
         # https://opensearch.org/docs/latest/security/authentication-backends/openid-connect/#configuration-settings
         #auth.multiple_auth_enabled: true
         #auth.type: ["basicauth", "openid"]
-        auth.type: openid
+        auth.type: basicauth
+        #auth.type: openid
 
-        openid:
-          connect_url: https://auth.eoepca-testing.spaceapplications.com/realms/eoepca/.well-known/openid-configuration
-          base_redirect_url: https://application-quality.develop.eoepca.org/dashboards/
-          client_id: application-quality-develop-dashboards
-          client_secret: 2Oz8olwAgHD5oRuEmtFsYsnrdkeWEAln
-          # scope: openid profile email
-          scope: openid roles profile user_name email
-          header: Authorization
-          verify_hostnames: false
-          #root_ca: /usr/share/dashboards/root-ca/root.ca.crt
-          #root_ca: /etc/ssl/certs/ca-certificates.crt
-          #root_ca: /usr/share/opensearch-dashboards/certs/ca.crt
-          trust_dynamic_headers: "true"
+        # openid:
+        #   connect_url: https://auth.eoepca-testing.spaceapplications.com/realms/eoepca/.well-known/openid-configuration
+        #   base_redirect_url: https://application-quality.develop.eoepca.org/dashboards/
+        #   client_id: application-quality-develop-dashboards
+        #   client_secret: 2Oz8olwAgHD5oRuEmtFsYsnrdkeWEAln
+        #   # scope: openid profile email
+        #   scope: openid roles profile user_name email
+        #   header: Authorization
+        #   verify_hostnames: false
+        #   #root_ca: /usr/share/dashboards/root-ca/root.ca.crt
+        #   #root_ca: /etc/ssl/certs/ca-certificates.crt
+        #   #root_ca: /usr/share/opensearch-dashboards/certs/ca.crt
+        #   trust_dynamic_headers: "true"
 
       opensearchDashboards:
         # The default application to load.
