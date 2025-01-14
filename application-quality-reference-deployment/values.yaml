@@ -29,7 +29,7 @@ application-quality:
   # Application Quality frontend
   web:
     image:
-      tag: 2024-12-25.1
+      tag: 2025-01-12.3
 
   persistence:
     enabled: true
