@@ -219,10 +219,10 @@ opensearch:
                 server_username: 'dashboards-client'
                 index: '.opensearch-dashboards'
 
-              do_not_fail_on_forbidden: false
+              do_not_fail_on_forbidden: true
 
               http:
-                anonymous_auth_enabled: false
+                anonymous_auth_enabled: true
 
               authc:
                 openid_auth_domain:
