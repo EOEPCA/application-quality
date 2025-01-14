@@ -219,10 +219,10 @@ opensearch:
                 server_username: 'dashboards-client'
                 index: '.opensearch-dashboards'
 
-              do_not_fail_on_forbidden: true
+              do_not_fail_on_forbidden: false
 
               http:
-                anonymous_auth_enabled: true
+                anonymous_auth_enabled: false
 
               authc:
                 openid_auth_domain:
@@ -442,11 +442,11 @@ opensearch-dashboards:
         ssl:
           # Establishes communication between OpenSearch and OpenSearch Dashboards. Valid values are full, certificate, or none.
           # certificate = verify the certificate but not the hostname
-          verificationMode: certificate
+          verificationMode: full
           alwaysPresentCertificate: true
-          certificateAuthorities: [ "/usr/share/opensearch-dashboards/clientcerts/ca.crt" ]
-          certificate: /usr/share/opensearch-dashboards/clientcerts/tls.crt
-          key: /usr/share/opensearch-dashboards/clientcerts/tls.key
+          certificateAuthorities: [ "/usr/share/opensearch-dashboards/admincerts/ca.crt" ]
+          certificate: /usr/share/opensearch-dashboards/admincerts/tls.crt
+          key: /usr/share/opensearch-dashboards/admincerts/tls.key
 
       logging:
         verbose: true
@@ -511,8 +511,11 @@ opensearch-dashboards:
 
   secretMounts:
     - name: certs
-      secretName: "opensearch-dashboards-tls-certificate"
+      secretName: opensearch-dashboards-tls-certificate
       path: /usr/share/opensearch-dashboards/certs
     - name: clientcerts
-      secretName: "opensearch-dashboards-client-certificate"
+      secretName: opensearch-dashboards-client-certificate
       path: /usr/share/opensearch-dashboards/clientcerts
+    - name: admincerts
+      secretName: opensearch-admin-certificate
+      path: /usr/share/opensearch-dashboards/admincerts
