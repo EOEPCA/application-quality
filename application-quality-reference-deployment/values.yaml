@@ -278,13 +278,6 @@ opensearch:
             - "admin"
             description: "Temporary admin user (Delete me)"
 
-          dashboards-client:
-            hash: "$2y$12$Fz7OW72EtL1KPMdPgtL.YuASfcjHCMm9NSGUaa6yxo9mtdVQcQNcS"
-            reserved: true
-            backend_roles:
-            - "admin"
-            description: "Temporary dashboard client user (Delete me)"
-
           appquality-backend-ro:
             hash: "$2y$12$EzrBjng/196TSFJl15LwMOpvY2mDDs.pqPBcM3nQmB02YFQ.yU4GC"
             description: "User for accessing Application Quality data in read-only mode"
@@ -439,6 +432,7 @@ opensearch-dashboards:
         ssl:
           # Enables SSL communication between the OpenSearch Dashboards server and the user’s web browser.
           enabled: true
+          certificateAuthorities: [ "/usr/share/opensearch-dashboards/certs/ca.crt" ]
           certificate: /usr/share/opensearch-dashboards/certs/tls.crt
           key: /usr/share/opensearch-dashboards/certs/tls.key
 
@@ -447,7 +441,9 @@ opensearch-dashboards:
 
         ssl:
           # Establishes communication between OpenSearch and OpenSearch Dashboards. Valid values are full, certificate, or none.
-          verificationMode: none
+          # certificate = verify the certificate but not the hostname
+          verificationMode: certificate
+          alwaysPresentCertificate: true
           certificateAuthorities: [ "/usr/share/opensearch-dashboards/clientcerts/ca.crt" ]
           certificate: /usr/share/opensearch-dashboards/clientcerts/tls.crt
           key: /usr/share/opensearch-dashboards/clientcerts/tls.key
