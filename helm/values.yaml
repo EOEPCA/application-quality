@@ -2,30 +2,121 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-namespace:
-  application-quality
-
-image:
-  repository: nexus.spaceapplications.com/repository/docker-asb-public/eoepca/application-quality
-  pullPolicy: Always
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.0.1"
-
-persistence:
-  enabled: true
-  storageClassName: managed-nfs-storage
-  accessMode:
-  - ReadWriteOnce
-  size: 1Gi
-
 ingress:
   enabled: false
   className: nginx
   domain: application-quality.eoepca-testing.spaceapplications.com
 
-service:
-  type: ClusterIP
-  port: 80
+web:
+  image:
+    repository: nexus.spaceapplications.com/repository/docker-asb-public/eoepca/eoepca-appquality-frontend
+    tag: develop
+    pullPolicy: IfNotPresent
+    #pullSecrets:
+    #  - name: spaceapps-nexus-asb-ro
+  serviceType: NodePort
+  servicePort: 80
+  containerPort: 80
+  replicaCount: 1
+
+api:
+  image:
+    repository: nexus.spaceapplications.com/repository/docker-asb-public/eoepca/eoepca-appquality-backend
+    tag: develop
+    pullPolicy: IfNotPresent
+    #pullSecrets:
+    #  - name: spaceapps-nexus-asb-ro
+  serviceType: NodePort
+  servicePort: 8000
+  containerPort: 8000
+  replicaCount: 1
+  adminUser: ""
+  adminPassword: ""
+  adminEmail: ""
+
+persistence:
+  enabled: true
+  createStorageClass: false
+  storageClassName: managed-nfs-storage
+  accessMode:
+  - ReadWriteOnce
+  size: 1Gi
+
+calrissian:
+  image: "terradue/calrissian:0.14.0"
+  volumeSize: "5Gi"
+  maxCores: "2"
+  maxRam: "2Gi"
+  storageClassName: nfs-client
+
+opensearch:
+  # Enable or disable saving runs and reports in Opensearch (default: false)
+  enabled: false
+  # Internal URL of the Opensearch servier (e.g. https://opensearch-cluster-master.application-quality-opensearch.svc.cluster.local:9200)
+  #url:
+  # Name of the Opensearch index where the pipeline runs must be stored (default: application-quality-pipeline-runs)
+  #indexRuns: 
+  # Name of the Opensearch index where the pipeline run reports must be stored (default: application-quality-pipeline-run-reports)
+  #indexReports:
+  # Username and password of an Opensearch user who has access to the two indices above
+  #username:
+  #password:
+
+web_server:
+  access_scheme: http
+  force_ssl_redirect: true
+  deploy_mode: prod
+  instance_name: EOEPCA-plus-Testing
+  theme: eoepca-develop
+  log_level: DEBUG
+  version: v0.0.1
+  additional_allowed_host: "localhost, 127.0.0.1, proxy,"
+  django_configuration: prod
+
+entrypoint:
+  collectstatic: "true"
+  migrate_db: "true"
+  load_data_on_init_db: "true"
+
+db:
+  image:
+    repository: postgres
+    tag: 13
+    pullPolicy: IfNotPresent
+  name: "appquality"
+  user: "admin"
+  password: "changeme"
+  serviceType: NodePort
+  servicePort: 5432
+  containerPort: 5432
+  storage:
+    size: 2Gi
+
+external_tools:
+  registry_url: "http://nexus.spaceapplications.com"
+
+nodeSelector: {}
+
+oidc:
+  enabled: false
+  realmBaseUrl: ".../realms/master"
+  # Client ID and Secret set in SealedSecret
+  clientId: ""
+  clientSecret: ""
+  preferredUsernameClaimField: "preferred_username"
+  logoutEndpointPath: "end_session"
+  logoutRedirectUrlParameterName: "post_logout_redirect_url"
+  postLogoutRedirectUrl: ""
+  loginUrl: "/oidc/authenticate"
+  loginRedirectUrl: ""
+  logoutRedirectUrl: "/"
+  rpRedirectUri: ""
+  rpSignAlgo: "RS256"
+
+sonarqube:
+  enabled: false
+  serverUrl: ""
+  accessToken: ""
 
 nodeSelector: {}
 
