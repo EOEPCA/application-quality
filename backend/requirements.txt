@@ -1,0 +1,14 @@
+celery[Redis]
+cwltool
+Django
+djangorestframework
+django-cors-headers==4.6.0
+# To serve admin static files in production
+whitenoise==6.8.2
+# gunicorn
+Jinja2
+kubernetes==28.1.0
+loguru
+mozilla-django-oidc
+opensearch-py
+psycopg2

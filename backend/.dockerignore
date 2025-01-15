@@ -1,0 +1,6 @@
+# python cache
+**/__pycache__
+
+# old fixtures
+**/fixtures/2024-11-0*.json
+**/fixtures/2024-11-1*.json
