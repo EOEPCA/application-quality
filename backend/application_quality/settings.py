@@ -9,9 +9,9 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
+import os
 
 from pathlib import Path
-import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,8 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-2)ffxll8_-u0fa4=cme!-ehj_n#5=mpk_2%t&!*ecwne7e0fur"
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("BACKEND_SERVICE_DEBUG_ENABLED", False)
 
 LOGGING = {
     "version": 1,
@@ -69,19 +68,29 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework.authtoken",
+    "corsheaders",
     "backend",
     "mozilla_django_oidc",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+STORAGES = {
+    # Keep static files in a cache
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 ROOT_URLCONF = "application_quality.urls"
 
@@ -153,6 +162,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
+STATIC_ROOT= os.path.join(BASE_DIR, "static/")
 STATIC_URL = "static/"
 
 # Default primary key field type
@@ -168,6 +178,9 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.TokenAuthentication",
     ],
+    #'DEFAULT_PERMISSION_CLASSES': [
+    #    'rest_framework.permissions.AllowAny',
+    #]
 }
 
 # Celery configuration
@@ -176,8 +189,7 @@ CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
 CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
 CELERY_WORKER_REDIRECT_STDOUTS = False
 
-# OpenIDConnect configuration
-
+# OpenID Connect configuration
 OIDC_ENABLED = os.getenv("OIDC_ENABLED")
 if OIDC_ENABLED.lower() == "true":
     OIDC_CONNECT_CONFIG_URL = os.getenv("OIDC_CONNECT_CONFIG_URL")
@@ -185,6 +197,7 @@ if OIDC_ENABLED.lower() == "true":
     OIDC_RP_CLIENT_SECRET = os.getenv("OIDC_RP_CLIENT_SECRET")
     OIDC_LOGOUT_ENDPOINT_PATH = os.getenv("OIDC_LOGOUT_ENDPOINT_PATH")
     OIDC_LOGOUT_REDIRECT_URI_PARAMETER_NAME = os.getenv("OIDC_LOGOUT_REDIRECT_URI_PARAMETER_NAME")
+    OIDC_OP_LOGOUT_URL_METHOD = "backend.auth_backends.logout_next_url"
     OIDC_POST_LOGOUT_REDIRECT_URL = os.getenv("OIDC_POST_LOGOUT_REDIRECT_URL")
     OIDC_OP_AUTHORIZATION_ENDPOINT = os.getenv("OIDC_OP_AUTHORIZATION_ENDPOINT")
     OIDC_OP_TOKEN_ENDPOINT = os.getenv("OIDC_OP_TOKEN_ENDPOINT")
@@ -197,8 +210,23 @@ if OIDC_ENABLED.lower() == "true":
     OIDC_PREFERRED_USERNAME_CLAIM_FIELD = os.getenv("OIDC_PREFERRED_USERNAME_CLAIM_FIELD")
     OIDC_RP_SIGN_ALGO = os.getenv("OIDC_RP_SIGN_ALGO")
     OIDC_OP_JWKS_ENDPOINT = os.getenv("OIDC_OP_JWKS_ENDPOINT")
+    ALLOW_LOGOUT_GET_METHOD = True
 
     AUTHENTICATION_BACKENDS = [
         "django.contrib.auth.backends.ModelBackend",
         "backend.auth_backends.CustomOIDCAuthenticationBackend",
     ]
+    # Thanks to this the redirect URI provided to Keycloak uses the expected scheme
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https") if LOGIN_REDIRECT_URL.startswith("https") else None
+
+
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOWED_ORIGINS = [
+    os.getenv("LOGIN_REDIRECT_URL").strip("/"), # Frontend URL
+]
+
+CORS_ALLOW_HEADERS = "*"
+
+#CSRF_COOKIE_SECURE = False
+#CSRF_USE_SESSIONS = True
+CSRF_TRUSTED_ORIGINS = [os.getenv("LOGIN_REDIRECT_URL").strip("/")]  # (Api Base Url)

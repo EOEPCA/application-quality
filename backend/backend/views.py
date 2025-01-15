@@ -1,3 +1,7 @@
+import logging
+import os
+import yaml
+
 from . import serializers
 from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow
 from backend.tasks import run_workflow_task
@@ -10,9 +14,6 @@ from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-import logging
-import os
-import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +70,8 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         return PipelineRun.objects.filter(pipeline_id=slug, started_by=self.request.user)
 
     def create(self, request, *args, **kwargs):
+        user = self.request.user
+        logger.info(f"User {user} is creating a pipeline run (admin={user.is_staff})")
         slug = self.kwargs["pipeline_slug"]
         logger.info(f"Creating a new run for pipeline '{slug}'")
 
