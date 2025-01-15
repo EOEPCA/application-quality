@@ -14,7 +14,8 @@ nav:
       - design/architecture.md
       - design/requirements.md
       - design/use-cases.md
-    #- Usage:
+    - Usage:
+      - usage/user-manual.md
     #  - usage/tutorials.md
     #  - usage/howtos.md
     #- Administration:

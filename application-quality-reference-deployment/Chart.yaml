@@ -1,6 +1,6 @@
 apiVersion: v2
-name: application-quality
-description: A Helm chart for Kubernetes
+name: application-quality-reference-deployment
+description: A reference deployment of the Application Quality BB (including OpenSearch and SonarQube)
 
 icon: https://upload.wikimedia.org/wikipedia/commons/3/3b/PlaceholderRoss.png
 
@@ -22,4 +22,16 @@ version: 0.1.0
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
+# It is recommended to use it with quotes.
 appVersion: "0.1.0"
+
+dependencies:
+- name: opensearch
+  version: "2.27.0"
+  repository: "https://opensearch-project.github.io/helm-charts/"
+- name: opensearch-dashboards
+  version: "2.25.0"
+  repository: "https://opensearch-project.github.io/helm-charts/"
+- name: application-quality
+  version: "0.1.0"
+  repository: "file://../helm"

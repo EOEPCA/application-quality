@@ -3,6 +3,13 @@ venv/
 # python cache
 __pycache__
 
-# old fixtures
+# Backend files and folders
+
+# Old fixtures
 **/fixtures/2024-11-0*.json
 **/fixtures/2024-11-1*.json
+
+# Frontend files and folders
+build
+dist
+node_modules

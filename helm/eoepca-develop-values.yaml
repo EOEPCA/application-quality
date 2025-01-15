@@ -1,45 +1,71 @@
-# Default values for Application Quality Building Block.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+# Values for deploying the Application Quality Building Block in the EOEPCA Develop cluster.
+# This is a YAML-formatted file. Declare variables to be passed into your templates.
 
 namespace:
   application-quality
 
-image:
-  repository: nexus.spaceapplications.com/repository/docker-asb-public/eoepca/application-quality
-  pullPolicy: Always
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.0.1"
+# Application Quality backend
+api:
+  image:
+    tag: 2025-01-10.1
+
+# Application Quality frontend
+web:
+  image:
+    tag: 2024-12-25.1
 
 persistence:
   enabled: true
-  storageClassName: managed-nfs-storage
+  storageClassName: managed-nfs-storage-retain
+  createStorageClass: false
   accessMode:
   - ReadWriteOnce
-  size: 1Gi
+  size: 2Gi
+
+calrissian:
+  image: "terradue/calrissian:0.14.0"
+  storageClassName: managed-nfs-storage-retain
+  volumeSize: "2Gi"
+  maxCores: "2"
+  maxRam: "2Gi"
+
+#db:
+
+opensearch:
+  enabled: false
+  url: "http://opensearch-cluster-master.application-quality.svc.cluster.local:9200"
+  #indexRuns:
+  #indexReports:
+  username: appquality-backend-rw
+  password: ""
+
+oidc:
+  enabled: true
+  realmBaseUrl: "https://auth.eoepca-testing.spaceapplications.com/realms/eoepca"
+  clientId: application-quality-develop
+  clientSecret: ""
+  postLogoutRedirectUrl: "https://application-quality.develop.eoepca.org/"
+  loginRedirectUrl: "https://application-quality.develop.eoepca.org/"
+  rpRedirectUri: "https://application-quality.develop.eoepca.org/"
+
+sonarqube:
+  enabled: false
+  serverUrl: application-quality-sonarqube-sonarqube.application-quality.svc.cluster.local:9000
+  accessToken: ""
 
 ingress:
   enabled: true
   className: nginx
   domain: application-quality.develop.eoepca.org
-  annotations:                                       
+  annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     ingress.kubernetes.io/ssl-redirect: 'true'
     nginx.ingress.kubernetes.io/ssl-redirect: 'true'
   tls:
-    - hosts:                                                                          
+    - hosts:
         - application-quality.develop.eoepca.org
       secretName: application-quality-tls
 
 service:
   type: ClusterIP
   port: 80
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
-
-serviceAccount:
-  create: false
