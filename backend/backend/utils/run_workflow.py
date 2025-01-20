@@ -23,6 +23,9 @@ BACKEND_SERVICE_PORT = os.getenv("BACKEND_SERVICE_PORT", "80")
 SONARQUBE_SERVER = os.getenv("SONARQUBE_SERVER","application-quality-sonarqube-sonarqube.application-quality-sonarqube.svc.cluster.local:9000")
 SONARQUBE_TOKEN = os.getenv("SONARQUBE_TOKEN")
 
+# HARBOR_LOGIN
+# HARBOR_ADDRESS
+
 
 logger = logging.getLogger(__name__)
 
@@ -97,8 +100,8 @@ def run_workflow(
         "server_url": f"{BACKEND_SERVICE_HOST}:{BACKEND_SERVICE_PORT}",
         "sonarqube_project_key": sonarqube_project,
         "sonarqube_project_name": sonarqube_project,
-        "sonarqube_server": SONARQUBE_SERVER,
-        "sonarqube_token": SONARQUBE_TOKEN,
+        # "sonarqube_server": SONARQUBE_SERVER,
+        # "sonarqube_token": SONARQUBE_TOKEN,
     }
 
     # if "sonarqube" in "pipeline.tools":
@@ -126,6 +129,7 @@ def run_workflow(
         cwl=cwl,
         params=params,
         runtime_context=session,
+        pod_env_vars={"SONARQUBE_SERVER":SONARQUBE_SERVER, "SONARQUBE_TOKEN":SONARQUBE_TOKEN},
         max_cores=AQBB_MAXCORES,
         max_ram=AQBB_MAXRAM,
         service_account=AQBB_SERVICEACCOUNT,
