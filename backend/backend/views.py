@@ -101,7 +101,8 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         run_workflow_task.delay(
             run_id=pipeline_run.id,
             repo_url=payload.get("repo_url"),
-            repo_branch=payload.get("repo_branch", "main"),
+            repo_branch=payload.get("repo_branch"),
+            parameters=payload.get("parameters"),
             slug=slug,
             cwl=cwl,
             username=request.user.username,

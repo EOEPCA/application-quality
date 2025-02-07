@@ -7,7 +7,13 @@ class PipelineSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Pipeline
-        fields = "__all__"
+        fields = [
+            "slug",
+            "description",
+            "tools",
+            "owner",
+            "version",
+        ]
 
 
 class PipelineRunSerializer(serializers.ModelSerializer):
@@ -45,4 +51,11 @@ class JobReportSerializer(serializers.ModelSerializer):
 class SubworkflowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subworkflow
-        fields = "__all__"
+        fields = [
+            "slug",
+            "name",
+            "description",
+            "tags",
+            "tools",
+            "version",
+        ]

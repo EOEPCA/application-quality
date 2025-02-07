@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 def run_workflow(
     repo_url: str,
     repo_branch: str,
+    parameters: dict,
     slug: str,
     run_id: str,
     cwl: dict,
@@ -100,20 +101,13 @@ def run_workflow(
         "server_url": f"{BACKEND_SERVICE_HOST}:{BACKEND_SERVICE_PORT}",
         "sonarqube_project_key": sonarqube_project,
         "sonarqube_project_name": sonarqube_project,
-        # "sonarqube_server": SONARQUBE_SERVER,
-        # "sonarqube_token": SONARQUBE_TOKEN,
+        "sonarqube_server": SONARQUBE_SERVER,
+        "sonarqube_token": SONARQUBE_TOKEN,
+    } | {
+        f"{section}_{key}": value
+        for section, opts in parameters.items()
+        for key, value in opts.items()
     }
-
-    # if "sonarqube" in "pipeline.tools":
-    #     sonarqube_project = f"{username}-{slug}-{str(run_id)}"
-    #     params.update(
-    #         {
-    #             "sonarqube_project_key": sonarqube_project,
-    #             "sonarqube_project_name": sonarqube_project,
-    #             "sonarqube_server": SONARQUBE_SERVER,
-    #             "sonarqube_token": SONARQUBE_TOKEN,
-    #         }
-    #     )
 
     pipeline_run.inputs = params
     pipeline_run.save(update_fields=['inputs'])  # Overwrite previous value because of server_url

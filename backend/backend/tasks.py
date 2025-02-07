@@ -7,6 +7,7 @@ def run_workflow_task(
     run_id: int,
     repo_url: str,
     repo_branch: str,
+    parameters: dict,
     slug: str,
     cwl: str,
     username: str,
@@ -14,6 +15,7 @@ def run_workflow_task(
     run_workflow(
         repo_url=repo_url,
         repo_branch=repo_branch,
+        parameters=parameters,
         slug=slug,
         run_id=run_id,
         cwl=cwl,
