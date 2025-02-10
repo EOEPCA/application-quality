@@ -57,7 +57,7 @@ class Subworkflow(models.Model):
     description     = models.TextField(null=True)
     pipeline_step   = models.TextField()
     definition      = models.TextField()
-    user_params     = models.JSONField(blank=True, null=True)
+    user_params     = models.JSONField(default=dict)
     tags            = models.ManyToManyField(Tag, related_name="subworkflows", blank=True)
     tools           = models.ManyToManyField("CommandLineTool", related_name="subworkflows")
     version         = models.CharField(max_length=50)

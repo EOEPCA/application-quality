@@ -168,7 +168,7 @@ def run_workflow(
     # tool_logs = execution.get_tool_logs()  # Can be useful to avoid using save_tool
 
     """
-    Delete the Kubernetes namespace (and everything that's associated to it)
+    Delete the Kubernetes namespace
     """
     if execution.is_succeeded():
         session.dispose()
