@@ -222,11 +222,11 @@ if OIDC_ENABLED.lower() == "true":
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOWED_ORIGINS = [
-    os.getenv("LOGIN_REDIRECT_URL").strip("/"), # Frontend URL
+    os.getenv("PUBLIC_URL"), # Frontend URL
 ]
 
 CORS_ALLOW_HEADERS = "*"
 
 #CSRF_COOKIE_SECURE = False
 #CSRF_USE_SESSIONS = True
-CSRF_TRUSTED_ORIGINS = [os.getenv("LOGIN_REDIRECT_URL").strip("/")]  # (Api Base Url)
+CSRF_TRUSTED_ORIGINS = [os.getenv("PUBLIC_URL")]  # (Api Base Url)
