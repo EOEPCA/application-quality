@@ -8,9 +8,9 @@ done
 
 echo "Postgres is ready!"
 
-if [[ "$BACKEND_SERVICE_ADMIN_USER" != "" ]] && \
-   [[ "$BACKEND_SERVICE_ADMIN_PASSWORD" != "" ]] && \
-   [[ "$BACKEND_SERVICE_ADMIN_EMAIL" != "" ]]
+if [ "$BACKEND_SERVICE_ADMIN_USER" != "" ] && \
+   [ "$BACKEND_SERVICE_ADMIN_PASSWORD" != "" ] && \
+   [ "$BACKEND_SERVICE_ADMIN_EMAIL" != "" ]
 then
     echo "Creating admin user ..."
     cat <<EOF | /app/manage.py shell

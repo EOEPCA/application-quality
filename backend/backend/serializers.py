@@ -55,6 +55,7 @@ class SubworkflowSerializer(serializers.ModelSerializer):
             "slug",
             "name",
             "description",
+            "user_params",
             "tags",
             "tools",
             "version",

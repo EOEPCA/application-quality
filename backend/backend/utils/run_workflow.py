@@ -104,9 +104,10 @@ def run_workflow(
         "sonarqube_server": SONARQUBE_SERVER,
         "sonarqube_token": SONARQUBE_TOKEN,
     } | {
-        f"{section}_{key}": value
-        for section, opts in parameters.items()
-        for key, value in opts.items()
+        f"{subworkflow}_{tool}_{input}": value
+        for subworkflow, tools in parameters.items()
+        for tool, inputs in tools.items()
+        for input, value in inputs.items()
     }
 
     pipeline_run.inputs = params
@@ -123,7 +124,10 @@ def run_workflow(
         cwl=cwl,
         params=params,
         runtime_context=session,
-        pod_env_vars={"SONARQUBE_SERVER":SONARQUBE_SERVER, "SONARQUBE_TOKEN":SONARQUBE_TOKEN},
+        pod_env_vars={
+            "SONARQUBE_SERVER": SONARQUBE_SERVER,
+            "SONARQUBE_TOKEN": SONARQUBE_TOKEN,
+        },
         max_cores=AQBB_MAXCORES,
         max_ram=AQBB_MAXRAM,
         service_account=AQBB_SERVICEACCOUNT,
