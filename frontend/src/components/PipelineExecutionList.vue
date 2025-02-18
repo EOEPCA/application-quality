@@ -178,6 +178,7 @@
 </template>
   
 <script>
+import { useAuthStore } from '@/stores/auth';
 import { usePipelineStore } from '@/stores/pipelines'
 import { formatDate } from '@/assets/tools'
 // import JsonToHtmlTable from '@/components/JsonToHtmlTable.vue'
@@ -241,13 +242,14 @@ export default {
       lastPollTime: null,
       errorCount: 0,
       maxErrors: 3, // Stop polling after 3 consecutive errors
-      }
-    },
+    }
+  },
   
-    setup() {
-      const store = usePipelineStore()
-      return { store }
-    },
+  setup() {
+    const store = usePipelineStore()
+    const authStore = useAuthStore()
+    return { store, authStore }
+  },
 
   computed: {
 
@@ -295,8 +297,13 @@ export default {
       prunePipelineExecutionDetails(execution) {
         const keysToKeep = [
           'pipeline', 'start_time', 'completion_time', 'job_reports_count', 'status',
-          'user', 'started_by', 'usage_report'
+          'user', 'started_by', 'usage_report',
+          //  TODO include user parameters only: 'inputs'
         ];
+        if (this.authStore.isAdmin) {
+          // Display more information to admin users
+          keysToKeep.push('inputs')
+        }
         return Object.fromEntries(
           Object.entries(execution).filter(([key]) => keysToKeep.includes(key))
         );
@@ -357,8 +364,9 @@ export default {
         this.stopPolling()
         this.startPolling()
       }
-    }}
+    }
   }
+}
 </script>
   
 <style scoped>

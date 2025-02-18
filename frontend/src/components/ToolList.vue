@@ -123,7 +123,7 @@
     />
   
     <!-- Tools Details Dialog -->
-    <v-dialog v-model="showDetails" max-width="800px">
+    <v-dialog v-model="showDetails" max-width="1200px">
       <v-card v-if="selectedTool">
         <!-- v-card-title>
           {{ selectedTool.name || selectedTool.id }}
@@ -239,7 +239,7 @@ export default {
     },
 
     pruneToolDetails(tool) {
-      const keysToKeep = ['name', 'description', 'version', 'tags', 'tools'];
+      const keysToKeep = ['name', 'description', 'version', 'tags', 'tools', 'user_params'];
       return Object.fromEntries(
         Object.entries(tool).filter(([key]) => keysToKeep.includes(key))
       );

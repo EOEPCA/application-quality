@@ -91,12 +91,20 @@
                 :__title="'Executions'"
                 @click="viewPipelineExecutions(item)"
               />
-              <v-btn
+              <!-- <v-btn
                 icon="mdi-flash"
                 color="error"
                 variant="text"
                 v-tooltip:bottom-end="'Execute ' + (item.description)"
                 @click="openExecutionDialog(item)"
+                :__title="'Execute ' + (item.description)"
+              /> -->
+              <v-btn
+                icon="mdi-flash"
+                color="error"
+                variant="text"
+                v-tooltip:bottom-end="'Execute ' + (item.description)"
+                @click="showExecutionPanel(item)"
                 :__title="'Execute ' + (item.description)"
               />
               <v-btn
@@ -166,14 +174,25 @@
         :pipeline="this.selectedPipeline"
         @execution-submitted="handleExecutionSubmitted"
       />
+
+      <!-- Pipeline execution drawer component -->
+      <pipeline-execution-panel
+        v-model="executionParameters"
+        :visible="this.executionPanelVisible"
+        :pipeline="this.selectedPipeline"
+        @execution-submitted="handleExecutionSubmitted"
+        @execution-cancelled="hideExecutionPanel"
+      />
     </v-card>
 
   </template>
   
 <script>
+import { useToolStore } from '@/stores/tools'
 import { usePipelineStore } from '@/stores/pipelines'
 import JsonToHtmlTable from '@/components/JsonToHtmlTable.vue'
 import PipelineExecutionDialog from './PipelineExecutionDialog.vue'
+import PipelineExecutionPanel from './PipelineExecutionPanel.vue'
 import { formatDate } from '@/assets/tools'
 
 export default {
@@ -181,7 +200,8 @@ export default {
 
     components: {
       JsonToHtmlTable,
-      PipelineExecutionDialog
+      PipelineExecutionDialog,
+      PipelineExecutionPanel
     },
 
     data() {
@@ -190,6 +210,8 @@ export default {
         showDetails: false,
         selectedPipeline: null,
         showExecutionDialog: false,
+        executionPanelVisible: false,
+        executionParameters: {},
         selectedPipelineForExecution: null,
         itemsPerPage: 10,
         sortBy: [{ key: 'name', order:'asc'}],
@@ -218,15 +240,21 @@ export default {
           align: 'center'
         }
       ]
-      }
-    },
+    }
+  },
   
-    setup() {
-      const store = usePipelineStore()
-      return { store }
-    },
+  setup() {
+    const store = usePipelineStore()
+    const toolStore = useToolStore()
+    return { store, toolStore }
+  },
   
-    computed: {
+  mounted() {
+    this.refreshTools()
+    this.refreshPipelines()
+  },
+  
+  computed: {
     filteredPipelines() {
       if (!this.search) return this.store.pipelines
 
@@ -234,24 +262,24 @@ export default {
       return this.store.pipelines.filter(pipeline => {
         return (
           (pipeline.description && pipeline.description.toLowerCase().includes(searchTerm)) ||
-          pipeline.slug.toLowerCase().includes(searchTerm)
+           pipeline.slug.toLowerCase().includes(searchTerm)
         )
       })
     }
   },
-
-    mounted() {
-      this.refreshPipelines()
+  
+  methods: {
+    async refreshPipelines() {
+      await this.store.fetchPipelines()
     },
   
-    methods: {
-      async refreshPipelines() {
-        await this.store.fetchPipelines()
-      },
-  
+    async refreshTools() {
+      await this.toolStore.fetchTools()
+    },
+
     formatDate(date) {
-        return formatDate(date)
-      },
+      return formatDate(date)
+    },
 
     prunePipelineDetails(pipeline) {
       const keysToKeep = ['slug', 'description', 'version', 'tools'];
@@ -260,56 +288,101 @@ export default {
       );
     },
 
-      viewPipelineDetails(pipeline) {
-        this.selectedPipeline = pipeline
-        this.showDetails = true
-      },
+    viewPipelineDetails(pipeline) {
+      this.selectedPipeline = pipeline
+      this.showDetails = true
+    },
 
-      viewPipelineExecutions(pipeline) {
-        // Store the selected pipeline in the store so it accessible by the executions page
-        // Navigate to the executions page
-        this.store.selectedPipelineId = pipeline.slug
-        this.$router.push('/executions')
-      },
+    viewPipelineExecutions(pipeline) {
+      // Store the selected pipeline in the store so it accessible by the executions page
+      // Navigate to the executions page
+      this.store.selectedPipelineId = pipeline.slug
+      this.$router.push('/executions')
+    },
 
-      editPipeline(pipeline) {
-        this.selectedPipeline = pipeline
-        this.showDetails = true
-      },
+    editPipeline(pipeline) {
+      this.selectedPipeline = pipeline
+      this.showDetails = true
+    },
 
-      openExecutionDialog(pipeline) {
-        console.log('Selected pipeline:', pipeline)
-        this.selectedPipeline = pipeline
-        this.showExecutionDialog = true
-      },
+    getPipelineUserParams(pipeline) {
+      const pipeline_params = {}
 
-      deletePipeline(pipeline) {
-        this.selectedPipeline = pipeline
-        this.showDetails = true
-      },
-
-      handleExecutionSubmitted(execution) {
-        // Handle the new execution
-        console.log('New execution created:', execution)
-        // Navigate to the Monitoring page
-        this.viewPipelineExecutions(execution.pipeline)
-        // TODO: Show a success message
-        this.$emit('execution-created', execution)
+      for (var tool_id of pipeline["tools"]) {
+        if (!this.toolStore.hasToolUserParams(tool_id)) {
+          continue
+        }
+        const tool_params = this.toolStore.getToolUserParams(tool_id)
+        // console.log("Tool params", tool_params)
+        pipeline_params[tool_id] = {}
+        for (const [step_id, step_params] of Object.entries(tool_params)) {
+          // console.log("Step:", step_id, step_params)
+          pipeline_params[tool_id][step_id] = {}
+          for (const [param_id, param_data] of Object.entries(step_params)) {
+            // console.log("Step param:", param_id, param_data)
+            pipeline_params[tool_id][step_id][param_id] = param_data.default
+          }
+        }
       }
+      console.log("Pipeline params", pipeline_params)
+      return pipeline_params
+    },
+
+    openExecutionDialog(pipeline) {
+      console.log('Selected pipeline:', pipeline)
+      this.selectedPipeline = pipeline
+      this.showExecutionDialog = true
+    },
+
+    showExecutionPanel(pipeline) {
+      console.log('Selected pipeline:', pipeline)
+      this.refreshTools()
+      pipeline["user_params"] = {}
+      for (var tool_id of pipeline["tools"]) {
+        const tool = this.toolStore.getToolById(tool_id)
+        pipeline["user_params"][tool_id] = tool ? tool["user_params"] : null
+      }
+
+      this.executionParameters = {
+        repo_url: "https://github.com/pypa/sampleproject",
+        repo_branch: "main",
+        parameters: this.getPipelineUserParams(pipeline),
+      }
+      this.selectedPipeline = pipeline
+      this.executionPanelVisible = true
+    },
+
+    hideExecutionPanel() {
+      this.executionPanelVisible = false
+    },
+
+    deletePipeline(pipeline) {
+      this.selectedPipeline = pipeline
+      this.showDetails = true
+    },
+
+    handleExecutionSubmitted(execution) {
+      // Handle the new execution
+      console.log('New execution created:', execution)
+      // Navigate to the Monitoring page
+      this.viewPipelineExecutions(execution.pipeline)
+      // TODO: Show a success message
+      this.$emit('execution-created', execution)
     }
   }
-  </script>
+}
+</script>
   
-  <style scoped>
-  .pipeline-json {
-    background: #f5f5f5;
-    padding: 1rem;
-    border-radius: 4px;
-    overflow-x: auto;
-    font-family: monospace;
-  }
+<style scoped>
+.pipeline-json {
+  background: #f5f5f5;
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: monospace;
+}
 
-  .v-table {
+.v-table {
   margin-top: 1rem;
 }
-  </style>
+</style>

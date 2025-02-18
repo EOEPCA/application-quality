@@ -27,7 +27,7 @@ export const useToolStore = defineStore('tool', {
       this.error = null
       try {
         const tool = await toolService.getToolById(id)
-        const index = this.tools.findIndex(p => p.id === id)
+        const index = this.tools.findIndex(p => p.slug === id)
         if (index !== -1) {
           this.tools[index] = tool
         } else {
@@ -40,5 +40,34 @@ export const useToolStore = defineStore('tool', {
       }
     },
 
+    // async getToolById(id) {
+    getToolById(id) {
+      var index = this.tools.findIndex(p => p.slug === id)
+      if (index == -1) {
+        // console.log("Tool not found in store => Fetching it", id)
+        // await this.fetchToolById(id)
+        this.fetchToolById(id)
+      }
+      index = this.tools.findIndex(p => p.slug === id)
+      if (index !== -1) {
+        return this.tools[index]
+      }
+      return null
+    },
+
+    getToolName(id) {
+      const tool = this.getToolById(id)
+      return tool ? tool.name : null
+    },
+
+    getToolUserParams(id) {
+      const tool = this.getToolById(id)
+      return tool ? tool.user_params : null
+    },
+
+    hasToolUserParams(id) {
+      const tool = this.getToolById(id)
+      return tool ? Object.keys(tool.user_params).length !== 0 : false
+    }
   }
 })

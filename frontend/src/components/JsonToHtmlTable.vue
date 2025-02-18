@@ -6,7 +6,7 @@
       class="row-data m-2 d-flex"
     >
       <div class="key p-2 d-inline-block" style="">
-        <div class="text-capitalize ">
+        <div class="text-capitalize">
           {{ keyTitle(row) }} <span v-if="showDataType">({{ checkValueType(data[row]) }})</span>
         </div>
         <div v-if="showKey" style="font-family: monospace;">key: {{row}}</div>
@@ -38,12 +38,14 @@ export default {
   props: {
     data: {
       type: Object,
-    }
-  },
-  data() {
-    return {
-      showDataType: false,
-      showKey: false
+    },
+    showDataType: {
+      type: Boolean,
+      default: false,
+    },
+    showKey: {
+      type: Boolean,
+      default: false,
     }
   },
   computed: {
@@ -76,7 +78,8 @@ export default {
 }
 
 .m-2 {
-  margin: .2rem 0 .2rem 0!important;
+  /* margin: .2rem 0 .2rem 0!important; */
+  margin: .2rem!important;
 }
 
 .mx-2 {

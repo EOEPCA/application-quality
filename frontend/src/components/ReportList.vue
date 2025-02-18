@@ -240,6 +240,17 @@ export default {
       // console.log("Sorting the executions ...")
       return executions.sort((a, b) => b.start_time.localeCompare(a.start_time))
     },
+
+    // filteredReports() {
+    //   if (!this.search) return this.store.tools
+    //   const searchTerm = this.search.toLowerCase()
+    //   return this.store.reports.filter(report => {
+    //     return (
+    //       (report.description && report.description.toLowerCase().includes(searchTerm)) ||
+    //       report.slug.toLowerCase().includes(searchTerm)
+    //     )
+    //   })
+    // },
   },
 
     mounted() {
