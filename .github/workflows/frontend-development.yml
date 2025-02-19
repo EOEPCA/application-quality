@@ -1,0 +1,82 @@
+name: Frontend Development
+
+on:
+  push:
+    branches: [ "frontend" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test application
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x]
+    defaults:
+      run:
+        working-directory: ./frontend
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: "Use Node.js ${{ matrix.node-version }}"
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: "Run tests"
+      run: |
+        npm config list
+        npm install
+        npm run test --if-present
+
+  lint:
+    name: Code standards
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x]
+    defaults:
+      run:
+        working-directory: ./frontend
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: "Use Node.js ${{ matrix.node-version }}"
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: "Lint code"
+      run: |
+        npm config list
+        npm install
+        npm run lint --if-present
+
+  build:
+    name: App build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x]
+    defaults:
+      run:
+        working-directory: ./frontend
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: "Use Node.js ${{ matrix.node-version }}"
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Build
+      run: |
+        npm config list
+        npm install
+        # npx webpack
+        npm run build
