@@ -104,7 +104,7 @@ def run_workflow(
         "sonarqube_server": SONARQUBE_SERVER,
         "sonarqube_token": SONARQUBE_TOKEN,
     } | {
-        f"{subworkflow}_{tool}_{input}": value
+        f"{subworkflow}.{tool}.{input}": value
         for subworkflow, tools in parameters.items()
         for tool, inputs in tools.items()
         for input, value in inputs.items()
