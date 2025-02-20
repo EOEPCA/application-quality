@@ -30,6 +30,7 @@ jobs:
       run: |
         npm config list
         npm install
+        npm run test:list --if-present
         npm run test --if-present
 
   lint:
@@ -77,6 +78,6 @@ jobs:
     - name: Build
       run: |
         npm config list
-        npm install
+        npm install --omit=dev
         # npx webpack
         npm run build
