@@ -1,10 +1,10 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import ToolsView from '../views/ToolsView.vue'
-import PipelinesView from '../views/PipelinesView.vue'
-import ExecutionsView from '../views/ExecutionsView.vue'
-import ReportsView from '../views/ReportsView.vue'
-import SettingsView from '../views/SettingsView.vue'
+import { createRouter, createWebHistory } from 'vue-router';
+import HomeView from '../views/HomeView.vue';
+import ToolsView from '../views/ToolsView.vue';
+import PipelinesView from '../views/PipelinesView.vue';
+import ExecutionsView from '../views/ExecutionsView.vue';
+import ReportsView from '../views/ReportsView.vue';
+import SettingsView from '../views/SettingsView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -25,29 +25,29 @@ const router = createRouter({
     {
       path: '/tools',
       name: 'tools',
-      component: ToolsView
+      component: ToolsView,
     },
     {
       path: '/pipelines',
       name: 'pipelines',
-      component: PipelinesView
+      component: PipelinesView,
     },
     {
       path: '/executions',
       name: 'executions',
-      component: ExecutionsView
+      component: ExecutionsView,
     },
     {
       path: '/reports',
       name: 'reports',
-      component: ReportsView
+      component: ReportsView,
     },
     {
       path: '/settings',
       name: 'settings',
-      component: SettingsView
-    }
+      component: SettingsView,
+    },
   ],
-})
+});
 
-export default router
+export default router;

@@ -1,8 +1,6 @@
 <template>
   <v-card flat>
-  
     <v-card-title class="d-flex align-center">
-        
       <v-spacer />
       <v-text-field
         v-model="search"
@@ -29,24 +27,19 @@
       />
     </v-card-title>
 
-        <v-alert
-          v-if="store.error"
-          type="error"
-          :text="store.error"
-          closable
-        />
+    <v-alert v-if="store.error" type="error" :text="store.error" closable />
 
     <v-data-table
-        v-if="store.tools.length"
-        v-model:items-per-page="itemsPerPage"
-        v-model:sort-by="sortBy"
-        :headers="headers"
-        :items="filteredTools"
-        :search="search"
-        class="elevation-1"
-        hover
-      >
-        <!-- template v-slot:top>
+      v-if="store.tools.length"
+      v-model:items-per-page="itemsPerPage"
+      v-model:sort-by="sortBy"
+      :headers="headers"
+      :items="filteredTools"
+      :search="search"
+      class="elevation-1"
+      hover
+    >
+      <!-- template v-slot:top>
           <v-toolbar flat>
             <v-toolbar-title>Tools</v-toolbar-title>
             <v-divider
@@ -65,49 +58,45 @@
           </v-toolbar>
         </template -->
 
-        <template v-slot:item="{ item }">
-          <tr>
-            <td>{{ item.description || 'No description' }}</td>
-            <td>{{ item.version || 'N/A' }}</td>
-            <td>{{ formatDate(item.created_at) }}</td>
-            <td class="text-right nowrap">
-              <v-btn
-                icon="mdi-information"
-                __size="small"
-                color="primary"
-                class="mr-2"
-                variant="text"
-                v-tooltip:bottom-end="'Tool information'"
-                :__title="'Information'"
-                @click="viewToolDetails(item)"
-              />
-              <v-btn
-                icon="mdi-pencil"
-                variant="text"
-                disabled
-                v-tooltip:bottom-end="'Edit this tool'"
-                :__title="'Edit this tool'"
-                @click="editTool(item)"
-              />
-              <v-btn
-                icon="mdi-delete"
-                variant="text"
-                disabled
-                v-tooltip:bottom-end="'Delete the tool'"
-                :__title="'Delete the tool'"
-                @click="deleteTool(item)"
-              />
-            </td>
-          </tr>
-        </template>
+      <template v-slot:item="{ item }">
+        <tr>
+          <td>{{ item.description || 'No description' }}</td>
+          <td>{{ item.version || 'N/A' }}</td>
+          <td>{{ formatDate(item.created_at) }}</td>
+          <td class="text-right nowrap">
+            <v-btn
+              icon="mdi-information"
+              __size="small"
+              color="primary"
+              class="mr-2"
+              variant="text"
+              v-tooltip:bottom-end="'Tool information'"
+              :__title="'Information'"
+              @click="viewToolDetails(item)"
+            />
+            <v-btn
+              icon="mdi-pencil"
+              variant="text"
+              disabled
+              v-tooltip:bottom-end="'Edit this tool'"
+              :__title="'Edit this tool'"
+              @click="editTool(item)"
+            />
+            <v-btn
+              icon="mdi-delete"
+              variant="text"
+              disabled
+              v-tooltip:bottom-end="'Delete the tool'"
+              :__title="'Delete the tool'"
+              @click="deleteTool(item)"
+            />
+          </td>
+        </tr>
+      </template>
 
-        <template v-slot:no-data>
-          <v-alert
-            type="info"
-            text="No tools available"
-            class="ma-2"
-          />
-        </template>
+      <template v-slot:no-data>
+        <v-alert type="info" text="No tools available" class="ma-2" />
+      </template>
     </v-data-table>
 
     <v-alert
@@ -115,13 +104,9 @@
       type="info"
       text="No analysis tools found"
     />
-  
-    <v-progress-circular
-      v-else
-      indeterminate
-      class="ma-4"
-    />
-  
+
+    <v-progress-circular v-else indeterminate class="ma-4" />
+
     <!-- Tools Details Dialog -->
     <v-dialog v-model="showDetails" max-width="1200px">
       <v-card v-if="selectedTool">
@@ -142,21 +127,19 @@
         </v-card-text>
       </v-card>
     </v-dialog>
-
   </v-card>
-
 </template>
-  
+
 <script>
-import { useToolStore } from '@/stores/tools'
-import JsonToHtmlTable from '@/components/JsonToHtmlTable.vue'
+import { useToolStore } from '@/stores/tools';
+import JsonToHtmlTable from '@/components/JsonToHtmlTable.vue';
 //import VueJsonToHtmlTable from 'vue-json-to-html-table'
 import 'vue-json-to-html-table/dist/style.css';
 
 export default {
   name: 'ToolList',
   components: {
-    JsonToHtmlTable
+    JsonToHtmlTable,
   },
   data() {
     return {
@@ -164,112 +147,120 @@ export default {
       showDetails: false,
       selectedTool: null,
       itemsPerPage: 10,
-      sortBy: [{ key: 'description', order:'asc'}],
+      sortBy: [{ key: 'description', order: 'asc' }],
 
       headers: [
         {
           title: 'Description',
           key: 'description',
           sortable: true,
-          align: 'start'
+          align: 'start',
         },
         {
           title: 'Version',
           key: 'version',
-          sortable: true
+          sortable: true,
         },
         {
           title: 'Created',
           key: 'created_at',
-          sortable: true
+          sortable: true,
         },
         {
           title: 'Actions',
           key: 'actions',
           sortable: false,
-          align: 'center'
-        }
+          align: 'center',
+        },
       ],
       jsonData: {
-        "test": 123
-      }
-    }
+        test: 123,
+      },
+    };
   },
-  
+
   setup() {
-    const store = useToolStore()
-    return { store }
+    const store = useToolStore();
+    return { store };
   },
-  
+
   computed: {
     filteredTools() {
-      if (!this.search) return this.store.tools
+      if (!this.search) return this.store.tools;
 
-      const searchTerm = this.search.toLowerCase()
-      return this.store.tools.filter(tool => {
+      const searchTerm = this.search.toLowerCase();
+      return this.store.tools.filter((tool) => {
         return (
           //(tool.name && tool.name.toLowerCase().includes(searchTerm)) ||
-          (tool.description && tool.description.toLowerCase().includes(searchTerm)) ||
+          (tool.description &&
+            tool.description.toLowerCase().includes(searchTerm)) ||
           //tool.id.toLowerCase().includes(searchTerm)
           tool.slug.toLowerCase().includes(searchTerm)
-        )
-      })
-    }
+        );
+      });
+    },
   },
 
   mounted() {
-    this.refreshTools()
+    this.refreshTools();
   },
-  
+
   methods: {
     async refreshTools() {
-        await this.store.fetchTools()
+      await this.store.fetchTools();
     },
-  
+
     formatDate(date) {
-    if (!date) return 'N/A'
+      if (!date) return 'N/A';
       return new Date(date).toLocaleDateString('en-UK', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: 'numeric',
         minute: 'numeric',
-        second: 'numeric'
-      })
+        second: 'numeric',
+      });
     },
 
     pruneToolDetails(tool) {
-      const keysToKeep = ['name', 'description', 'version', 'tags', 'tools', 'user_params'];
+      const keysToKeep = [
+        'name',
+        'description',
+        'version',
+        'tags',
+        'tools',
+        'user_params',
+      ];
       return Object.fromEntries(
-        Object.entries(tool).filter(([key]) => keysToKeep.includes(key))
+        Object.entries(tool).filter(([key]) => keysToKeep.includes(key)),
       );
     },
 
     viewToolDetails(tool) {
-      this.selectedTool = tool
-      this.showDetails = true
+      this.selectedTool = tool;
+      this.showDetails = true;
     },
 
     editTool(tool) {
-      this.selectedTool = tool
-      this.showDetails = true
+      this.selectedTool = tool;
+      this.showDetails = true;
     },
 
     deleteTool(tool) {
-      this.selectedTool = tool
-      this.showDetails = true
+      this.selectedTool = tool;
+      this.showDetails = true;
     },
-  }
-}
+  },
+};
 </script>
-  
+
 <style scoped>
 .tool-json {
-    background: #f5f5f5;
-    padding: 1rem;
-    border-radius: 4px;
-    overflow-x: auto;
-    font-family: monospace;
+  background: #f5f5f5;
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: monospace;
 }
 
 .v-table {

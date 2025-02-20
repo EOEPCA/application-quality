@@ -30,8 +30,8 @@ jobs:
       run: |
         npm config list
         npm install
-        npm run test:list --if-present
-        npm run test --if-present
+        npm run test:list
+        npm run test
 
   lint:
     name: Code standards
@@ -55,7 +55,11 @@ jobs:
       run: |
         npm config list
         npm install
-        npm run lint --if-present
+        npm run lint
+    
+    - name: "Format code"
+      run: |
+        npm run format
 
   build:
     name: App build
