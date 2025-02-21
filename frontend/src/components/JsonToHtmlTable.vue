@@ -8,20 +8,17 @@
       <div class="key p-2 d-inline-block" style="">
         <div class="text-capitalize">
           {{ keyTitle(row) }}
-          <span v-if="showDataType">({{ checkValueType(data[row]) }})</span>
+          <span v-if="showDataType">({{ valueType(data[row]) }})</span>
         </div>
         <div v-if="showKey" style="font-family: monospace">key: {{ row }}</div>
       </div>
-      <div
-        class="value"
-        v-if="['string', 'number'].includes(checkValueType(data[row]))"
-      >
+      <div class="value" v-if="isPrimitiveValueType(data[row])">
         <div class="p-2 d-inline-block">{{ data[row] }}</div>
       </div>
-      <div class="value" v-else-if="checkValueType(data[row]) === 'array'">
+      <div class="value" v-else-if="valueType(data[row]) === 'array'">
         <div v-for="(arrRow, index2) in data[row]" :key="index2" class="d-flex">
-          <div class="mx-2">--</div>
-          <div v-if="['string', 'number'].includes(checkValueType(arrRow))">
+          <div class="mx-2">&bull;</div>
+          <div v-if="isPrimitiveValueType(arrRow)">
             {{ arrRow }}
           </div>
           <div v-else>
@@ -65,11 +62,14 @@ export default {
       // JavaScript escape code for nbsp: \xa0
       return key.split('_').join(' ').replace(' ', '\xa0');
     },
-    checkValueType(val) {
+    valueType(val) {
       if (typeof val !== 'object') {
         return typeof val;
       }
       return Array.isArray(val) ? 'array' : 'object';
+    },
+    isPrimitiveValueType(val) {
+      return ['string', 'number', 'boolean'].includes(this.valueType(val));
     },
   },
 };

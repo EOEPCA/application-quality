@@ -56,7 +56,7 @@
     </v-card-title>
 
     <v-alert v-if="store.error" type="error" :text="store.error" closable />
-    <!-- Filtered executions: {{ filteredExecutions && filteredExecutions.length }} -->
+
     <v-data-table
       v-model:items-per-page="itemsPerPage"
       v-model:sort-by="sortBy"
@@ -93,7 +93,7 @@
               <strong>{{ progress(item) }} / {{ progressMax(item) }}</strong>
             </v-progress-linear>
           </td>
-          <td class="text-right">
+          <td class="text-right nowrap">
             <v-btn
               icon="mdi-information"
               color="primary"
@@ -380,5 +380,9 @@ export default {
 
 .first-letter {
   text-transform: capitalize;
+}
+
+.nowrap {
+  white-space: nowrap;
 }
 </style>

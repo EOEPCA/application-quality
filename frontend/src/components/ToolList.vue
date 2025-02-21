@@ -122,7 +122,11 @@
             :text="selectedTool.description"
             class="mb-4"
           />
-          <JsonToHtmlTable :data="pruneToolDetails(selectedTool)" />
+          <JsonToHtmlTable
+            :data="pruneToolDetails(selectedTool)"
+            :showDataType="false"
+            :showKey="false"
+          />
           <!-- pre class="tool-json">{{ JSON.stringify(selectedTool, null, 2) }}</pre -->
         </v-card-text>
       </v-card>

@@ -110,7 +110,7 @@
           <td>{{ formatDate(store.executionById(item.run).start_time) }}</td>
           <td>{{ item.name || 'No name' }}</td>
           <td>{{ formatDate(item.created_at) }}</td>
-          <td class="text-right">
+          <td class="text-right nowrap">
             <v-btn
               icon="mdi-information"
               __size="small"
@@ -313,5 +313,9 @@ export default {
 
 .v-table {
   margin-top: 1rem;
+}
+
+.nowrap {
+  white-space: nowrap;
 }
 </style>

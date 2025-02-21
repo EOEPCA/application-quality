@@ -63,25 +63,21 @@
           <td>{{ item.description || 'No description' }}</td>
           <td>{{ item.version || 'N/A' }}</td>
           <td>{{ formatDate(item.created_at) }}</td>
-          <td class="text-right">
+          <td class="text-right nowrap">
             <v-btn
               icon="mdi-information"
-              __size="small"
               color="primary"
               class="mr-2"
               variant="text"
               v-tooltip:bottom-end="'Pipeline information'"
-              :__title="'Information'"
               @click="viewPipelineDetails(item)"
             />
             <v-btn
               icon="mdi-monitor-eye"
-              __size="small"
               color="primary"
               class="mr-2"
               variant="text"
               v-tooltip:bottom-end="'Pipeline executions'"
-              :__title="'Executions'"
               @click="viewPipelineExecutions(item)"
             />
             <!-- <v-btn
@@ -98,14 +94,12 @@
               variant="text"
               v-tooltip:bottom-end="'Execute ' + item.description"
               @click="showExecutionPanel(item)"
-              :__title="'Execute ' + item.description"
             />
             <v-btn
               icon="mdi-pencil"
               variant="text"
               disabled
               v-tooltip:bottom-end="'Edit this pipeline'"
-              :__title="'Edit this pipeline'"
               @click="editPipeline(item)"
             />
             <v-btn
@@ -113,7 +107,6 @@
               variant="text"
               disabled
               v-tooltip:bottom-end="'Delete the pipeline'"
-              :__title="'Delete the pipeline'"
               @click="deletePipeline(item)"
             />
           </td>
@@ -369,5 +362,9 @@ export default {
 
 .v-table {
   margin-top: 1rem;
+}
+
+.nowrap {
+  white-space: nowrap;
 }
 </style>

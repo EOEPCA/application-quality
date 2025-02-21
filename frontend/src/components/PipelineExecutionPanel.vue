@@ -1,7 +1,7 @@
 <template>
   <v-navigation-drawer
-    v-if="pipeline"
-    v-model="isVisible"
+    v-if="visible && pipeline && modelValue && resetForm()"
+    v-model="localVisible"
     location="right"
     temporary
     :width="800"
@@ -64,7 +64,9 @@
                     elevation="3"
                     class="mb-4"
                   >
-                    <v-card-title> Tool Step: {{ step_id }} </v-card-title>
+                    <v-card-title v-if="step_params"
+                      >Tool Step: {{ step_id }}</v-card-title
+                    >
                     <v-card-text>
                       <div
                         v-for="(param, param_id) in step_params"
@@ -86,7 +88,7 @@
                           persistent-hint
                         />
                         <v-checkbox
-                          v-if="param.type == 'bool'"
+                          v-if="param.type.startsWith('bool')"
                           :key="param_id"
                           v-model="
                             localModelValue['parameters'][tool_id][step_id][
@@ -165,7 +167,10 @@ export default {
       loading: false,
       error: false,
       panelVisible: false,
-      localModelValue: Object.assign({}, this.modelValue),
+      // These are given values in resetForm()
+      localModelValue: null,
+      localPipeline: null,
+      localVisible: false,
     };
   },
 
@@ -200,15 +205,16 @@ export default {
     this.resetForm();
   },
 
-  computed: {
-    isVisible() {
-      return this.visible;
-    },
-  },
-
   methods: {
     resetForm() {
+      // console.log('Re-initialising the execution form');
       this.error = null;
+      this.localModelValue = this.modelValue
+        ? JSON.parse(JSON.stringify(this.modelValue))
+        : null;
+      this.localPipeline = this.pipeline;
+      this.localVisible = this.visible;
+      return true;
     },
 
     cancelExecution() {
@@ -237,10 +243,8 @@ export default {
 
     async submitExecution() {
       if (!this.isValid) return;
-
       this.loading = true;
       this.error = null;
-
       try {
         console.log('Pipeline to execute:', this.pipeline);
         const response = await pipelineService.executePipeline(
@@ -258,3 +262,15 @@ export default {
   },
 };
 </script>
+
+<style>
+.v-input__details {
+  color: blue;
+}
+
+.v-checkbox .v-input__details {
+  padding-top: 0;
+  padding-inline: 16px;
+  min-height: 0;
+}
+</style>
