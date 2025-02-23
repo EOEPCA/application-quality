@@ -288,6 +288,11 @@ export default {
       await this.store.fetchPipelineExecutions(this.store.selectedPipelineId);
     },
 
+    isUserInput(key) {
+      const inputsToKeep = ['repo_url', 'repo_branch'];
+      return inputsToKeep.includes(key) || key.includes('.');
+    },
+
     prunePipelineExecutionDetails(execution) {
       const keysToKeep = [
         'pipeline',
@@ -298,15 +303,25 @@ export default {
         'user',
         'started_by',
         'usage_report',
-        //  TODO include user parameters only: 'inputs'
+        // 'inputs' are filtered separately below
       ];
-      if (this.authStore.isAdmin) {
-        // Display more information to admin users
-        keysToKeep.push('inputs');
-      }
-      return Object.fromEntries(
+      const details = Object.fromEntries(
         Object.entries(execution).filter(([key]) => keysToKeep.includes(key)),
       );
+      // Add user parameters only
+      //const executionInputs = execution.inputs;
+      const userInputs = Object.fromEntries(
+        Object.entries(execution.inputs).filter(([key]) =>
+          this.isUserInput(key),
+        ),
+      );
+      if (this.authStore.isAdmin) {
+        // Display all inputs to admin users
+        details.inputs = execution.inputs;
+      } else {
+        details.inputs = userInputs;
+      }
+      return details;
     },
 
     viewPipelineExecutionDetails(execution) {
