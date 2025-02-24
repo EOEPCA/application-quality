@@ -18,6 +18,8 @@ web:
   servicePort: 80
   containerPort: 80
   replicaCount: 1
+  # The URL used to access the frontend (required by the backend to authorize the requests)
+  publicUrl: ""
 
 api:
   image:

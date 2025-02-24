@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: {{ include "application-quality.fullname" . }}-api-env
 data:
+  PUBLIC_URL: {{ .Values.web.publicUrl }}
+
   BACKEND_SERVICE_HOST: {{ include "application-quality.fullname" . }}-api.{{ .Release.Namespace }}.svc.cluster.local
   BACKEND_SERVICE_PORT: {{ .Values.api.containerPort | quote }}
 

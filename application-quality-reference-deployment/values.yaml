@@ -24,12 +24,13 @@ application-quality:
   # Application Quality backend
   api:
     image:
-      tag: 2025-01-10.1
+      tag: 2025-02-20.1
 
   # Application Quality frontend
   web:
     image:
-      tag: 2025-01-15.1
+      tag: 2025-02-24.1
+    publicUrl: "https://application-quality.develop.eoepca.org"
 
   persistence:
     enabled: true
