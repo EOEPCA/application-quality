@@ -4,14 +4,14 @@
   "pk": "python",
   "fields": {
    "description": "python pipeline",
-   "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n    bandit_subworkflow.filter.regex:\r\n      label: regex\r\n      type: string\r\n      default: .*\\.py\r\n    bandit_subworkflow.bandit.verbose:\r\n      label: Verbose\r\n      doc: Output extra information like excluded and included files.\r\n      type: boolean\r\n      default: false\r\n    branch:\r\n      type: string\r\n      default: ''\r\n    flake8_subworkflow.filter.regex:\r\n      label: regex\r\n      type: string\r\n      default: .*\\.py\r\n    flake8_subworkflow.flake8.verbose:\r\n      label: Verbose\r\n      doc: Increase the verbosity of Flake8’s output.\r\n      type: boolean\r\n      default: false\r\n    pipeline_id: string\r\n    pylint_subworkflow.filter.regex:\r\n      label: regex\r\n      type: string\r\n      default: .*\\.py\r\n    pylint_subworkflow.pylint.disable:\r\n      label: disable\r\n      doc: |-\r\n        Disable the message, report, category or checker with the given id(s). You can either give multiple identifiers separated by comma (,) or put this option multiple times (only on the command line, not in the configuration file where it should appear only once). You can also use \"--disable=all\" to disable everything first and then re-enable specific checks. For example, if you want to run only the similarities checker, you can use \"--disable=all --enable=similarities\". If you want to run only the classes checker, but have no Warning level messages displayed, use \"--disable=all --enable=classes --disable=W\".\r\n      type: string\r\n      default: E0401\r\n    pylint_subworkflow.pylint.errors_only:\r\n      label: errors_only\r\n      doc: |-\r\n        In error mode, messages with a category besides ERROR or FATAL are suppressed, and no reports are done by default. Error mode is compatible with disabling specific errors.\r\n      type: boolean\r\n      default: false\r\n    pylint_subworkflow.pylint.verbose:\r\n      label: verbose\r\n      doc: In verbose mode, extra non-checker-related info will be displayed.\r\n      type: boolean\r\n      default: false\r\n    repo_url: string\r\n    ruff_subworkflow.filter.regex:\r\n      label: regex\r\n      type: string\r\n      default: .*\\.py\r\n    ruff_subworkflow.ruff.verbose:\r\n      label: Verbose\r\n      doc: Enable verbose logging.\r\n      type: boolean\r\n      default: false\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    clone_step:\r\n      in:\r\n        branch: branch\r\n        repo_url: repo_url\r\n      run: '#clone_tool'\r\n      out:\r\n      - repo_directory\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n  id: main\r\n- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: alpine/git\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: clone_branch.sh\r\n        entry: |-\r\n          set -e\r\n\r\n          if [ $(inputs.branch) ]; then\r\n            echo 'Branch specified: $(inputs.branch). Cloning branch...'\r\n            git clone $(inputs.repo_url) -b $(inputs.branch)\r\n          else\r\n            echo 'No branch specified. Cloning default branch...'\r\n            git clone $(inputs.repo_url)\r\n          fi\r\n\r\n          echo '✅ Cloned!\r\n          '\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    branch: string\r\n    repo_url: string\r\n\r\n  outputs:\r\n    repo_directory:\r\n      type: Directory\r\n      outputBinding:\r\n        glob: $(inputs.repo_url.split('/').pop().replace('.git',''))\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - clone_branch.sh\r\n  id: clone_tool\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.0",
-   "owner": 1,
+   "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n{%- for tool in subworkflows %}\r\n  {%- for tool_name, params in tool.user_params.items() %}\r\n    {%- for param_name, param in params.items() %}\r\n    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:\r\n      label: \"{{ param.label or param_name }}\"\r\n      {%- if param.doc %}\r\n      doc: |-\r\n        {{ param.doc }}\r\n      {%- endif %}\r\n      type: {{ param.type }}\r\n      default: {{ param.default | tojson }}\r\n    {%- endfor %}\r\n  {%- endfor %}\r\n{%- endfor %}\r\n    branch:\r\n      type: string\r\n      default: ''\r\n    pipeline_id: string\r\n    repo_url: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    clone_step:\r\n      in:\r\n        branch: branch\r\n        repo_url: repo_url\r\n      run: '#clone_tool'\r\n      out:\r\n      - repo_directory\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n  id: main\r\n- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: alpine/git\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: clone_branch.sh\r\n        entry: |-\r\n          set -e\r\n\r\n          if [ $(inputs.branch) ]; then\r\n            echo 'Branch specified: $(inputs.branch). Cloning branch...'\r\n            git clone $(inputs.repo_url) -b $(inputs.branch)\r\n          else\r\n            echo 'No branch specified. Cloning default branch...'\r\n            git clone $(inputs.repo_url)\r\n          fi\r\n\r\n          echo '✅ Cloned!\r\n          '\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    branch: string\r\n    repo_url: string\r\n\r\n  outputs:\r\n    repo_directory:\r\n      type: Directory\r\n      outputBinding:\r\n        glob: $(inputs.repo_url.split('/').pop().replace('.git',''))\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - clone_branch.sh\r\n  id: clone_tool\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.0",
+   "owner": null,
    "version": "0.1",
    "tools": [
-    "bandit",
-    "flake8",
-    "pylint",
-    "ruff"
+    "bandit_subworkflow",
+    "flake8_subworkflow",
+    "pylint_subworkflow",
+    "ruff_subworkflow"
    ]
   }
  },
@@ -31,7 +31,7 @@
  },
  {
   "model": "backend.subworkflow",
-  "pk": "bandit",
+  "pk": "bandit_subworkflow",
   "fields": {
    "name": "bandit",
    "description": "Bandit - Bandit is a tool designed to find common security issues in Python code",
@@ -59,15 +59,15 @@
     1
    ],
    "tools": [
-    "save",
     "filter",
-    "bandit"
+    "bandit",
+    "save"
    ]
   }
  },
  {
   "model": "backend.subworkflow",
-  "pk": "flake8",
+  "pk": "flake8_subworkflow",
   "fields": {
    "name": "flake8",
    "description": "flake8 - Style guide enforcement tool for Python",
@@ -95,15 +95,15 @@
     1
    ],
    "tools": [
+    "filter",
     "flake8",
-    "save",
-    "filter"
+    "save"
    ]
   }
  },
  {
   "model": "backend.subworkflow",
-  "pk": "pylint",
+  "pk": "pylint_subworkflow",
   "fields": {
    "name": "pylint",
    "description": "pylint - Static code analyser tool for Python",
@@ -143,15 +143,15 @@
     1
    ],
    "tools": [
-    "save",
     "filter",
-    "pylint"
+    "pylint",
+    "save"
    ]
   }
  },
  {
   "model": "backend.subworkflow",
-  "pk": "ruff",
+  "pk": "ruff_subworkflow",
   "fields": {
    "name": "ruff",
    "description": "Ruff - An extremely fast Python linter and code formatter, written in Rust",
@@ -179,9 +179,9 @@
     1
    ],
    "tools": [
+    "filter",
     "ruff",
-    "save",
-    "filter"
+    "save"
    ]
   }
  },

@@ -133,8 +133,10 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             subtemplate = Template(subworkflow.definition)
             subcontext = {"tools": list(subworkflow.tools.all())}
             subtool = {
-                "pipeline_step": subworkflow.pipeline_step,
                 "definition": subtemplate.render(subcontext),
+                "slug": subworkflow.pk,
+                "user_params": subworkflow.user_params,
+                "pipeline_step": subworkflow.pipeline_step,
             }
             rendered_subworkflows.append(subtool)
 
