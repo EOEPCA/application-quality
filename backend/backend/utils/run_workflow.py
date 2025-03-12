@@ -34,8 +34,8 @@ def run_workflow(
     repo_url: str,
     repo_branch: str,
     parameters: dict,
-    slug: str,
-    run_id: str,
+    pipeline_id: int,
+    run_id: int,
     cwl: dict,
     username: str,
 ) -> dict:
@@ -92,9 +92,9 @@ def run_workflow(
 
     session.initialise()
 
-    sonarqube_project = f"{username}-{slug}-{str(run_id)}"
+    sonarqube_project = f"{username}-{str(pipeline_id)}-{str(run_id)}"
     params = {
-        "pipeline_id": slug,
+        "pipeline_id": str(pipeline_id),
         "run_id": str(run_id),
         "repo_url": repo_url,
         "repo_branch": repo_branch,

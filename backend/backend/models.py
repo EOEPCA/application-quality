@@ -39,7 +39,7 @@ class PipelineRun(models.Model):
         return self.jobreports.count()
 
     def __str__(self):
-        return f"{'✅' if self.status == 'succeeded' else '❌'} Run {self.id}: {self.pipeline.slug}"
+        return f"{'✅' if self.status == 'succeeded' else '❌'} Run {self.id}: {self.pipeline.name}"
 
 
 class JobReport(models.Model):
@@ -49,7 +49,7 @@ class JobReport(models.Model):
     created_at      = models.DateTimeField(null=True)
 
     def __str__(self):
-        return f"Run {self.run.id} ({self.run.pipeline.slug}): {self.name} job"
+        return f"Run {self.run.id} ({self.run.pipeline.name}): {self.name} job"
 
 
 class Tag(models.Model):
