@@ -31,7 +31,7 @@ class IsOwnerOrAdmin(permissions.BasePermission):
 
 class PipelineViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.PipelineSerializer
-    lookup_field = "slug"
+    lookup_field = "id"
 
     def get_queryset(self):
         if self.request.user.is_staff:
@@ -60,25 +60,25 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         logger.info(f"User {user} is requesting pipeline runs (admin={user.is_staff})")
-        slug = self.kwargs["pipeline_slug"]
+        id = self.kwargs["pipeline_id"]
         if user.is_staff:
-            if slug == "_":
+            if id == "_":
                 return PipelineRun.objects
-            return PipelineRun.objects.filter(pipeline_id=slug)
-        if slug == "_":
+            return PipelineRun.objects.filter(pipeline_id=id)
+        if id == "_":
             return PipelineRun.objects.filter(started_by=self.request.user)
-        return PipelineRun.objects.filter(pipeline_id=slug, started_by=self.request.user)
+        return PipelineRun.objects.filter(pipeline_id=id, started_by=self.request.user)
 
     def create(self, request, *args, **kwargs):
         user = self.request.user
         logger.info(f"User {user} is creating a pipeline run (admin={user.is_staff})")
-        slug = self.kwargs["pipeline_slug"]
-        logger.info(f"Creating a new run for pipeline '{slug}'")
+        id = self.kwargs["pipeline_id"]
+        logger.info(f"Creating a new run for pipeline '{id}'")
 
         try:
-            pipeline = Pipeline.objects.get(slug=slug)
+            pipeline = Pipeline.objects.get(id=id)
         except Pipeline.DoesNotExist:
-            logger.warning(f"Couldn't create a new run: Pipeline {slug} not found")
+            logger.warning(f"Couldn't create a new run: Pipeline {id} not found")
             return Response(
                 {"error": "Pipeline not found."},
                 status=status.HTTP_404_NOT_FOUND
@@ -103,14 +103,14 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             repo_url=payload.get("repo_url"),
             repo_branch=payload.get("repo_branch"),
             parameters=payload.get("parameters"),
-            slug=slug,
+            id=id,
             cwl=cwl,
             username=request.user.username,
         )
 
         pipeline_run.executed_cwl = yaml_cwl
         pipeline_run.inputs = {
-            "pipeline_id": slug,
+            "pipeline_id": id,
             "run_id": str(pipeline_run.id),
             "repo_url": payload.get("repo_url"),
             "repo_branch": payload.get("repo_branch"),
@@ -125,7 +125,7 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         )
 
     def render_cwl(self, pipeline):
-        logger.debug(f"Rendering CWL for pipeline '{pipeline.slug}'")
+        logger.debug(f"Rendering CWL for pipeline '{pipeline.id}'")
         rendered_subworkflows = []
 
         for subworkflow in pipeline.tools.all():
@@ -134,7 +134,7 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             subcontext = {"tools": list(subworkflow.tools.all())}
             subtool = {
                 "definition": subtemplate.render(subcontext),
-                "slug": subworkflow.pk,
+                "id": subworkflow.pk,
                 "user_params": subworkflow.user_params,
                 "pipeline_step": subworkflow.pipeline_step,
             }
@@ -143,7 +143,7 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         template = Template(pipeline.template)
         context = {"subworkflows": rendered_subworkflows}
         result = template.render(context)
-        logger.debug(f"CWL rendered for pipeline '{pipeline.slug}'")
+        logger.debug(f"CWL rendered for pipeline '{pipeline.id}'")
         return result
 
 
@@ -156,9 +156,9 @@ class JobReportViewSet(
     serializer_class = serializers.JobReportSerializer
 
     def get_queryset(self):
-        slug = self.kwargs["pipeline_slug"]
+        id = self.kwargs["pipeline_id"]
         run_id = self.kwargs["run_id"]
-        queryset = JobReport.objects.filter(run__pipeline__slug=slug, run_id=run_id)
+        queryset = JobReport.objects.filter(run__pipeline__id=id, run_id=run_id)
 
         tool_name = self.request.query_params.get("name")
         if tool_name:
@@ -167,18 +167,18 @@ class JobReportViewSet(
         return queryset
 
     def create(self, request, *args, **kwargs):
-        slug = self.kwargs["pipeline_slug"]
+        id = self.kwargs["pipeline_id"]
         run_id = self.kwargs["run_id"]
-        logger.info(f"Creating a new job report for '{slug}' pipeline, run_id {run_id}")
+        logger.info(f"Creating a new job report for '{id}' pipeline, run_id {run_id}")
 
         tool_name = request.query_params.get("name")
         if not tool_name:
             raise ValidationError("Tool 'name' is required as a query parameter.")
 
         try:
-            run = PipelineRun.objects.get(pipeline__slug=slug, id=run_id)
+            run = PipelineRun.objects.get(pipeline__id=id, id=run_id)
         except PipelineRun.DoesNotExist:
-            logger.warning(f"Couln't create a job report: Run {run_id} for pipeline '{slug}' not found")
+            logger.warning(f"Couln't create a job report: Run {run_id} for pipeline '{id}' not found")
             return Response(
                 {"error": "Pipeline run not found."},
                 status=status.HTTP_404_NOT_FOUND

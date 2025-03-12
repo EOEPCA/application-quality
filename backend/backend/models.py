@@ -3,15 +3,23 @@ from django.contrib.auth.models import User
 
 
 class Pipeline(models.Model):
-    slug            = models.SlugField(primary_key=True, max_length=50, unique=True)
+    name            = models.CharField(max_length=50)
     description     = models.TextField(null=True)
     template        = models.TextField()
     tools           = models.ManyToManyField("Subworkflow", blank=True)
     owner           = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name="pipelines")
     version         = models.CharField(max_length=50, null=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'owner', 'version'],
+                name='unique_name_owner_version'
+            )
+        ]
+
     def __str__(self):
-        return self.slug
+        return self.name
 
 
 class PipelineRun(models.Model):

@@ -8,7 +8,7 @@ class PipelineSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pipeline
         fields = [
-            "slug",
+            "id",
             "description",
             "tools",
             "owner",
