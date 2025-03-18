@@ -31,8 +31,8 @@ logger = logging.getLogger(__name__)
 
 
 def run_workflow(
-    repo_url: str,
-    repo_branch: str,
+    # repo_url: str,
+    # repo_branch: str,
     parameters: dict,
     pipeline_id: int,
     run_id: int,
@@ -96,8 +96,8 @@ def run_workflow(
     params = {
         "pipeline_id": str(pipeline_id),
         "run_id": str(run_id),
-        "repo_url": repo_url,
-        "repo_branch": repo_branch,
+        # "repo_url": repo_url,
+        # "repo_branch": repo_branch,
         "server_url": f"{BACKEND_SERVICE_HOST}:{BACKEND_SERVICE_PORT}",
         "sonarqube_project_key": sonarqube_project,
         "sonarqube_project_name": sonarqube_project,

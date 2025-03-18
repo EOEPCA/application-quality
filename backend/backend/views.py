@@ -100,8 +100,8 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         payload = request.data  # dict
         run_workflow_task.delay(
             run_id=pipeline_run.id,
-            repo_url=payload.get("repo_url"),
-            repo_branch=payload.get("repo_branch"),
+            # repo_url=payload.get("repo_url"),
+            # repo_branch=payload.get("repo_branch"),
             parameters=payload.get("parameters"),
             pipeline_id=pipeline_id,
             cwl=cwl,
@@ -112,8 +112,8 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         pipeline_run.inputs = {
             "pipeline_id": pipeline_id,
             "run_id": str(pipeline_run.id),
-            "repo_url": payload.get("repo_url"),
-            "repo_branch": payload.get("repo_branch"),
+            # "repo_url": payload.get("repo_url"),
+            # "repo_branch": payload.get("repo_branch"),
         }
         pipeline_run.save()
         logger.debug(f"Run {pipeline_run.id} updated with CWL and inputs")
