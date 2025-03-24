@@ -36,6 +36,9 @@ else
     echo "Admin user already exists"
 fi
 
+echo "Connecting to vcluster..."
+sh vcluster.sh
+
 echo "Collecting static files ..."
 /app/manage.py collectstatic --noinput
 echo "Applying database migrations ..."
