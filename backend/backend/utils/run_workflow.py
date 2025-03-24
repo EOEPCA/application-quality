@@ -13,12 +13,12 @@ import os
 
 AQBB_STORAGECLASS = os.getenv("AQBB_STORAGECLASS", "standard")
 AQBB_VOLUMESIZE = os.getenv("AQBB_VOLUMESIZE", "5Gi")
-AQBB_CALRISSIANIMAGE = os.getenv("AQBB_CALRISSIANIMAGE", "terradue/calrissian:0.14.0")
+AQBB_CALRISSIANIMAGE = os.getenv("AQBB_CALRISSIANIMAGE", "nexus.spaceapplications.com/repository/docker-eoepca/calrissian:0.18.1")
 AQBB_MAXCORES = os.getenv("AQBB_MAXCORES", "2")
 AQBB_MAXRAM = os.getenv("AQBB_MAXRAM", "2Gi")
 AQBB_SECRET = os.getenv("AQBB_SECRET", None)
 AQBB_SERVICEACCOUNT = os.getenv("AQBB_SERVICEACCOUNT", None)  # Create a ServiceAccount for Calrissian with the right roles and use it here
-BACKEND_SERVICE_HOST = os.getenv("BACKEND_SERVICE_HOST", "backend-service.aqbb.svc.cluster.local")
+BACKEND_SERVICE_HOST = os.getenv("BACKEND_SERVICE_HOST", "backend-service.default.svc.cluster.local")
 BACKEND_SERVICE_PORT = os.getenv("BACKEND_SERVICE_PORT", "80")
 SONARQUBE_SERVER = os.getenv("SONARQUBE_SERVER","application-quality-sonarqube-sonarqube.application-quality-sonarqube.svc.cluster.local:9000")
 SONARQUBE_TOKEN = os.getenv("SONARQUBE_TOKEN")
@@ -31,10 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 def run_workflow(
-    # repo_url: str,
-    # repo_branch: str,
     parameters: dict,
-    pipeline_id: int,
     run_id: int,
     cwl: dict,
     username: str,
@@ -70,9 +67,18 @@ def run_workflow(
     """
     Create the kubernetes namespace on the cluster
     """
+    kubeconfig = os.getenv("KUBECONFIG", None)
+
+    if kubeconfig: # Only useful for debug purposes
+        try:
+            config.load_kube_config(config_file=kubeconfig)
+            logger.debug("Config file loaded successfully.")
+        except Exception as e:
+            logger.error(f"Failed to load config file: {e}")
+            raise
 
     try:
-        config.load_incluster_config()  # Not necessary anymore, normally
+        config.load_incluster_config()  # Only useful for debug purposes
         logger.debug("In-cluster config loaded successfully.")
     except Exception as e:
         logger.error(f"Failed to load in-cluster config: {e}")
@@ -92,12 +98,10 @@ def run_workflow(
 
     session.initialise()
 
-    sonarqube_project = f"{username}-{str(pipeline_id)}-{str(run_id)}"
+    sonarqube_project = f"{username}-{pipeline_run.pipeline.name}-{str(run_id)}"
     params = {
-        "pipeline_id": str(pipeline_id),
+        "pipeline_id": str(pipeline_run.pipeline.pk),
         "run_id": str(run_id),
-        # "repo_url": repo_url,
-        # "repo_branch": repo_branch,
         "server_url": f"{BACKEND_SERVICE_HOST}:{BACKEND_SERVICE_PORT}",
         "sonarqube_project_key": sonarqube_project,
         "sonarqube_project_name": sonarqube_project,

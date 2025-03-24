@@ -1,69 +1,10 @@
 [
  {
   "model": "backend.pipeline",
-  "pk": 1,
-  "fields": {
-   "name": "CWL",
-   "description": "application package validator pipeline",
-   "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n{%- for tool in subworkflows %}\r\n  {%- for tool_name, params in tool.user_params.items() %}\r\n    {%- for param_name, param in params.items() %}\r\n    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:\r\n      label: \"{{ param.label or param_name }}\"\r\n      {%- if param.doc %}\r\n      doc: |-\r\n        {{ param.doc }}\r\n      {%- endif %}\r\n      type: {{ param.type }}\r\n      default: {{ param.default | tojson }}\r\n    {%- endfor %}\r\n  {%- endfor %}\r\n{%- endfor %}\r\n    branch:\r\n      type: string\r\n      default: ''\r\n    pipeline_id: string\r\n    repo_url: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    clone_step:\r\n      in:\r\n        branch: branch\r\n        repo_url: repo_url\r\n      run: '#clone_tool'\r\n      out:\r\n      - repo_directory\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n  id: main\r\n- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: alpine/git\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: clone_branch.sh\r\n        entry: |-\r\n          set -e\r\n\r\n          if [ $(inputs.branch) ]; then\r\n            echo 'Branch specified: $(inputs.branch). Cloning branch...'\r\n            git clone $(inputs.repo_url) -b $(inputs.branch)\r\n          else\r\n            echo 'No branch specified. Cloning default branch...'\r\n            git clone $(inputs.repo_url)\r\n          fi\r\n\r\n          echo '✅ Cloned!\r\n          '\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    branch: string\r\n    repo_url: string\r\n\r\n  outputs:\r\n    repo_directory:\r\n      type: Directory\r\n      outputBinding:\r\n        glob: $(inputs.repo_url.split('/').pop().replace('.git',''))\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - clone_branch.sh\r\n  id: clone_tool\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.0",
-   "owner": null,
-   "version": "0.1",
-   "tools": [
-    "ap_validator_subworkflow"
-   ]
-  }
- },
- {
-  "model": "backend.pipeline",
-  "pk": 3,
-  "fields": {
-   "name": "Jupyter notebook",
-   "description": "Jupyter notebook specs best practices checker",
-   "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n{%- for tool in subworkflows %}\r\n  {%- for tool_name, params in tool.user_params.items() %}\r\n    {%- for param_name, param in params.items() %}\r\n    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:\r\n      label: \"{{ param.label or param_name }}\"\r\n      {%- if param.doc %}\r\n      doc: |-\r\n        {{ param.doc }}\r\n      {%- endif %}\r\n      type: {{ param.type }}\r\n      default: {{ param.default | tojson }}\r\n    {%- endfor %}\r\n  {%- endfor %}\r\n{%- endfor %}\r\n    branch:\r\n      type: string\r\n      default: ''\r\n    pipeline_id: string\r\n    repo_url: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    clone_step:\r\n      in:\r\n        branch: branch\r\n        repo_url: repo_url\r\n      run: '#clone_tool'\r\n      out:\r\n      - repo_directory\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n  id: main\r\n- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: alpine/git\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: clone_branch.sh\r\n        entry: |-\r\n          set -e\r\n\r\n          if [ $(inputs.branch) ]; then\r\n            echo 'Branch specified: $(inputs.branch). Cloning branch...'\r\n            git clone $(inputs.repo_url) -b $(inputs.branch)\r\n          else\r\n            echo 'No branch specified. Cloning default branch...'\r\n            git clone $(inputs.repo_url)\r\n          fi\r\n\r\n          echo '✅ Cloned!\r\n          '\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    branch: string\r\n    repo_url: string\r\n\r\n  outputs:\r\n    repo_directory:\r\n      type: Directory\r\n      outputBinding:\r\n        glob: $(inputs.repo_url.split('/').pop().replace('.git',''))\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - clone_branch.sh\r\n  id: clone_tool\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.0",
-   "owner": null,
-   "version": "0.1",
-   "tools": [
-    "ipynb_specs_checker_subworkflow"
-   ]
-  }
- },
- {
-  "model": "backend.pipeline",
-  "pk": 4,
-  "fields": {
-   "name": "Papermill",
-   "description": "Papermill pipeline",
-   "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n{%- for tool in subworkflows %}\r\n  {%- for tool_name, params in tool.user_params.items() %}\r\n    {%- for param_name, param in params.items() %}\r\n    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:\r\n      label: \"{{ param.label or param_name }}\"\r\n      {%- if param.doc %}\r\n      doc: |-\r\n        {{ param.doc }}\r\n      {%- endif %}\r\n      type: {{ param.type }}\r\n      default: {{ param.default | tojson }}\r\n    {%- endfor %}\r\n  {%- endfor %}\r\n{%- endfor %}\r\n    branch:\r\n      type: string\r\n      default: ''\r\n    pipeline_id: string\r\n    repo_url: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    clone_step:\r\n      in:\r\n        branch: branch\r\n        repo_url: repo_url\r\n      run: '#clone_tool'\r\n      out:\r\n      - repo_directory\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n  id: main\r\n- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: alpine/git\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: clone_branch.sh\r\n        entry: |-\r\n          set -e\r\n\r\n          if [ $(inputs.branch) ]; then\r\n            echo 'Branch specified: $(inputs.branch). Cloning branch...'\r\n            git clone $(inputs.repo_url) -b $(inputs.branch)\r\n          else\r\n            echo 'No branch specified. Cloning default branch...'\r\n            git clone $(inputs.repo_url)\r\n          fi\r\n\r\n          echo '✅ Cloned!\r\n          '\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    branch: string\r\n    repo_url: string\r\n\r\n  outputs:\r\n    repo_directory:\r\n      type: Directory\r\n      outputBinding:\r\n        glob: $(inputs.repo_url.split('/').pop().replace('.git',''))\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - clone_branch.sh\r\n  id: clone_tool\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.0",
-   "owner": null,
-   "version": "0.1",
-   "tools": [
-    "papermill_subworkflow"
-   ]
-  }
- },
- {
-  "model": "backend.pipeline",
-  "pk": 5,
-  "fields": {
-   "name": "Python",
-   "description": "python pipeline",
-   "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n{%- for tool in subworkflows %}\r\n  {%- for tool_name, params in tool.user_params.items() %}\r\n    {%- for param_name, param in params.items() %}\r\n    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:\r\n      label: \"{{ param.label or param_name }}\"\r\n      {%- if param.doc %}\r\n      doc: |-\r\n        {{ param.doc }}\r\n      {%- endif %}\r\n      type: {{ param.type }}\r\n      default: {{ param.default | tojson }}\r\n    {%- endfor %}\r\n  {%- endfor %}\r\n{%- endfor %}\r\n    branch:\r\n      type: string\r\n      default: ''\r\n    pipeline_id: string\r\n    repo_url: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    clone_step:\r\n      in:\r\n        branch: branch\r\n        repo_url: repo_url\r\n      run: '#clone_tool'\r\n      out:\r\n      - repo_directory\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n  id: main\r\n- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: alpine/git\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: clone_branch.sh\r\n        entry: |-\r\n          set -e\r\n\r\n          if [ $(inputs.branch) ]; then\r\n            echo 'Branch specified: $(inputs.branch). Cloning branch...'\r\n            git clone $(inputs.repo_url) -b $(inputs.branch)\r\n          else\r\n            echo 'No branch specified. Cloning default branch...'\r\n            git clone $(inputs.repo_url)\r\n          fi\r\n\r\n          echo '✅ Cloned!\r\n          '\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    branch: string\r\n    repo_url: string\r\n\r\n  outputs:\r\n    repo_directory:\r\n      type: Directory\r\n      outputBinding:\r\n        glob: $(inputs.repo_url.split('/').pop().replace('.git',''))\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - clone_branch.sh\r\n  id: clone_tool\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.0",
-   "owner": null,
-   "version": "0.1",
-   "tools": [
-    "bandit_subworkflow",
-    "flake8_subworkflow",
-    "pylint_subworkflow",
-    "ruff_subworkflow"
-   ]
-  }
- },
- {
-  "model": "backend.pipeline",
   "pk": 6,
   "fields": {
-   "name": "Python - clone",
-   "description": "python pipeline",
+   "name": "Python pipeline",
+   "description": "Runs a series of static analysis tools on python files",
    "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n{%- for tool in subworkflows %}\r\n  {%- for tool_name, params in tool.user_params.items() %}\r\n    {%- for param_name, param in params.items() %}\r\n    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:\r\n      label: \"{{ param.label or param_name }}\"\r\n      {%- if param.doc %}\r\n      doc: |-\r\n        {{ param.doc }}\r\n      {%- endif %}\r\n      type: {{ param.type }}\r\n      default: {{ param.default | tojson }}\r\n    {%- endfor %}\r\n  {%- endfor %}\r\n{%- endfor %}\r\n    branch:\r\n      type: string\r\n      default: ''\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n  id: main\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.0",
    "owner": null,
    "version": "0.1",
@@ -78,15 +19,18 @@
  },
  {
   "model": "backend.pipeline",
-  "pk": 7,
+  "pk": 8,
   "fields": {
-   "name": "SonarQube",
-   "description": "SonarQube pipeline",
-   "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n    pipeline_id:\r\n      type: string\r\n    repo_branch:\r\n      type: string\r\n    repo_url:\r\n      type: string\r\n    run_id:\r\n      type: string\r\n    server_url:\r\n      type: string\r\n    sonarqube_project_key:\r\n      type: string\r\n    sonarqube_project_name:\r\n      type: string\r\n    sonarqube_server:\r\n      type: string\r\n      default: sonarqube-sonarqube.sonarqube:9000\r\n    sonarqube_token:\r\n      type: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    clone_step:\r\n      in:\r\n        repo_branch: repo_branch\r\n        repo_url: repo_url\r\n      run: '#clone_tool'\r\n      out:\r\n      - repo_directory\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n  id: main\r\n- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: alpine/git\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    repo_branch:\r\n      type: string\r\n      default: main\r\n    repo_url:\r\n      type: string\r\n\r\n  outputs:\r\n    repo_directory:\r\n      type: Directory\r\n      outputBinding:\r\n        glob: $(inputs.repo_url.split('/').pop().replace('.git',''))\r\n\r\n  baseCommand: git\r\n  arguments:\r\n  - clone\r\n  - $(inputs.repo_url)\r\n  - -b\r\n  - $(inputs.repo_branch)\r\n  id: clone_tool\r\n{% for tool in subworkflows %}{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.0",
+   "name": "Notebook pipeline",
+   "description": "Runs a static analysis and then executes Jupyter Notebooks files (ipynb).",
+   "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n{%- for tool in subworkflows %}\r\n  {%- for tool_name, params in tool.user_params.items() %}\r\n    {%- for param_name, param in params.items() %}\r\n    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:\r\n      label: \"{{ param.label or param_name }}\"\r\n      {%- if param.doc %}\r\n      doc: |-\r\n        {{ param.doc }}\r\n      {%- endif %}\r\n      type: {{ param.type }}\r\n      default: {{ param.default | tojson }}\r\n    {%- endfor %}\r\n  {%- endfor %}\r\n{%- endfor %}\r\n    branch:\r\n      type: string\r\n      default: ''\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n  id: main\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.0",
    "owner": null,
    "version": "0.1",
    "tools": [
-    "sonarqube"
+    "clone_subworkflow",
+    "ipynb_specs_checker_subworkflow",
+    "papermill_subworkflow",
+    "ruff_ipynb_subworkflow"
    ]
   }
  },
@@ -94,21 +38,56 @@
   "model": "backend.tag",
   "pk": 1,
   "fields": {
-   "name": "python"
+   "name": "asset: python"
   }
  },
  {
   "model": "backend.tag",
   "pk": 2,
   "fields": {
-   "name": "other"
+   "name": "asset: other"
   }
  },
  {
   "model": "backend.tag",
   "pk": 3,
   "fields": {
-   "name": "cwl"
+   "name": "asset: cwl"
+  }
+ },
+ {
+  "model": "backend.tag",
+  "pk": 4,
+  "fields": {
+   "name": "asset: notebook"
+  }
+ },
+ {
+  "model": "backend.tag",
+  "pk": 5,
+  "fields": {
+   "name": "type: best practice"
+  }
+ },
+ {
+  "model": "backend.tag",
+  "pk": 6,
+  "fields": {
+   "name": "type: app quality"
+  }
+ },
+ {
+  "model": "backend.tag",
+  "pk": 7,
+  "fields": {
+   "name": "type: app performance"
+  }
+ },
+ {
+  "model": "backend.tag",
+  "pk": 8,
+  "fields": {
+   "name": "type: init"
   }
  },
  {
@@ -144,7 +123,8 @@
    },
    "version": "0.1",
    "tags": [
-    3
+    3,
+    5
    ],
    "tools": [
     "ap_validator",
@@ -180,7 +160,8 @@
    },
    "version": "0.1",
    "tags": [
-    1
+    1,
+    6
    ],
    "tools": [
     "bandit",
@@ -249,7 +230,8 @@
    },
    "version": "0.1",
    "tags": [
-    1
+    1,
+    5
    ],
    "tools": [
     "filter",
@@ -283,7 +265,8 @@
    },
    "version": "0.1",
    "tags": [
-    1
+    4,
+    5
    ],
    "tools": [
     "filter",
@@ -311,7 +294,8 @@
    },
    "version": "0.1",
    "tags": [
-    1
+    4,
+    7
    ],
    "tools": [
     "filter",
@@ -359,7 +343,8 @@
    },
    "version": "0.1",
    "tags": [
-    1
+    1,
+    5
    ],
    "tools": [
     "filter",
@@ -374,8 +359,8 @@
   "fields": {
    "name": "ruff - notebook",
    "description": "Ruff - An extremely fast Python linter and code formatter, written in Rust",
-   "pipeline_step": "ruff_subworkflow:\r\n  in:\r\n    filter.regex: ruff_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    ruff.verbose: ruff_subworkflow.ruff.verbose\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#ruff_subworkflow'\r\n  out: []",
-   "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: ruff\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    ruff.verbose: boolean\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    ruff_report:\r\n      type: File\r\n      outputSource: ruff_step/ruff_report\r\n\r\n  steps:\r\n    filter_ruff_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    ruff_step:\r\n      in:\r\n        file_list: filter_ruff_step/file_list\r\n        source_directory: source_directory\r\n        verbose: ruff.verbose\r\n      run: '#ruff_tool'\r\n      out:\r\n      - ruff_report\r\n    save_ruff_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: ruff_step/ruff_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n  id: ruff_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+   "pipeline_step": "ruff_ipynb_subworkflow:\r\n  in:\r\n    filter.regex: ruff_ipynb_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    ruff.verbose: ruff_ipynb_subworkflow.ruff.verbose\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#ruff_ipynb_subworkflow'\r\n  out: []",
+   "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: ruff\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    ruff.verbose: boolean\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    ruff_report:\r\n      type: File\r\n      outputSource: ruff_step/ruff_report\r\n\r\n  steps:\r\n    filter_ruff_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    ruff_step:\r\n      in:\r\n        file_list: filter_ruff_step/file_list\r\n        source_directory: source_directory\r\n        verbose: ruff.verbose\r\n      run: '#ruff_tool'\r\n      out:\r\n      - ruff_report\r\n    save_ruff_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: ruff_step/ruff_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n  id: ruff_ipynb_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
    "user_params": {
     "ruff": {
      "verbose": {
@@ -395,7 +380,8 @@
    },
    "version": "0.1",
    "tags": [
-    1
+    4,
+    5
    ],
    "tools": [
     "filter",
@@ -431,7 +417,8 @@
    },
    "version": "0.1",
    "tags": [
-    1
+    1,
+    5
    ],
    "tools": [
     "filter",
@@ -509,7 +496,7 @@
   "pk": "ipynb_specs_checker",
   "fields": {
    "name": "jupyter notebook best practices checker",
-   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: python:slim\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          cd $(inputs.source_directory.path)\r\n          python ~/script.py > ~/ipynb_specs_checker_report.json\r\n          exit 0\r\n      - entryname: script.py\r\n        entry: |-\r\n          import json\r\n          import os\r\n\r\n          files = '$(inputs.file_list.join(\" \"))'\r\n          schema = '$(inputs.schema)'\r\n\r\n          def read_notebook(notebook_path: str):\r\n              result = {\"filename\": os.path.relpath(notebook_path, os.path.expanduser('$(inputs.source_directory.path)/..')), \"schema\": schema}\r\n              try:\r\n                  with open(notebook_path) as f:\r\n                      notebook = json.load(f)\r\n              except Exception as e:\r\n                  result['error'] = (f\"Error reading notebook file: {e}\")\r\n                  return result\r\n\r\n              if \"metadata\" not in notebook:\r\n                  result['error'] = (\"Notebook does not contain a 'metadata' section.\")\r\n                  return result\r\n\r\n              metadata = notebook[\"metadata\"]\r\n\r\n              if schema.lower() == \"eumetsat\":\r\n                  mandatory_fields = [\"author\", \"title\", \"description\", \"services\"]\r\n                  optional_fields = [\"image\", \"tags\"]\r\n              elif schema.lower() == \"schema.org\":\r\n                  mandatory_fields = [\"author\", \"name\", \"description\", \"keywords\"]\r\n                  optional_fields = [\"identifier\", \"image\", \"potentialAction\", \"domain\", \"platform\", \"instruments\", \"tags\", \"license\"]\r\n              else:\r\n                  result['error'] = f\"Unknown schema type: {schema}\"\r\n                  return result\r\n\r\n              errors = []\r\n              for field in mandatory_fields:\r\n                  if field not in metadata:\r\n                      errors.append(field)\r\n\r\n              warnings = []\r\n              for field in optional_fields:\r\n                  if field not in metadata:\r\n                      warnings.append(field)\r\n\r\n              result['valid'] = (len(errors) == 0)\r\n              result['missing_mandatory_fields'] = errors\r\n              result['missing_optional_fields'] = warnings\r\n\r\n              return result\r\n\r\n          output = []\r\n\r\n          file_list = files.split(sep=' ')\r\n          for notebook_path in file_list:\r\n              output.append(read_notebook(notebook_path))\r\n\r\n          print(json.dumps(output, indent=4))\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    schema: string\r\n    file_list: string[]\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    ipynb_specs_checker_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: ipynb_specs_checker_report.json\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: ipynb_specs_checker_tool",
+   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: python:slim\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          cd $(inputs.source_directory.path)\r\n          python ~/script.py > ~/ipynb_specs_checker_report.json\r\n          exit 0\r\n      - entryname: script.py\r\n        entry: |-\r\n          import json\r\n          import os\r\n\r\n          schema = '$(inputs.schema)'\r\n\r\n          def read_notebook(notebook_path: str):\r\n              result = {\"filename\": os.path.relpath(notebook_path, os.path.expanduser('$(inputs.source_directory.path)/..')), \"schema\": schema}\r\n              try:\r\n                  with open(notebook_path) as f:\r\n                      notebook = json.load(f)\r\n              except Exception as e:\r\n                  result['error'] = (f\"Error reading notebook file: {e}\")\r\n                  return result\r\n\r\n              if \"metadata\" not in notebook:\r\n                  result['error'] = (\"Notebook does not contain a 'metadata' section.\")\r\n                  return result\r\n\r\n              metadata = notebook[\"metadata\"]\r\n\r\n              if schema.lower() == \"eumetsat\":\r\n                  mandatory_fields = [\"author\", \"title\", \"description\", \"services\"]\r\n                  optional_fields = [\"image\", \"tags\"]\r\n              elif schema.lower() == \"schema.org\":\r\n                  mandatory_fields = [\"author\", \"name\", \"description\", \"keywords\"]\r\n                  optional_fields = [\"identifier\", \"image\", \"potentialAction\", \"domain\", \"platform\", \"instruments\", \"tags\", \"license\"]\r\n              else:\r\n                  result['error'] = f\"Unknown schema type: {schema}\"\r\n                  return result\r\n\r\n              errors = []\r\n              for field in mandatory_fields:\r\n                  if field not in metadata:\r\n                      errors.append(field)\r\n\r\n              warnings = []\r\n              for field in optional_fields:\r\n                  if field not in metadata:\r\n                      warnings.append(field)\r\n\r\n              result['valid'] = (len(errors) == 0)\r\n              result['missing_mandatory_fields'] = errors\r\n              result['missing_optional_fields'] = warnings\r\n\r\n              return result\r\n\r\n          output = []\r\n\r\n          for notebook_path in $(inputs.file_list):\r\n              output.append(read_notebook(notebook_path))\r\n\r\n          print(json.dumps(output, indent=4))\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    schema: string\r\n    file_list: string[]\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    ipynb_specs_checker_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: ipynb_specs_checker_report.json\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: ipynb_specs_checker_tool",
    "version": "0.1"
   }
  },

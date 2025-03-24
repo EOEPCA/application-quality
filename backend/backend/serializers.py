@@ -9,6 +9,7 @@ class PipelineSerializer(serializers.ModelSerializer):
         model = Pipeline
         fields = [
             "id",
+            "name",
             "description",
             "tools",
             "owner",
