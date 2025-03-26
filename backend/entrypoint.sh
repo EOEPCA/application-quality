@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/env sh
 
 echo "Waiting for Postgres to be ready ..."
 until pg_isready -h $DB_HOST -p $DB_PORT; do
@@ -8,12 +8,11 @@ done
 
 echo "Postgres is ready!"
 
-if [ "$BACKEND_SERVICE_ADMIN_USER" != "" ] && \
-   [ "$BACKEND_SERVICE_ADMIN_PASSWORD" != "" ] && \
-   [ "$BACKEND_SERVICE_ADMIN_EMAIL" != "" ]
-then
-    echo "Creating admin user ..."
-    cat <<EOF | /app/manage.py shell
+if [ "$BACKEND_SERVICE_ADMIN_USER" != "" ] &&
+  [ "$BACKEND_SERVICE_ADMIN_PASSWORD" != "" ] &&
+  [ "$BACKEND_SERVICE_ADMIN_EMAIL" != "" ]; then
+  echo "Creating admin user ..."
+  cat <<EOF | /app/manage.py shell
 import os
 from django.contrib.auth import get_user_model
 
@@ -33,11 +32,13 @@ User.objects.filter(username=BACKEND_SERVICE_ADMIN_USER).exists() or \
     )
 EOF
 else
-    echo "Admin user already exists"
+  echo "Admin user already exists"
 fi
 
-echo "Connecting to vcluster..."
-sh vcluster.sh
+if [ "$VCLUSTER_ENABLED" = "true" ]; then
+  echo "Setting up vcluster..."
+  sh vcluster.sh
+fi
 
 echo "Collecting static files ..."
 /app/manage.py collectstatic --noinput
