@@ -1,4 +1,16 @@
 <template>
+  <VueNotifications
+    :reverse="notify.reverse"
+    :width="notify.width"
+    :position="notify.position"
+    :max="notify.max"
+    :close-on-click="notify.closeOnClick"
+    :pause-on-hover="notify.pauseOnHover"
+    :speed="notify.speed"
+    :timeout="notify.timeout"
+    :clean="notify.clean"
+    :ignore-duplicates="notify.ignoreDuplicate"
+  />
   <v-app>
     <v-app-bar color="primary">
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
@@ -8,7 +20,7 @@
       <span class="vuetify-label" v-tooltip:bottom-end="store.username">
         {{ store.firstname }} {{ store.lastname }}
       </span>
-      <v-chip v-if="store.isAdmin" size="small" class="ml-2">Admin</v-chip>
+      <v-chip v-if="store.isAdmin" size="small" class="ml-2"> Admin </v-chip>
       <v-chip v-if="store.isSuperuser" size="small" class="ml-2">
         Superuser
       </v-chip>
@@ -57,6 +69,18 @@ export default {
         { title: 'Settings', path: '/settings', icon: 'mdi-cog' },
       ],
       userDetails: null,
+      notify: {
+        reverse: false,
+        width: '600px',
+        position: 'center',
+        timeout: 5000, // Default: 400
+        max: 5000,
+        closeOnClick: true,
+        pauseOnHover: true,
+        speed: 300,
+        clean: false,
+        ignoreDuplicates: true,
+      },
     };
   },
   setup() {

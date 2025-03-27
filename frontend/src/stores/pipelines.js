@@ -22,7 +22,14 @@ export const usePipelineStore = defineStore('pipeline', {
       try {
         this.pipelines = await pipelineService.getPipelines();
       } catch (error) {
-        this.error = error.message;
+        const msg_prefix = 'Error fetching pipelines: ';
+        if (error.response?.data?.detail) {
+          console.error(msg_prefix, error, error.response.data.detail);
+          this.error = msg_prefix + error.response.data.detail;
+        } else {
+          console.error(msg_prefix, error);
+          this.error = msg_prefix + error.message;
+        }
       } finally {
         this.loadingPipelines = false;
       }
@@ -40,7 +47,14 @@ export const usePipelineStore = defineStore('pipeline', {
           this.pipelines.push(pipeline);
         }
       } catch (error) {
-        this.error = error.message;
+        const msg_prefix = 'Error fetching pipeline: ';
+        if (error.response?.data?.detail) {
+          console.error(msg_prefix, error, error.response.data.detail);
+          this.error = msg_prefix + error.response.data.detail;
+        } else {
+          console.error(msg_prefix, error);
+          this.error = msg_prefix + error.message;
+        }
       } finally {
         this.loadingPipelines = false;
       }
@@ -52,7 +66,14 @@ export const usePipelineStore = defineStore('pipeline', {
       try {
         this.executions = await pipelineService.getPipelineExecutions(id);
       } catch (error) {
-        this.error = error.message;
+        const msg_prefix = 'Error fetching pipeline executions: ';
+        if (error.response?.data?.detail) {
+          console.error(msg_prefix, error, error.response.data.detail);
+          this.error = msg_prefix + error.response.data.detail;
+        } else {
+          console.error(msg_prefix, error);
+          this.error = msg_prefix + error.message;
+        }
       } finally {
         this.loadingExecutions = false;
       }
@@ -67,7 +88,14 @@ export const usePipelineStore = defineStore('pipeline', {
           runId,
         );
       } catch (error) {
-        this.error = error.message;
+        const msg_prefix = 'Error fetching pipeline execution reports: ';
+        if (error.response?.data?.detail) {
+          console.error(msg_prefix, error, error.response.data.detail);
+          this.error = msg_prefix + error.response.data.detail;
+        } else {
+          console.error(msg_prefix, error);
+          this.error = msg_prefix + error.message;
+        }
       } finally {
         this.loadingReports = false;
       }
@@ -107,6 +135,27 @@ export const usePipelineStore = defineStore('pipeline', {
 
     selectedPipeline() {
       return this.pipelineById(this.selectedPipelineId);
+    },
+
+    async deletePipeline(id) {
+      console.log('Deleting pipeline:', id);
+      this.loading = true;
+      this.error = null;
+      try {
+        await pipelineService.deletePipeline(id);
+        this.fetchPipelines();
+      } catch (error) {
+        const msg_prefix = 'Error deleting pipeline ' + id + ': ';
+        if (error.response?.data?.detail) {
+          console.error(msg_prefix, error, error.response.data.detail);
+          this.error = msg_prefix + error.response.data.detail;
+        } else {
+          console.error(msg_prefix, error);
+          this.error = msg_prefix + error.message;
+        }
+      } finally {
+        this.loadingPipelines = false;
+      }
     },
   },
 });

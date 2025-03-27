@@ -26,8 +26,7 @@
     "vue-json-to-html-table": "^0.0.7",
     "vue-router": "^4.4.5",
     "vuetify": "^3.7.4",
-    "vite": "^5.4.10",
-    "@vitejs/plugin-vue": "^5.1.4"
+    "vue3-notify": "^0.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.14.0",
@@ -38,6 +37,8 @@
     "jsdom": "^26.0.0",
     "prettier": "^3.3.3",
     "resize-observer-polyfill": "^1.5.1",
-    "vitest": "^3.0.6"
+    "vite": "^5.4.10",
+    "vitest": "^3.0.6",
+    "@vitejs/plugin-vue": "^5.1.4"
   }
 }

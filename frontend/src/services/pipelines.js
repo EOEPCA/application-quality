@@ -22,7 +22,15 @@ export const pipelineService = {
       const response = await pipelineApi.get('/');
       return response.data;
     } catch (error) {
-      console.error('Error fetching pipelines:', error);
+      if (error.response?.data?.detail) {
+        console.error(
+          'Error fetching pipelines:',
+          error,
+          error.response.data.detail,
+        );
+      } else {
+        console.error('Error fetching pipelines:', error);
+      }
       throw error;
     }
   },
@@ -33,6 +41,28 @@ export const pipelineService = {
       return response.data;
     } catch (error) {
       console.error(`Error fetching pipeline ${pipelineId}:`, error);
+      throw error;
+    }
+  },
+
+  async createPipeline(pipeline) {
+    try {
+      console.log('Create pipeline data:', pipeline);
+      const response = await pipelineApi.post(`/`, pipeline);
+      return response.data;
+    } catch (error) {
+      console.error(`Error creating pipeline ${pipeline.slug}:`, error);
+      throw error;
+    }
+  },
+
+  async updatePipeline(pipeline) {
+    try {
+      console.log('Update pipeline data:', pipeline);
+      const response = await pipelineApi.put(`/${pipeline.slug}`, pipeline);
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating pipeline ${pipeline.slug}:`, error);
       throw error;
     }
   },
@@ -90,6 +120,17 @@ export const pipelineService = {
         `Error fetching pipeline execution reports for ${pipelineId} ${runId}:`,
         error,
       );
+      throw error;
+    }
+  },
+
+  async deletePipeline(pipelineId) {
+    try {
+      console.log('Delete pipeline:', pipelineId);
+      const response = await pipelineApi.delete(pipelineId);
+      return response.data;
+    } catch (error) {
+      console.error(`Error deleting pipeline ${pipelineId}:`, error);
       throw error;
     }
   },
