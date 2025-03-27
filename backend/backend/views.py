@@ -22,6 +22,17 @@ if os.getenv("OIDC_ENABLED").lower() == "true":
 else:
     logger.info("OIDC is DISABLED")
 
+pipeline_cwl_template_path = os.path.join(os.path.dirname(__file__), "pipeline_template.cwl.jinja")
+pipeline_cwl_template = ""
+
+try:
+    logger.info("Loading %s", pipeline_cwl_template_path)
+    with open(pipeline_cwl_template_path, "r") as file:
+        pipeline_cwl_template = file.read()
+except Exception as ex:
+    logger.error("Error loading %s: %s", pipeline_cwl_template_path, str(ex))
+    pipeline_cwl_template = f"Failed to load pipeline CWL template: {ex}"
+
 class IsOwnerOrAdmin(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.user.is_staff:
@@ -42,7 +53,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        serializer.save(owner=self.request.user, template=pipeline_cwl_template)
 
     def get_permissions(self):
         if self.action in ["list", "retrieve"]:
