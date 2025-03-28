@@ -95,6 +95,12 @@ export const useToolStore = defineStore('tool', {
       return tool ? Object.keys(tool.user_params).length !== 0 : false;
     },
 
+    isInitTool(id) {
+      // Check if the tool is tagged with "type: init"
+      const tool = this.getToolById(id);
+      return tool ? tool.tags.includes('type: init') : false;
+    },
+
     getToolTags(id) {
       const tool = this.getToolById(id);
       return tool ? tool.tags : null;

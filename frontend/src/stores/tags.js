@@ -26,7 +26,7 @@ export const useTagStore = defineStore('tag', {
       this.error = null;
       try {
         const tag = await tagService.getTagById(id);
-        const index = this.tags.findIndex((p) => p.slug === id);
+        const index = this.tags.findIndex((p) => p.id === id);
         if (index !== -1) {
           this.tags[index] = tag;
         } else {
@@ -41,13 +41,13 @@ export const useTagStore = defineStore('tag', {
 
     // async getTagById(id) {
     getTagById(id) {
-      var index = this.tags.findIndex((p) => p.slug === id);
+      var index = this.tags.findIndex((p) => p.id === id);
       if (index == -1) {
         // console.log("Tag not found in store => Fetching it", id)
         // await this.fetchTagById(id)
         this.fetchTagById(id);
       }
-      index = this.tags.findIndex((p) => p.slug === id);
+      index = this.tags.findIndex((p) => p.id === id);
       if (index !== -1) {
         return this.tags[index];
       }

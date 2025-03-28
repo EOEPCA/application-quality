@@ -51,7 +51,7 @@ export const pipelineService = {
       const response = await pipelineApi.post(`/`, pipeline);
       return response.data;
     } catch (error) {
-      console.error(`Error creating pipeline ${pipeline.slug}:`, error);
+      console.error(`Error creating pipeline ${pipeline.name}:`, error);
       throw error;
     }
   },
@@ -59,10 +59,13 @@ export const pipelineService = {
   async updatePipeline(pipeline) {
     try {
       console.log('Update pipeline data:', pipeline);
-      const response = await pipelineApi.put(`/${pipeline.slug}`, pipeline);
+      const response = await pipelineApi.put(`/${pipeline.id}`, pipeline);
       return response.data;
     } catch (error) {
-      console.error(`Error updating pipeline ${pipeline.slug}:`, error);
+      console.error(
+        `Error updating pipeline ${pipeline.name} (Id: ${pipeline.id}):`,
+        error,
+      );
       throw error;
     }
   },
@@ -82,7 +85,7 @@ export const pipelineService = {
 
   async getPipelineExecutions(pipelineId) {
     try {
-      if (pipelineId === undefined) {
+      if (pipelineId === undefined || pipelineId === null) {
         pipelineId = '_'; // Meaning "all pipelines"
       }
       const response = await pipelineApi.get(`/${pipelineId}/runs/`);

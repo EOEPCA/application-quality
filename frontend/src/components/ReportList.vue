@@ -7,8 +7,8 @@
         v-model="store.selectedPipelineId"
         label="Pipeline"
         :items="store.pipelines"
-        item-title="description"
-        item-value="slug"
+        item-title="name"
+        item-value="id"
         variant="solo"
         density="compact"
         class="pa-1"
@@ -97,8 +97,8 @@
         <tr>
           <td>
             {{
-              store.pipelineById(store.executionById(item.run).pipeline)
-                .description || '-'
+              store.pipelineById(store.executionById(item.run).pipeline).name ||
+              '-'
             }}
           </td>
           <td>
@@ -203,7 +203,7 @@ export default {
           align: 'start',
         },
         {
-          title: 'Tool Name',
+          title: 'Tool',
           key: 'tool_name',
           sortable: true,
           align: 'start',
@@ -214,7 +214,7 @@ export default {
           sortable: true,
         },
         {
-          title: 'Actions',
+          title: '',
           key: 'actions',
           sortable: false,
           align: 'center',

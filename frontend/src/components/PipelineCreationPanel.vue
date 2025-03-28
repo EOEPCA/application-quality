@@ -9,8 +9,8 @@
   >
     <v-card>
       <v-card-title class="d-flex align-center">
-        <span v-if="modelValue.creation">New pipeline: {{ pipelineSlug }}</span>
-        <span v-else>Edit pipeline: {{ pipelineSlug }}</span>
+        <span v-if="modelValue.creation">New pipeline: {{ pipelineName }}</span>
+        <span v-else>Edit pipeline: {{ pipelineName }}</span>
         <v-spacer />
         <v-btn
           icon="mdi-close"
@@ -145,14 +145,13 @@
 // import { ref, computed } from 'vue'
 import { pipelineService } from '@/services/pipelines';
 import { useToolStore } from '@/stores/tools';
-import { slugify } from '@/assets/tools';
 
 export default {
   name: 'PipelineCreationPanel',
 
   data() {
     return {
-      pipelineSlug: '',
+      pipelineName: '',
       form: null,
       isValid: false,
       isBusy: false,
@@ -216,7 +215,7 @@ export default {
     },
 
     onPipelineNameChange() {
-      this.pipelineSlug = slugify(this.modelValue.name);
+      this.pipelineName = this.modelValue.name;
     },
 
     cancel() {
@@ -256,8 +255,7 @@ export default {
       try {
         console.log('Pipeline to create:', this.modelValue.name);
         const data = {
-          // TODO: Currently the name is lost if the user enters a description
-          slug: slugify(this.modelValue.name),
+          name: this.modelValue.name,
           description: this.modelValue.description || this.modelValue.name,
           tools: this.modelValue.selectedTools.map((tool) =>
             typeof tool === 'object' ? tool.slug : tool,
@@ -271,8 +269,8 @@ export default {
         if (err.response == undefined) {
           this.error = err.message || 'Failed to submit creation';
         } else {
-          if (err.response.data['slug'] != undefined) {
-            this.error = 'Name: ' + err.response.data['slug'];
+          if (err.response.data['name'] != undefined) {
+            this.error = 'Name: ' + err.response.data['name'];
           } else if (err.response.data['version'] != undefined) {
             this.error = 'Version: ' + err.response.data['version'];
           } else if (err.response.data['tools'] != undefined) {
@@ -298,9 +296,7 @@ export default {
       try {
         console.log('Pipeline to update:', this.modelValue.name);
         const data = {
-          // TODO: Currently the name is lost if the user enters a description
-          // Note: The slug cannot be changed as it is the primary key
-          slug: slugify(this.modelValue.name),
+          name: this.modelValue.name,
           description: this.modelValue.description || this.modelValue.name,
           tools: this.modelValue.selectedTools.map((tool) =>
             typeof tool === 'object' ? tool.slug : tool,
@@ -314,8 +310,8 @@ export default {
         if (err.response == undefined) {
           this.error = err.message || 'Failed to submit edition';
         } else {
-          if (err.response.data['slug'] != undefined) {
-            this.error = 'Name: ' + err.response.data['slug'];
+          if (err.response.data['name'] != undefined) {
+            this.error = 'Name: ' + err.response.data['name'];
           } else if (err.response.data['version'] != undefined) {
             this.error = 'Version: ' + err.response.data['version'];
           } else if (err.response.data['tools'] != undefined) {

@@ -60,7 +60,10 @@
 
       <template v-slot:item="{ item }">
         <tr>
-          <td>{{ item.description || 'No description' }}</td>
+          <td>
+            <div class="font-weight-bold">{{ item.name }}</div>
+            <div class="font-weight-light">{{ item.description }}</div>
+          </td>
           <td>{{ item.version || 'N/A' }}</td>
           <td class="nowrap">
             <v-chip
@@ -166,7 +169,7 @@ export default {
 
       headers: [
         {
-          title: 'Description',
+          title: 'Tool',
           key: 'description',
           sortable: true,
           align: 'start',

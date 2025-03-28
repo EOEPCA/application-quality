@@ -2,7 +2,7 @@
   <v-dialog v-model="dialogVisible" max-width="800px" persistent>
     <v-card>
       <v-card-title class="d-flex align-center">
-        Execute Pipeline: {{ pipeline.slug }}
+        Execute Pipeline: {{ pipeline.name }}
         <v-spacer />
         <v-btn
           icon="mdi-close"
@@ -175,7 +175,7 @@ export default {
       try {
         console.log('Selected pipeline:', selectedPipeline.value);
         const response = await pipelineService.executePipeline(
-          selectedPipeline.value.slug,
+          selectedPipeline.value.id,
           {
             repo_url: formData.value.git_repo,
             repo_branch: formData.value.git_branch,

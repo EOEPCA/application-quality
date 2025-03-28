@@ -81,7 +81,10 @@
 
       <template v-slot:item="{ item }">
         <tr>
-          <td>{{ item.description || 'No description' }}</td>
+          <td>
+            <div class="font-weight-bold">{{ item.name }}</div>
+            <div class="font-weight-light">{{ item.description }}</div>
+          </td>
           <td>{{ item.version || 'N/A' }}</td>
           <td>{{ item.owner || '-' }}</td>
           <td>{{ formatDate(item.created_at) }}</td>
@@ -91,7 +94,7 @@
               color="primary"
               class="mr-2"
               variant="text"
-              v-tooltip:bottom-end="'Pipeline information (' + item.slug + ')'"
+              v-tooltip:bottom-end="'Pipeline information (' + item.name + ')'"
               @click="viewPipelineDetails(item)"
             />
             <v-btn
@@ -183,16 +186,9 @@
             class="mb-4"
           />
           <JsonToHtmlTable :data="prunePipelineDetails(selectedPipeline)" />
-          <!-- pre class="pipeline-json">{{ JSON.stringify(selectedPipeline, null, 2) }}</pre -->
         </v-card-text>
       </v-card>
     </v-dialog>
-
-    <!-- <pipeline-execution-dialog
-        v-model="showExecutionDialog"
-        :pipeline="this.selectedPipeline"
-        @execution-submitted="handleExecutionSubmitted"
-      /> -->
 
     <!-- Pipeline creation drawer component -->
     <pipeline-creation-panel
@@ -271,7 +267,6 @@ export default {
   components: {
     JsonToHtmlTable,
     PipelineCreationPanel,
-    // PipelineExecutionDialog,
     PipelineExecutionPanel,
   },
 
@@ -285,8 +280,9 @@ export default {
       pipelineSuccessMessage: null,
       editionPanelVisible: false,
       editionParameters: {},
-      // showExecutionDialog: false,
       executionPanelVisible: false,
+      // Used to collect the values to execute a pipeline
+      // Passed as v-model to the pipeline execution panel
       executionParameters: {},
       selectedPipelineForExecution: null,
       showDeleteDialog: false,
@@ -296,7 +292,7 @@ export default {
 
       headers: [
         {
-          title: 'Name',
+          title: 'Pipeline',
           key: 'name',
           sortable: true,
           align: 'start',
@@ -343,13 +339,15 @@ export default {
   computed: {
     filteredPipelines() {
       if (!this.search) return this.store.pipelines;
-
       const searchTerm = this.search.toLowerCase();
       return this.store.pipelines.filter((pipeline) => {
+        const allText =
+          pipeline.name + pipeline.description + String(pipeline.tags);
         return (
-          (pipeline.description &&
-            pipeline.description.toLowerCase().includes(searchTerm)) ||
-          pipeline.slug.toLowerCase().includes(searchTerm)
+          // (pipeline.description &&
+          //   pipeline.description.toLowerCase().includes(searchTerm)) ||
+          // pipeline.name.toLowerCase().includes(searchTerm)
+          allText.toLowerCase().includes(searchTerm)
         );
       });
     },
@@ -389,7 +387,18 @@ export default {
     },
 
     prunePipelineDetails(pipeline) {
-      const keysToKeep = ['slug', 'description', 'version', 'tools'];
+      const keysToKeep = [
+        'name',
+        'description',
+        'version',
+        'created_at',
+        'edited_at',
+        'tools',
+      ];
+      if (this.authStore.isAdmin) {
+        // Only display these properties to admin users
+        keysToKeep.append('id');
+      }
       return Object.fromEntries(
         Object.entries(pipeline).filter(([key]) => keysToKeep.includes(key)),
       );
@@ -403,7 +412,7 @@ export default {
     viewPipelineExecutions(pipeline) {
       // Store the selected pipeline in the store so it accessible by the executions page
       // Navigate to the executions page
-      this.store.selectedPipelineId = pipeline.slug;
+      this.store.selectedPipelineId = pipeline.id;
       this.$router.push('/executions');
     },
 
@@ -433,9 +442,9 @@ export default {
       this.creationPanelVisible = false;
       this.refreshPipelines();
       // Display a success message
-      // this.pipelineSuccessMessage = "Pipeline created successfully: " + pipeline.slug
+      // this.pipelineSuccessMessage = "Pipeline created successfully: " + pipeline.name
       this.$notify({
-        title: `Created pipeline "${pipeline.slug}"`,
+        title: `Created pipeline "${pipeline.name}"`,
         type: 'success',
       });
       this.$emit('pipeline-created', pipeline);
@@ -446,7 +455,8 @@ export default {
       this.selectedPipeline = pipeline;
 
       this.creationParameters = {
-        name: pipeline.slug,
+        id: pipeline.id,
+        name: pipeline.name,
         description: pipeline.description,
         version: pipeline.version,
         availableTools: this.toolStore.tools,
@@ -466,9 +476,9 @@ export default {
       this.creationPanelVisible = false;
       this.refreshPipelines();
       // Display a success message
-      // this.pipelineSuccessMessage = "Pipeline edited successfully: " + pipeline.slug
+      // this.pipelineSuccessMessage = "Pipeline edited successfully: " + pipeline.name
       this.$notify({
-        title: `Saved pipeline "${pipeline.slug}"`,
+        title: `Saved pipeline "${pipeline.name}"`,
         type: 'success',
       });
       this.$emit('pipeline-created', pipeline);
@@ -511,16 +521,22 @@ export default {
     showExecutionPanel(pipeline) {
       console.log('Selected pipeline:', pipeline);
       this.refreshTools();
+      pipeline['init_params'] = {};
       pipeline['user_params'] = {};
       for (var tool_id of pipeline['tools']) {
         const tool = this.toolStore.getToolById(tool_id);
-        pipeline['user_params'][tool_id] = tool ? tool['user_params'] : null;
+        if (this.toolStore.isInitTool(tool_id)) {
+          pipeline['init_params'][tool_id] = tool ? tool['user_params'] : null;
+        } else {
+          pipeline['user_params'][tool_id] = tool ? tool['user_params'] : null;
+        }
       }
 
+      // "executionParameters" is used to collect the values to execute the pipeline
       this.executionParameters = {
-        //repo_url: "https://github.com/EOEPCA/application-quality",
-        repo_url: 'https://github.com/pypa/sampleproject',
-        repo_branch: 'main',
+        // repo_url: "https://github.com/EOEPCA/application-quality",
+        // repo_url: 'https://github.com/pypa/sampleproject',
+        // repo_branch: 'main',
         parameters: this.getPipelineUserParams(pipeline),
       };
       this.selectedPipeline = pipeline;
@@ -541,19 +557,19 @@ export default {
     async confirmDeletePipeline(pipeline) {
       this.deletingPipeline = true;
       try {
-        await this.store.deletePipeline(this.selectedPipeline.slug);
+        await this.store.deletePipeline(this.selectedPipeline.id);
         this.showDeleteDialog = false;
         // Display a success message
-        // this.pipelineSuccessMessage = "Pipeline deleted successfully: " + pipeline.slug
+        // this.pipelineSuccessMessage = "Pipeline deleted successfully: " + pipeline.name
         this.$notify({
-          title: `Deleted pipeline "${pipeline.slug}"`,
+          title: `Deleted pipeline "${pipeline.name}"`,
           type: 'success',
         });
         this.$emit('pipeline-deleted', pipeline);
         await this.refreshPipelines();
       } catch (error) {
         this.$notify({
-          title: `Failed to delete pipeline "${pipeline.slug}"`,
+          title: `Failed to delete pipeline "${pipeline.name}"`,
           text: error.message,
           type: 'error',
         });

@@ -119,7 +119,7 @@ export const usePipelineStore = defineStore('pipeline', {
         return null;
       }
       const pipelines = this.pipelines.filter((pipeline) => {
-        return pipeline.slug == id;
+        return pipeline.id == id;
       });
       console.log('Pipelines with id:', id, pipelines);
       if (pipelines.length != 0) {

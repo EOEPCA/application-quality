@@ -7,8 +7,8 @@
         v-model="store.selectedPipelineId"
         label="Pipeline"
         :items="store.pipelines"
-        item-title="description"
-        item-value="slug"
+        item-title="name"
+        item-value="id"
         variant="solo"
         density="compact"
         class="pa-1"
@@ -62,7 +62,6 @@
       v-model:sort-by="sortBy"
       :headers="headers"
       :items="store.executions"
-      :search="store.selectedPipelineId"
       :filter-keys="['pipeline']"
       :custom-filter="filterOnPipelineId"
       class="elevation-1"
@@ -73,7 +72,7 @@
       <template v-slot:item="{ item }">
         <tr>
           <td>
-            {{ item.pipeline && store.pipelineById(item.pipeline).description }}
+            {{ item.pipeline && store.pipelineById(item.pipeline).name }}
           </td>
           <td>
             {{ item.pipeline && store.pipelineById(item.pipeline).version }}
@@ -175,6 +174,7 @@
 
 <script>
 import { useAuthStore } from '@/stores/auth';
+import { useToolStore } from '@/stores/tools';
 import { usePipelineStore } from '@/stores/pipelines';
 import { formatDate } from '@/assets/tools';
 // import JsonToHtmlTable from '@/components/JsonToHtmlTable.vue'
@@ -188,7 +188,6 @@ export default {
   data() {
     return {
       showDetails: false,
-      search: '',
       selectedExecution: null,
       itemsPerPage: 10,
       sortBy: [{ key: 'start_time', order: 'desc' }],
@@ -243,8 +242,9 @@ export default {
 
   setup() {
     const store = usePipelineStore();
+    const toolStore = useToolStore();
     const authStore = useAuthStore();
-    return { store, authStore };
+    return { store, toolStore, authStore };
   },
 
   computed: {
@@ -256,13 +256,10 @@ export default {
   },
 
   mounted() {
+    this.refreshTools();
     this.refreshPipelineExecutions();
     // this.isPolling = false
     // this.togglePolling()
-    if (this.store.selectedPipelineId) {
-      const pipeline = this.store.selectedPipeline();
-      this.search = pipeline.description;
-    }
   },
 
   methods: {
@@ -271,14 +268,26 @@ export default {
       // console.log("Max progress:", this.store.pipelineById(execution.pipeline).tools.length)
       return execution.job_reports_count;
     },
+
     progressMax(execution) {
       // console.log("Max progress:", this.store.pipelineById(execution.pipeline).tools.length)
-      return this.store.pipelineById(execution.pipeline).tools.length;
+      const pipeline = this.store.pipelineById(execution.pipeline);
+      // Do not include init tools as they don't generate reports
+      console.log('Pipeline tools:', pipeline.tools);
+      const analysisTools = pipeline.tools.filter(
+        (tool) => !this.toolStore.isInitTool(tool),
+      );
+      console.log('Analysis tools:', analysisTools);
+      return analysisTools.length;
     },
 
     filterOnPipelineId(value, query, item) {
       console.info('filterOnPipelineId:', value, query, item);
       return value == query;
+    },
+
+    async refreshTools() {
+      await this.toolStore.fetchTools();
     },
 
     async refreshPipelineExecutions() {
