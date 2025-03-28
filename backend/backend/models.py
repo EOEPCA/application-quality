@@ -8,13 +8,15 @@ class Pipeline(models.Model):
     template        = models.TextField()
     tools           = models.ManyToManyField("Subworkflow", blank=True)
     owner           = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name="pipelines")
+    created_at      = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    edited_at       = models.DateTimeField(auto_now=True, blank=True, null=True)
     version         = models.CharField(max_length=50, null=True)
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['name', 'owner', 'version'],
-                name='unique_name_owner_version'
+                fields=["name", "owner", "version"],
+                name="unique_name_owner_version"
             )
         ]
 
@@ -39,7 +41,7 @@ class PipelineRun(models.Model):
         return self.jobreports.count()
 
     def __str__(self):
-        return f"{'✅' if self.status == 'succeeded' else '❌'} Run {self.id}: {self.pipeline.name}"
+        return f"{"✅" if self.status == "succeeded" else "❌"} Run {self.id}: {self.pipeline.name}"
 
 
 class JobReport(models.Model):

@@ -3,7 +3,7 @@ import os
 import yaml
 
 from . import serializers
-from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow
+from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag
 from backend.tasks import run_workflow_task
 from backend.utils.opensearch import index_pipeline_job_report
 
@@ -42,7 +42,6 @@ class IsOwnerOrAdmin(permissions.BasePermission):
 
 class PipelineViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.PipelineSerializer
-    lookup_field = "id"
 
     def get_queryset(self):
         if self.request.user.is_staff:
@@ -65,7 +64,6 @@ class PipelineViewSet(viewsets.ModelViewSet):
 
 class PipelineRunViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.PipelineRunSerializer
-    lookup_field = "id"
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
@@ -214,7 +212,11 @@ class JobReportViewSet(
         )
 
 
-class SubworkflowViewSet(viewsets.ModelViewSet):
+class SubworkflowViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Subworkflow.objects.all()
     serializer_class = serializers.SubworkflowSerializer
-    lookup_field = "slug"
+
+
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = serializers.TagSerializer
