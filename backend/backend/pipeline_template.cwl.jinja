@@ -25,60 +25,15 @@ $graph:
       type: string
       default: ''
     pipeline_id: string
-    repo_url: string
     run_id: string
     server_url: string
 
   outputs: []
 
   steps:
-    clone_step:
-      in:
-        branch: branch
-        repo_url: repo_url
-      run: '#clone_tool'
-      out:
-      - repo_directory
     {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}
     {% endfor %}
   id: main
-- class: CommandLineTool
-
-  requirements:
-    DockerRequirement:
-      dockerPull: alpine/git
-    InitialWorkDirRequirement:
-      listing:
-      - entryname: clone_branch.sh
-        entry: |-
-          set -e
-
-          if [ $(inputs.branch) ]; then
-            echo 'Branch specified: $(inputs.branch). Cloning branch...'
-            git clone $(inputs.repo_url) -b $(inputs.branch)
-          else
-            echo 'No branch specified. Cloning default branch...'
-            git clone $(inputs.repo_url)
-          fi
-
-          echo '✅ Cloned!
-          '
-    InlineJavascriptRequirement: {}
-
-  inputs:
-    branch: string
-    repo_url: string
-
-  outputs:
-    repo_directory:
-      type: Directory
-      outputBinding:
-        glob: $(inputs.repo_url.split('/').pop().replace('.git',''))
-
-  baseCommand: sh
-  arguments:
-  - clone_branch.sh
-  id: clone_tool
 {% for tool in subworkflows %}
 {{ tool.definition }}
 {% endfor %}
