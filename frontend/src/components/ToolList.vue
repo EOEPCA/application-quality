@@ -62,7 +62,18 @@
         <tr>
           <td>{{ item.description || 'No description' }}</td>
           <td>{{ item.version || 'N/A' }}</td>
-          <td>{{ formatDate(item.created_at) }}</td>
+          <td class="nowrap">
+            <v-chip
+              v-for="tag_name in item.tags"
+              :key="tag_name"
+              size="small"
+              class="ml-2"
+              :color="tagChipColor(tag_name)"
+              v-tooltip:bottom-end="tagChipTooltip(tag_name)"
+              >{{ tagChipLabel(tag_name) }}</v-chip
+            >
+          </td>
+          <!-- <td>{{ formatDate(item.created_at) }}</td> -->
           <td class="text-right nowrap">
             <v-btn
               icon="mdi-information"
@@ -74,7 +85,7 @@
               :__title="'Information'"
               @click="viewToolDetails(item)"
             />
-            <v-btn
+            <!-- <v-btn
               icon="mdi-pencil"
               variant="text"
               disabled
@@ -89,7 +100,7 @@
               v-tooltip:bottom-end="'Delete the tool'"
               :__title="'Delete the tool'"
               @click="deleteTool(item)"
-            />
+            /> -->
           </td>
         </tr>
       </template>
@@ -166,8 +177,8 @@ export default {
           sortable: true,
         },
         {
-          title: 'Created',
-          key: 'created_at',
+          title: 'Purposes',
+          key: 'tags',
           sortable: true,
         },
         {
@@ -224,6 +235,49 @@ export default {
         minute: 'numeric',
         second: 'numeric',
       });
+    },
+
+    tagChipColor(tagName) {
+      // Determine color based on tag name prefix
+      let color = 'grey';
+      if (typeof tagName === 'string') {
+        if (tagName.toLowerCase().startsWith('asset')) {
+          color = 'blue';
+        } else if (tagName.toLowerCase().startsWith('type')) {
+          color = 'green';
+        }
+      }
+      console.log(`Chip color for tag $tagName is $color`);
+      return color;
+    },
+
+    tagChipLabel(tagName) {
+      // Extract the substring after colon
+      if (typeof tagName !== 'string') return tagName;
+      const colonIndex = tagName.indexOf(':');
+      if (colonIndex !== -1 && colonIndex < tagName.length - 1) {
+        return tagName.substring(colonIndex + 1).trim();
+      }
+      return tagName;
+    },
+
+    tagChipTooltip(tagName) {
+      let tooltip = 'Not an analysis tool';
+      let label = this.tagChipLabel(tagName);
+      if (label == 'python') {
+        tooltip = 'Analyses Python scripts';
+      } else if (label == 'notebook') {
+        tooltip = 'Analyses iPython / Jupyter notebooks';
+      } else if (label == 'cwl') {
+        tooltip = 'Analyses Application Package CWL files';
+      } else if (label == 'best practice') {
+        tooltip = 'Verifies the applications compliance with best practices';
+      } else if (label == 'app quality') {
+        tooltip = 'Verifies the applications quality';
+      } else if (label == 'app security') {
+        tooltip = 'Verifies the applications security and safety';
+      }
+      return tooltip;
     },
 
     pruneToolDetails(tool) {

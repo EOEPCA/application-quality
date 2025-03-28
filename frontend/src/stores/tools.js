@@ -1,20 +1,44 @@
 import { defineStore } from 'pinia';
 import { toolService } from '@/services/tools';
+import { tagService } from '@/services/tags';
 
 export const useToolStore = defineStore('tool', {
   state: () => ({
     tools: [],
+    tags: [],
     executions: [],
     loading: false,
     error: null,
   }),
 
   actions: {
+    updateToolsTags(tools, tags) {
+      // Replace tag IDs with tag names in the tools array
+      this.tools = tools.map((tool) => {
+        if (tool.tags && Array.isArray(tool.tags)) {
+          // Create a new tool object with updated tags
+          return {
+            ...tool,
+            tags: tool.tags.map((tagId) => {
+              // Find the tag object that matches the tagId
+              const tag = tags.find((t) => t.id === tagId || t._id === tagId);
+              // Return the tag name if found, otherwise return the original tagId
+              return tag ? tag.name : tagId;
+            }),
+          };
+        }
+        // If tool doesn't have tags, return it unchanged
+        return tool;
+      });
+    },
+
     async fetchTools() {
       this.loading = true;
       this.error = null;
       try {
         this.tools = await toolService.getTools();
+        this.tags = await tagService.getTags();
+        this.updateToolsTags(this.tools, this.tags);
       } catch (error) {
         this.error = error.message;
       } finally {
@@ -33,6 +57,7 @@ export const useToolStore = defineStore('tool', {
         } else {
           this.tools.push(tool);
         }
+        this.updateToolsTags(this.tools, this.tags);
       } catch (error) {
         this.error = error.message;
       } finally {
@@ -68,6 +93,11 @@ export const useToolStore = defineStore('tool', {
     hasToolUserParams(id) {
       const tool = this.getToolById(id);
       return tool ? Object.keys(tool.user_params).length !== 0 : false;
+    },
+
+    getToolTags(id) {
+      const tool = this.getToolById(id);
+      return tool ? tool.tags : null;
     },
   },
 });
