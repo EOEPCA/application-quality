@@ -131,9 +131,9 @@
         </v-card-title -->
         <v-card-text>
           <v-alert
-            v-if="selectedTool.description"
+            v-if="selectedTool.name"
             type="info"
-            :text="selectedTool.description"
+            :text="selectedTool.name"
             class="mb-4"
           />
           <JsonToHtmlTable

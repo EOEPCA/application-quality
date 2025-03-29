@@ -40,7 +40,14 @@ export const useToolStore = defineStore('tool', {
         this.tags = await tagService.getTags();
         this.updateToolsTags(this.tools, this.tags);
       } catch (error) {
-        this.error = error.message;
+        const msg_prefix = 'Error fetching tools: ';
+        if (error.response?.data?.detail) {
+          console.error(msg_prefix, error, error.response.data.detail);
+          this.error = msg_prefix + error.response.data.detail;
+        } else {
+          console.error(msg_prefix, error);
+          this.error = msg_prefix + error.message;
+        }
       } finally {
         this.loading = false;
       }
@@ -59,7 +66,14 @@ export const useToolStore = defineStore('tool', {
         }
         this.updateToolsTags(this.tools, this.tags);
       } catch (error) {
-        this.error = error.message;
+        const msg_prefix = 'Error fetching tool: ';
+        if (error.response?.data?.detail) {
+          console.error(msg_prefix, error, error.response.data.detail);
+          this.error = msg_prefix + error.response.data.detail;
+        } else {
+          console.error(msg_prefix, error);
+          this.error = msg_prefix + error.message;
+        }
       } finally {
         this.loading = false;
       }

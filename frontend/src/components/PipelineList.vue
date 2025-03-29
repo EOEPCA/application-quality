@@ -177,12 +177,12 @@
             {{ selectedPipeline.name || selectedPipeline.id }}
             <v-spacer />
             <v-btn icon="mdi-close" variant="text" @click="showDetailsDialog = false" />
-          </v-card-title -->
+        </v-card-title -->
         <v-card-text>
           <v-alert
-            v-if="selectedPipeline.description"
+            v-if="selectedPipeline.name"
             type="info"
-            :text="selectedPipeline.description"
+            :text="selectedPipeline.name"
             class="mb-4"
           />
           <JsonToHtmlTable :data="prunePipelineDetails(selectedPipeline)" />

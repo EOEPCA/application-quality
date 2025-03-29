@@ -9,7 +9,9 @@
   >
     <v-card>
       <v-card-title class="d-flex align-center">
-        <span v-if="modelValue.creation">New pipeline: {{ pipelineName }}</span>
+        <span v-if="modelValue.isCreation"
+          >New pipeline: {{ pipelineName }}</span
+        >
         <span v-else>Edit pipeline: {{ pipelineName }}</span>
         <v-spacer />
         <v-btn
@@ -100,12 +102,7 @@
             </v-card-text>
           </v-card>
 
-          <v-card
-            title="Default values"
-            elevation="3"
-            class="mb-4"
-            v-if="false"
-          >
+          <v-card title="Default values" elevation="3" class="mb-4" v-if="true">
             <v-card-text>
               <v-text-field
                 v-model="modelValue.repo_url"
