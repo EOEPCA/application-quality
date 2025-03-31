@@ -102,7 +102,7 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         )
         logger.info(f"Pipeline run created with id {pipeline_run.id}")
 
-        yaml_cwl = self.render_cwl(pipeline)
+        yaml_cwl = self._render_cwl(pipeline)
         cwl = yaml.safe_load(yaml_cwl)
 
         logger.info(f"Running workflow with id {pipeline_run.id}")
@@ -128,7 +128,23 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED
         )
 
-    def render_cwl(self, pipeline):
+    def _merge_params(self, subworkflow: Subworkflow, default_inputs: dict) -> dict:
+        if subworkflow.slug not in default_inputs:
+            return subworkflow.user_params
+
+        merged_params = subworkflow.user_params.copy()
+        defaults = default_inputs[subworkflow.slug]
+
+        for key, value in merged_params.items():
+            if isinstance(value, dict) and key in defaults:
+                for sub_key, sub_value in value.items():
+                    if isinstance(sub_value, dict) and "default" in sub_value:
+                        if sub_key in defaults[key] and "default" in defaults[key][sub_key]:
+                            merged_params[key][sub_key]["default"] = defaults[key][sub_key]["default"]
+
+        return merged_params
+
+    def _render_cwl(self, pipeline):
         logger.debug(f"Rendering CWL for pipeline '{pipeline.id}'")
         rendered_subworkflows = []
 
@@ -139,7 +155,7 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             subtool = {
                 "definition": subtemplate.render(subcontext),
                 "slug": subworkflow.pk,
-                "user_params": subworkflow.user_params,
+                "user_params": self._merge_params(subworkflow, pipeline.default_inputs),
                 "pipeline_step": subworkflow.pipeline_step,
             }
             rendered_subworkflows.append(subtool)

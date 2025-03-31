@@ -12,6 +12,7 @@ class PipelineSerializer(serializers.ModelSerializer):
             "name",
             "description",
             "tools",
+            "default_inputs",
             "owner",
             "created_at",
             "edited_at",

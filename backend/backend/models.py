@@ -7,6 +7,7 @@ class Pipeline(models.Model):
     description     = models.TextField(null=True)
     template        = models.TextField()
     tools           = models.ManyToManyField("Subworkflow", blank=True)
+    default_inputs  = models.JSONField(default=dict, blank=True, null=True)
     owner           = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name="pipelines")
     created_at      = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     edited_at       = models.DateTimeField(auto_now=True, blank=True, null=True)
