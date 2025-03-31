@@ -129,8 +129,8 @@ export const pipelineService = {
 
   async deletePipeline(pipelineId) {
     try {
-      console.log('Delete pipeline:', pipelineId);
-      const response = await pipelineApi.delete(pipelineId);
+      console.log('Delete pipeline with Id:', pipelineId);
+      const response = await pipelineApi.delete(`/${pipelineId}`);
       return response.data;
     } catch (error) {
       console.error(`Error deleting pipeline ${pipelineId}:`, error);

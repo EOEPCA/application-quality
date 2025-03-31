@@ -138,7 +138,7 @@ export const usePipelineStore = defineStore('pipeline', {
     },
 
     async deletePipeline(id) {
-      console.log('Deleting pipeline:', id);
+      console.log('Delete pipeline with Id:', id);
       this.loading = true;
       this.error = null;
       try {
