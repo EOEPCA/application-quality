@@ -73,7 +73,7 @@
                   <v-list-item
                     v-bind="props"
                     :title="item.raw.name"
-                    class="d-flex flex-row align-stretch"
+                    class="d-flex flex-row align-stretch font-weight-bold"
                   >
                     <template v-slot:prepend>
                       <v-icon
@@ -83,7 +83,7 @@
                     </template>
                     <!-- eslint-disable vue/no-v-text-v-html-on-component -->
                     <v-list-item-subtitle
-                      class="text-wrap"
+                      class="text-wrap font-weight-light"
                       v-html="item.raw.description"
                     />
                   </v-list-item>
@@ -370,13 +370,6 @@ export default {
             typeof tool === 'object' ? tool.slug : tool,
           ),
           default_inputs: defaultInputs,
-          // "clone_subwokflow": {
-          //     "clone": {
-          //         "repo_branch": {
-          //             "default": "main"
-          //         }
-          //     }
-          // }
         };
         const response = await pipelineService.createPipeline(data);
         // The panel is closed when the parent component receives this signal

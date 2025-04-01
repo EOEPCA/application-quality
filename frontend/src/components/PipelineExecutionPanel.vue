@@ -37,7 +37,7 @@
               <tool-inputs-card
                 v-if="toolStore.hasToolUserParams(init_tool_id)"
                 :toolId="init_tool_id"
-                :toolParams.sync="pipeline.init_params[init_tool_id]"
+                :toolParams="pipeline.default_inputs[init_tool_id]"
                 @update:toolParams="
                   (toolId, toolParams) => updateToolParams(toolId, toolParams)
                 "
@@ -68,7 +68,7 @@
               <tool-inputs-card
                 v-if="toolStore.hasToolUserParams(tool_id)"
                 :toolId="tool_id"
-                :toolParams.sync="pipeline.user_params[tool_id]"
+                :toolParams="pipeline.default_inputs[tool_id]"
                 @update:toolParams="
                   (toolId, toolParams) => updateToolParams(toolId, toolParams)
                 "
@@ -125,7 +125,6 @@ export default {
       localModelValue: null,
       localPipeline: null,
       localVisible: false,
-      toolInputsCardProperties: {},
     };
   },
 
@@ -162,7 +161,7 @@ export default {
 
   methods: {
     resetForm() {
-      // console.log('Re-initialising the execution form');
+      // console.log('Re-initialising the pipeline execution form');
       this.error = null;
       this.localModelValue = this.modelValue
         ? JSON.parse(JSON.stringify(this.modelValue))
@@ -179,7 +178,14 @@ export default {
     },
 
     updateToolParams(toolId, toolParams) {
-      console.log('Received update:toolParams event:', toolId, toolParams);
+      console.log(
+        'Received "update:toolParams" event:',
+        toolId,
+        toolParams,
+        this.localModelValue,
+      );
+      // Update the localModelValue
+      this.localModelValue.parameters[toolId] = toolParams;
     },
 
     async submitExecution() {
@@ -187,10 +193,34 @@ export default {
       this.loading = true;
       this.error = null;
       try {
-        console.log('Pipeline to execute:', this.pipeline);
+        console.log(
+          'Pipeline to execute:',
+          this.pipeline,
+          this.localModelValue,
+        );
+        var execParams = {};
+        for (var toolId in this.localModelValue.parameters) {
+          console.log('Tool:', toolId);
+          execParams[toolId] = {};
+          for (var stepId in this.localModelValue.parameters[toolId]) {
+            console.log('  Step:', stepId);
+            execParams[toolId][stepId] = {};
+            for (var paramId in this.localModelValue.parameters[toolId][
+              stepId
+            ]) {
+              console.log('    Param:', paramId);
+              execParams[toolId][stepId][paramId] =
+                this.localModelValue.parameters[toolId][stepId][
+                  paramId
+                ].default;
+              console.log('    Value:', execParams[toolId][stepId][paramId]);
+            }
+          }
+        }
         const response = await pipelineService.executePipeline(
           this.pipeline.id,
-          this.localModelValue,
+          //this.localModelValue,
+          { parameters: execParams },
         );
         // The panel is closed when the parent component receives this signal
         this.$emit('execution-submitted', response);

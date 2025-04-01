@@ -112,7 +112,7 @@ export const usePipelineStore = defineStore('pipeline', {
     },
 
     pipelineById(id) {
-      console.log('Pipelines in store:', this.pipelines);
+      // console.log('Pipelines in store:', this.pipelines);
       if (id == null || id == undefined) id = this.selectedPipelineId;
       if (id == null || id == undefined) {
         console.log('Bad request: not pipeline Id provided');
@@ -121,7 +121,7 @@ export const usePipelineStore = defineStore('pipeline', {
       const pipelines = this.pipelines.filter((pipeline) => {
         return pipeline.id == id;
       });
-      console.log('Pipelines with id:', id, pipelines);
+      // console.log('Pipelines with id:', id, pipelines);
       if (pipelines.length != 0) {
         return pipelines[0];
       }
