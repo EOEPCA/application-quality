@@ -98,7 +98,12 @@ export default {
       this.localToolParams = this.toolParams;
     }
     // this.localDefaultInputs = this.defaultInputs;
-    console.log('Tool Id, params, default:', this.toolId, this.toolParams, this.defaultInputs);
+    console.log(
+      'Tool Id, params, default:',
+      this.toolId,
+      this.toolParams,
+      this.defaultInputs,
+    );
   },
 
   // Properties provided by the parent component

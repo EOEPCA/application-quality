@@ -260,8 +260,8 @@ export default {
     visible: {
       handler() {
         console.log('Creation/edition panel becomes visible');
-        this.resetForm();  // updateCreationPanel();
-      }
+        this.resetForm(); // updateCreationPanel();
+      },
     },
     localModelValue: {
       handler() {
@@ -362,12 +362,12 @@ export default {
       if (this.localModelValue.defaultInputs !== undefined) {
         return this.localModelValue.defaultInputs[toolId];
       } else if (this.selectedTools.init_params[toolId]) {
-        return this.selectedTools.init_params[toolId]
+        return this.selectedTools.init_params[toolId];
       } else {
-        this.selectedTools.user_params[toolId]
+        this.selectedTools.user_params[toolId];
       }
     },
-    
+
     async submitCreation() {
       if (!this.isValid) return;
 
@@ -423,21 +423,28 @@ export default {
       this.error = null;
 
       try {
-        console.log('Pipeline to update:', this.localModelValue.id, this.localModelValue.name);
+        console.log(
+          'Pipeline to update:',
+          this.localModelValue.id,
+          this.localModelValue.name,
+        );
         var defaultInputs = {};
         for (var tool of this.localModelValue.selectedTools) {
           console.log('Selected tool:', tool.slug, tool);
           if (this.toolStore.isInitTool(tool.slug)) {
-            defaultInputs[tool.slug] = this.selectedTools.init_params[tool.slug];
+            defaultInputs[tool.slug] =
+              this.selectedTools.init_params[tool.slug];
           } else {
-            defaultInputs[tool.slug] = this.selectedTools.user_params[tool.slug];
+            defaultInputs[tool.slug] =
+              this.selectedTools.user_params[tool.slug];
           }
         }
         console.log('New default inputs:', defaultInputs);
         const data = {
           id: this.localModelValue.id,
           name: this.localModelValue.name,
-          description: this.localModelValue.description || this.localModelValue.name,
+          description:
+            this.localModelValue.description || this.localModelValue.name,
           tools: this.localModelValue.selectedTools.map((tool) =>
             typeof tool === 'object' ? tool.slug : tool,
           ),
@@ -470,7 +477,9 @@ export default {
     },
 
     async submit() {
-      this.localModelValue.isCreation ? this.submitCreation() : this.submitEdition();
+      this.localModelValue.isCreation
+        ? this.submitCreation()
+        : this.submitEdition();
     },
   },
 };
