@@ -127,6 +127,7 @@
                 v-if="toolStore.hasToolUserParams(init_tool_id)"
                 :toolId="init_tool_id"
                 :toolParams="selectedTools.init_params[init_tool_id]"
+                :defaultInputs="defaultInputs(init_tool_id)"
                 @update:toolParams="
                   (toolId, toolParams) => updateToolParams(toolId, toolParams)
                 "
@@ -144,6 +145,7 @@
                 v-if="toolStore.hasToolUserParams(tool_id)"
                 :toolId="tool_id"
                 :toolParams="selectedTools.user_params[tool_id]"
+                :defaultInputs="defaultInputs(tool_id)"
                 @update:toolParams="
                   (toolId, toolParams) => updateToolParams(toolId, toolParams)
                 "
@@ -208,10 +210,11 @@ export default {
     // modelValue contains the creation data
     modelValue: {
       type: Object,
-      default: () => ({
-        availableTools: [],
-        selectedTools: null,
-      }),
+      // default: () => ({
+      //   availableTools: [],
+      //   selectedTools: null,
+      //   defaultInputs: {},
+      // }),
       required: true,
     },
     visible: {
@@ -254,9 +257,16 @@ export default {
   },
 
   watch: {
+    visible: {
+      handler() {
+        console.log('Creation/edition panel becomes visible');
+        this.resetForm();  // updateCreationPanel();
+      }
+    },
     localModelValue: {
       handler() {
         console.log('Selected tools:', this.localModelValue.selectedTools);
+        console.log('Default inputs:', this.localModelValue.defaultInputs);
         this.updateCreationPanel();
         //this.$emit('update:toolParams', this.localToolId, this.localToolParams);
       },
@@ -276,6 +286,7 @@ export default {
       }
       this.localPipeline = this.pipeline;
       this.localVisible = this.visible;
+      this.updateCreationPanel();
       return true;
     },
 
@@ -314,11 +325,10 @@ export default {
     // After the tools have been selected, the user must be able
     // to enter or edit the default values for the user parameters
     updateCreationPanel() {
-      //console.log('Selected pipeline:', pipeline);
-      //this.refreshTools();
       this.selectedTools.init_params = {};
       this.selectedTools.user_params = {};
       console.log('Selected tools:', this.localModelValue.selectedTools);
+      console.log('Default inputs:', this.localModelValue.defaultInputs);
       for (var tool of this.localModelValue.selectedTools) {
         // const tool = this.toolStore.getToolById(tool_id);
         if (this.toolStore.isInitTool(tool.slug)) {
@@ -348,6 +358,16 @@ export default {
       }
     },
 
+    defaultInputs(toolId) {
+      if (this.localModelValue.defaultInputs !== undefined) {
+        return this.localModelValue.defaultInputs[toolId];
+      } else if (this.selectedTools.init_params[toolId]) {
+        return this.selectedTools.init_params[toolId]
+      } else {
+        this.selectedTools.user_params[toolId]
+      }
+    },
+    
     async submitCreation() {
       if (!this.isValid) return;
 
@@ -358,7 +378,7 @@ export default {
         console.log('Pipeline to create:', this.localModelValue.name);
         var defaultInputs = {};
         for (var tool of this.localModelValue.selectedTools) {
-          console.log('Selected tool:', tool);
+          console.log('Selected tool:', tool.slug, tool);
           defaultInputs[tool.slug] = tool.user_params;
         }
         const data = {
@@ -403,14 +423,26 @@ export default {
       this.error = null;
 
       try {
-        console.log('Pipeline to update:', this.modelValue.name);
+        console.log('Pipeline to update:', this.localModelValue.id, this.localModelValue.name);
+        var defaultInputs = {};
+        for (var tool of this.localModelValue.selectedTools) {
+          console.log('Selected tool:', tool.slug, tool);
+          if (this.toolStore.isInitTool(tool.slug)) {
+            defaultInputs[tool.slug] = this.selectedTools.init_params[tool.slug];
+          } else {
+            defaultInputs[tool.slug] = this.selectedTools.user_params[tool.slug];
+          }
+        }
+        console.log('New default inputs:', defaultInputs);
         const data = {
-          name: this.modelValue.name,
-          description: this.modelValue.description || this.modelValue.name,
-          tools: this.modelValue.selectedTools.map((tool) =>
+          id: this.localModelValue.id,
+          name: this.localModelValue.name,
+          description: this.localModelValue.description || this.localModelValue.name,
+          tools: this.localModelValue.selectedTools.map((tool) =>
             typeof tool === 'object' ? tool.slug : tool,
           ),
-          version: this.modelValue.version,
+          version: this.localModelValue.version,
+          default_inputs: defaultInputs,
         };
         const response = await pipelineService.updatePipeline(data);
         // The panel is closed when the parent component receives this signal
@@ -438,7 +470,7 @@ export default {
     },
 
     async submit() {
-      this.modelValue.isCreation ? this.submitCreation() : this.submitEdition();
+      this.localModelValue.isCreation ? this.submitCreation() : this.submitEdition();
     },
   },
 };

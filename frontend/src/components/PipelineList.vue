@@ -399,7 +399,7 @@ export default {
       ];
       if (this.authStore.isAdmin) {
         // Only display these properties to admin users
-        keysToKeep.append('id');
+        keysToKeep.push('id');
       }
       return Object.fromEntries(
         Object.entries(pipeline).filter(([key]) => keysToKeep.includes(key)),
@@ -462,6 +462,7 @@ export default {
         description: pipeline.description,
         version: pipeline.version,
         availableTools: this.toolStore.tools,
+        defaultInputs: pipeline.default_inputs,
         // Retrieve the tool objects
         selectedTools: pipeline.tools.map((tool) =>
           typeof tool === 'string' ? this.toolStore.getToolById(tool) : tool,

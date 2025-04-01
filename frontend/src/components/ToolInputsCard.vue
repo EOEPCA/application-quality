@@ -92,8 +92,13 @@ export default {
 
   mounted() {
     this.localToolId = this.toolId;
-    this.localToolParams = this.toolParams;
-    console.log('Tool Id, params:', this.toolId, this.toolParams);
+    if (this.defaultInputs !== undefined) {
+      this.localToolParams = this.defaultInputs;
+    } else {
+      this.localToolParams = this.toolParams;
+    }
+    // this.localDefaultInputs = this.defaultInputs;
+    console.log('Tool Id, params, default:', this.toolId, this.toolParams, this.defaultInputs);
   },
 
   // Properties provided by the parent component
@@ -105,6 +110,10 @@ export default {
     toolParams: {
       type: Object,
       required: true,
+    },
+    defaultInputs: {
+      type: Object,
+      required: false,
     },
   },
 
