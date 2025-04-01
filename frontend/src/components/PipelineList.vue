@@ -171,7 +171,7 @@
     <v-progress-circular v-else indeterminate class="ma-4" />
 
     <!-- Pipeline Details Dialog -->
-    <v-dialog v-model="showDetailsDialog" max-width="800px">
+    <v-dialog v-model="showDetailsDialog" max-width="1200px">
       <v-card v-if="selectedPipeline">
         <!-- v-card-title>
             {{ selectedPipeline.name || selectedPipeline.id }}
@@ -391,9 +391,11 @@ export default {
         'name',
         'description',
         'version',
+        'owner',
         'created_at',
         'edited_at',
         'tools',
+        'default_inputs',
       ];
       if (this.authStore.isAdmin) {
         // Only display these properties to admin users

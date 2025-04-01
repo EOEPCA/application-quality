@@ -1,7 +1,7 @@
 <!-- eslint-disable vue/no-mutating-props -->
 <template>
   <v-navigation-drawer
-    __v-if="pipeline"
+    v-if="localModelValue"
     v-model="isVisible"
     location="right"
     temporary
@@ -36,7 +36,7 @@
           <v-card title="Properties" elevation="3" class="mb-4">
             <v-card-text>
               <v-text-field
-                v-model="modelValue.name"
+                v-model="localModelValue.name"
                 label="Name"
                 required
                 :disabled="!modelValue.isCreation"
@@ -44,19 +44,19 @@
                 :rules="[(v) => !!v || 'The name may not be empty']"
               />
               <v-text-field
-                v-model="modelValue.description"
+                v-model="localModelValue.description"
                 label="Description (optional)"
                 required
                 :__rules="[(v) => !!v || 'The Git repository URL is required']"
               />
               <v-text-field
-                v-model="modelValue.version"
+                v-model="localModelValue.version"
                 label="Version (free text)"
                 required
                 :rules="[(v) => !!v || 'The version may not be empty']"
               />
               <v-combobox
-                v-model="modelValue.selectedTools"
+                v-model="localModelValue.selectedTools"
                 :items="modelValue.availableTools"
                 label="Selected analysis tools"
                 multiple
@@ -102,7 +102,7 @@
             </v-card-text>
           </v-card>
 
-          <v-card title="Default values" elevation="3" class="mb-4" v-if="true">
+          <!-- <v-card title="Default values" elevation="3" class="mb-4" v-if="true">
             <v-card-text>
               <v-text-field
                 v-model="modelValue.repo_url"
@@ -116,7 +116,41 @@
                 :rules="[(v) => !!v || 'The Git branch is required']"
               />
             </v-card-text>
-          </v-card>
+          </v-card> -->
+
+          <template v-if="selectedTools.init_params">
+            <div
+              v-for="(init_params, init_tool_id) in selectedTools.init_params"
+              :key="init_tool_id"
+            >
+              <tool-inputs-card
+                v-if="toolStore.hasToolUserParams(init_tool_id)"
+                :toolId="init_tool_id"
+                :toolParams="selectedTools.init_params[init_tool_id]"
+                @update:toolParams="
+                  (toolId, toolParams) => updateToolParams(toolId, toolParams)
+                "
+              >
+              </tool-inputs-card>
+            </div>
+          </template>
+
+          <template v-if="selectedTools.user_params">
+            <div
+              v-for="(tool_params, tool_id) in selectedTools.user_params"
+              :key="tool_id"
+            >
+              <tool-inputs-card
+                v-if="toolStore.hasToolUserParams(tool_id)"
+                :toolId="tool_id"
+                :toolParams="selectedTools.user_params[tool_id]"
+                @update:toolParams="
+                  (toolId, toolParams) => updateToolParams(toolId, toolParams)
+                "
+              >
+              </tool-inputs-card>
+            </div>
+          </template>
         </v-form>
       </v-card-text>
 
@@ -142,9 +176,14 @@
 // import { ref, computed } from 'vue'
 import { pipelineService } from '@/services/pipelines';
 import { useToolStore } from '@/stores/tools';
+import ToolInputsCard from './ToolInputsCard.vue';
 
 export default {
   name: 'PipelineCreationPanel',
+
+  components: {
+    ToolInputsCard,
+  },
 
   data() {
     return {
@@ -154,6 +193,14 @@ export default {
       isBusy: false,
       error: false,
       panelVisible: false,
+      selectedTools: {
+        init_params: {},
+        user_params: {},
+      },
+      // These are given values in resetForm()
+      localModelValue: null,
+      localPipeline: null,
+      localVisible: false,
     };
   },
 
@@ -206,13 +253,34 @@ export default {
     },
   },
 
+  watch: {
+    localModelValue: {
+      handler() {
+        console.log('Selected tools:', this.localModelValue.selectedTools);
+        this.updateCreationPanel();
+        //this.$emit('update:toolParams', this.localToolId, this.localToolParams);
+      },
+      deep: true,
+    },
+  },
+
   methods: {
     resetForm() {
+      // console.log('Re-initialising the pipeline creation form');
       this.error = null;
+      this.localModelValue = this.modelValue
+        ? JSON.parse(JSON.stringify(this.modelValue))
+        : null;
+      if (this.localModelValue.selectedTools === undefined) {
+        this.localModelValue.selectedTools = [];
+      }
+      this.localPipeline = this.pipeline;
+      this.localVisible = this.visible;
+      return true;
     },
 
     onPipelineNameChange() {
-      this.pipelineName = this.modelValue.name;
+      this.pipelineName = this.localModelValue.name;
     },
 
     cancel() {
@@ -243,6 +311,43 @@ export default {
     //   return tools_params
     // },
 
+    // After the tools have been selected, the user must be able
+    // to enter or edit the default values for the user parameters
+    updateCreationPanel() {
+      //console.log('Selected pipeline:', pipeline);
+      //this.refreshTools();
+      this.selectedTools.init_params = {};
+      this.selectedTools.user_params = {};
+      console.log('Selected tools:', this.localModelValue.selectedTools);
+      for (var tool of this.localModelValue.selectedTools) {
+        // const tool = this.toolStore.getToolById(tool_id);
+        if (this.toolStore.isInitTool(tool.slug)) {
+          this.selectedTools.init_params[tool.slug] = tool
+            ? tool['user_params']
+            : null;
+        } else {
+          this.selectedTools.user_params[tool.slug] = tool
+            ? tool['user_params']
+            : null;
+        }
+      }
+    },
+
+    updateToolParams(toolId, toolParams) {
+      console.log(
+        'Received "update:toolParams" event:',
+        toolId,
+        toolParams,
+        this.selectedTools,
+      );
+      // Update the defaultToolsValues
+      if (this.toolStore.isInitTool(toolId)) {
+        this.selectedTools.init_params[toolId] = toolParams;
+      } else {
+        this.selectedTools.user_params[toolId] = toolParams;
+      }
+    },
+
     async submitCreation() {
       if (!this.isValid) return;
 
@@ -250,14 +355,28 @@ export default {
       this.error = null;
 
       try {
-        console.log('Pipeline to create:', this.modelValue.name);
+        console.log('Pipeline to create:', this.localModelValue.name);
+        var defaultInputs = {};
+        for (var tool of this.localModelValue.selectedTools) {
+          console.log('Selected tool:', tool);
+          defaultInputs[tool.slug] = tool.user_params;
+        }
         const data = {
-          name: this.modelValue.name,
-          description: this.modelValue.description || this.modelValue.name,
-          tools: this.modelValue.selectedTools.map((tool) =>
+          name: this.localModelValue.name,
+          description:
+            this.localModelValue.description || this.localModelValue.name,
+          version: this.localModelValue.version,
+          tools: this.localModelValue.selectedTools.map((tool) =>
             typeof tool === 'object' ? tool.slug : tool,
           ),
-          version: this.modelValue.version,
+          default_inputs: defaultInputs,
+          // "clone_subwokflow": {
+          //     "clone": {
+          //         "repo_branch": {
+          //             "default": "main"
+          //         }
+          //     }
+          // }
         };
         const response = await pipelineService.createPipeline(data);
         // The panel is closed when the parent component receives this signal

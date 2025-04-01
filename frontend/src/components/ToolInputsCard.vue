@@ -21,7 +21,7 @@
         v-for="(step_params, step_id) in localToolParams"
         :key="step_id"
       >
-        <v-card elevation="3" class="mb-2" color="indigo">
+        <v-card elevation="3" class="mb-2" color="white">
           <v-card-title v-if="step_params">Step: {{ step_id }}</v-card-title>
           <v-card-text v-for="(param, param_id) in step_params" :key="param_id">
             <!-- CWL input types: string, boolean, int, long, float, double, and null -->

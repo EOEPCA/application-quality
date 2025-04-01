@@ -70,7 +70,7 @@
               v-for="tag_name in item.tags"
               :key="tag_name"
               size="small"
-              class="ml-2"
+              class="mr-2"
               :color="tagChipColor(tag_name)"
               v-tooltip:bottom-end="tagChipTooltip(tag_name)"
               >{{ tagChipLabel(tag_name) }}</v-chip
