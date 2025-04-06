@@ -59,3 +59,11 @@ data:
   SONARQUBE_SERVER: {{ .Values.sonarqube.serverUrl }}
   SONARQUBE_TOKEN: {{ .Values.sonarqube.accessToken }}
   {{- end }}
+  # vCluster
+  VCLUSTER_ENABLED: {{ .Values.vclusters.enabled | default false | quote }}
+  {{- if eq .Values.vclusters.enabled true }}
+  VCLUSTER_NAME: {{ tpl .Values.vclusters.name . }}
+  VCLUSTER_NAMESPACE: {{ tpl .Values.vclusters.namespace . }}
+  VCLUSTER_SERVICE: {{ .Values.vclusters.backend_service | default "default/backend-service" }}
+  HOST_CLUSTER_SERVICE: {{ .Release.Namespace }}/{{ include "application-quality.fullname" . }}-api
+  {{- end }}

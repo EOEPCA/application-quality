@@ -44,6 +44,15 @@ persistence:
   - ReadWriteOnce
   size: 1Gi
 
+vclusters:
+  enabled: false
+  # Templated
+  name: "{{ .Release.Namespace }}-vcluster"
+  # Templated
+  namespace: "{{ .Release.Namespace }}-vcluster"
+  # Local "namespace/service" to the backend service inside the vcluster:
+  #service: default/backend-service
+
 calrissian:
   image: "terradue/calrissian:0.14.0"
   volumeSize: "5Gi"
