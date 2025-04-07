@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 
 class PipelineSerializer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source="owner.username")
+    owner_name = serializers.ReadOnlyField(source="owner.username")
 
     class Meta:
         model = Pipeline
@@ -14,6 +14,7 @@ class PipelineSerializer(serializers.ModelSerializer):
             "tools",
             "default_inputs",
             "owner",
+            "owner_name",
             "created_at",
             "edited_at",
             "version",
