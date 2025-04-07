@@ -189,7 +189,7 @@ class JobReportViewSet(
     def create(self, request, *args, **kwargs):
         pipeline_id = self.kwargs["pipeline_id"]
         run_id = self.kwargs["run_id"]
-        logger.info(f"Creating a new job report for '{pipeline_id}' pipeline, run_id {run_id}")
+        logger.info(f"Creating a new job report for pipeline {pipeline_id}, run_id {run_id}")
 
         tool_name = request.query_params.get("name")
         if not tool_name:
