@@ -15,11 +15,13 @@ if [ -z "$VCLUSTER_NAME" ] || [ -z "$VCLUSTER_NAMESPACE" ]; then
   exit 0
 fi
 
-if vcluster list | grep -q "^$VCLUSTER_NAME\s"; then
-  vcluster create $VCLUSTER_NAME -n $VCLUSTER_NAMESPACE \
-    --set=networking.replicateServices.fromHost[0].from=$HOST_CLUSTER_SERVICE \
-    --set=networking.replicateServices.fromHost[0].to=$VCLUSTER_SERVICE \
-    --connect=false
-fi
+echo "Creating vcluster $VCLUSTER_NAME ..."
+set +e
+vcluster create $VCLUSTER_NAME -n $VCLUSTER_NAMESPACE \
+  --set=networking.replicateServices.fromHost[0].from=$HOST_CLUSTER_SERVICE \
+  --set=networking.replicateServices.fromHost[0].to=$VCLUSTER_SERVICE \
+  --connect=false
+set -e
 
+echo "Connecting to vcluster $VCLUSTER_NAME ..."
 vcluster connect $VCLUSTER_NAME -n $VCLUSTER_NAMESPACE --server=$VCLUSTER_NAME.$VCLUSTER_NAMESPACE
