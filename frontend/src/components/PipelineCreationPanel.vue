@@ -57,7 +57,7 @@
               />
               <v-combobox
                 v-model="localModelValue.selectedTools"
-                :items="modelValue.availableTools"
+                :items="localModelValue.availableTools"
                 label="Selected analysis tools"
                 multiple
                 chips
@@ -167,7 +167,7 @@
           :loading="isBusy"
           :disabled="!isValid"
         >
-          {{ modelValue.creation ? 'Create' : 'Submit' }}
+          {{ modelValue.creation ? 'Create' : 'Submit Changes' }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -176,7 +176,7 @@
 
 <script>
 // import { ref, computed } from 'vue'
-import { pipelineService } from '@/services/pipelines';
+import { usePipelineStore } from '@/stores/pipelines';
 import { useToolStore } from '@/stores/tools';
 import ToolInputsCard from './ToolInputsCard.vue';
 
@@ -207,7 +207,7 @@ export default {
   },
 
   props: {
-    // modelValue contains the creation data
+    // modelValue contains the creation/edit data
     modelValue: {
       type: Object,
       // default: () => ({
@@ -222,12 +222,6 @@ export default {
       default: false,
       required: true,
     },
-    pipeline: {
-      // Invalid prop: type check failed for prop "pipeline". Expected Object, got Null
-      // type: Object,
-      default: null,
-      required: false,
-    },
   },
 
   emits: [
@@ -241,8 +235,10 @@ export default {
   //setup(props, { emit }) {
   setup() {
     const toolStore = useToolStore();
+    const pipelineStore = usePipelineStore();
     return {
       toolStore,
+      pipelineStore,
     };
   },
 
@@ -259,8 +255,14 @@ export default {
   watch: {
     visible: {
       handler() {
-        console.log('Creation/edition panel becomes visible');
-        this.resetForm(); // updateCreationPanel();
+        if (this.visible) {
+          if (this.modelValue.isCreation) {
+            console.log('Initialising the pipeline creation panel');
+          } else {
+            console.log('Initialising the pipeline edition panel');
+          }
+          this.resetForm();
+        }
       },
     },
     localModelValue: {
@@ -332,13 +334,15 @@ export default {
       for (var tool of this.localModelValue.selectedTools) {
         // const tool = this.toolStore.getToolById(tool_id);
         if (this.toolStore.isInitTool(tool.slug)) {
-          this.selectedTools.init_params[tool.slug] = tool
-            ? tool['user_params']
-            : null;
+          this.selectedTools.init_params[tool.slug] = this.localModelValue
+            .defaultInputs[tool.slug]
+            ? this.localModelValue.defaultInputs[tool.slug]
+            : tool['user_params'];
         } else {
-          this.selectedTools.user_params[tool.slug] = tool
-            ? tool['user_params']
-            : null;
+          this.selectedTools.user_params[tool.slug] = this.localModelValue
+            .defaultInputs[tool.slug]
+            ? this.localModelValue.defaultInputs[tool.slug]
+            : tool['user_params'];
         }
       }
     },
@@ -359,13 +363,13 @@ export default {
     },
 
     defaultInputs(toolId) {
-      if (this.localModelValue.defaultInputs !== undefined) {
-        return this.localModelValue.defaultInputs[toolId];
-      } else if (this.selectedTools.init_params[toolId]) {
+      console.log('LocalModelValue:', this.localModelValue);
+      if (this.selectedTools.init_params[toolId]) {
         return this.selectedTools.init_params[toolId];
-      } else {
-        this.selectedTools.user_params[toolId];
+      } else if (this.selectedTools.user_params[toolId]) {
+        return this.selectedTools.user_params[toolId];
       }
+      return this.localModelValue.defaultInputs[toolId];
     },
 
     async submitCreation() {
@@ -391,7 +395,7 @@ export default {
           ),
           default_inputs: defaultInputs,
         };
-        const response = await pipelineService.createPipeline(data);
+        const response = await this.pipelineStore.createPipeline(data);
         // The panel is closed when the parent component receives this signal
         this.$emit('creation-submitted', response);
       } catch (err) {
@@ -449,9 +453,11 @@ export default {
             typeof tool === 'object' ? tool.slug : tool,
           ),
           version: this.localModelValue.version,
+          // Note: The pipeline owner is not changed if edited by another (admin) user
+          owner: this.localModelValue.owner,
           default_inputs: defaultInputs,
         };
-        const response = await pipelineService.updatePipeline(data);
+        const response = await this.pipelineStore.updatePipeline(data);
         // The panel is closed when the parent component receives this signal
         this.$emit('edition-submitted', response);
       } catch (err) {

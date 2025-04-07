@@ -25,7 +25,7 @@
         class="mx-2"
         v-tooltip:bottom-end="'Reload the pipeline definitions'"
         @click="refreshPipelines"
-        :loading="store.loadingPipelines"
+        :loading="pipelineStore.loadingPipelines"
       />
       <v-btn
         icon="mdi-pencil"
@@ -35,7 +35,7 @@
         :disabled="!canCreatePipeline()"
         v-tooltip:bottom-end="'Create a new pipeline'"
         @click="createPipeline"
-        :loading="store.loadingPipelines"
+        :loading="pipelineStore.loadingPipelines"
       />
     </v-card-title>
 
@@ -48,10 +48,15 @@
       @click:close="pipelineSuccessMessage = null"
     />
 
-    <v-alert v-if="store.error" type="error" :text="store.error" closable />
+    <v-alert
+      v-if="pipelineStore.error"
+      type="error"
+      :text="pipelineStore.error"
+      closable
+    />
 
     <v-data-table
-      v-if="store.pipelines.length"
+      v-if="pipelineStore.pipelines.length"
       v-model:items-per-page="itemsPerPage"
       v-model:sort-by="sortBy"
       :headers="headers"
@@ -60,25 +65,6 @@
       class="elevation-1"
       hover
     >
-      <!-- template v-slot:top>
-          <v-toolbar flat>
-            <v-toolbar-title>Pipelines</v-toolbar-title>
-            <v-divider
-              class="mx-4"
-              inset
-              vertical
-            />
-            <v-spacer />
-            <v-btn
-              color="primary"
-              @click="openExecutionDialog"
-              :disabled="!store.pipelines.length"
-            >
-              New Execution
-            </v-btn>
-          </v-toolbar>
-        </template -->
-
       <template v-slot:item="{ item }">
         <tr>
           <td>
@@ -86,7 +72,7 @@
             <div class="font-weight-light">{{ item.description }}</div>
           </td>
           <td>{{ item.version || 'N/A' }}</td>
-          <td>{{ item.owner || '-' }}</td>
+          <td>{{ item.owner_name || '-' }}</td>
           <td>{{ formatDate(item.created_at) }}</td>
           <td class="text-right">
             <v-btn
@@ -105,14 +91,6 @@
               v-tooltip:bottom-end="'Pipeline executions'"
               @click="viewPipelineExecutions(item)"
             />
-            <!-- <v-btn
-                icon="mdi-flash"
-                color="error"
-                variant="text"
-                v-tooltip:bottom-end="'Execute ' + (item.description)"
-                @click="openExecutionDialog(item)"
-                :__title="'Execute ' + (item.description)"
-              /> -->
             <v-btn
               icon="mdi-flash"
               color="success"
@@ -163,7 +141,7 @@
     </v-data-table>
 
     <v-alert
-      v-else-if="!store.loadingPipelines"
+      v-else-if="!pipelineStore.loadingPipelines"
       type="info"
       text="No pipelines found"
     />
@@ -256,7 +234,6 @@ import { useAuthStore } from '@/stores/auth';
 import { useToolStore } from '@/stores/tools';
 import { usePipelineStore } from '@/stores/pipelines';
 import JsonToHtmlTable from '@/components/JsonToHtmlTable.vue';
-// import PipelineExecutionDialog from './PipelineExecutionDialog.vue'
 import PipelineCreationPanel from './PipelineCreationPanel.vue';
 import PipelineExecutionPanel from './PipelineExecutionPanel.vue';
 import { formatDate } from '@/assets/tools';
@@ -304,7 +281,7 @@ export default {
         },
         {
           title: 'Owner',
-          key: 'owner',
+          key: 'owner_name',
           sortable: true,
         },
         {
@@ -324,9 +301,9 @@ export default {
 
   setup() {
     const authStore = useAuthStore();
-    const store = usePipelineStore();
+    const pipelineStore = usePipelineStore();
     const toolStore = useToolStore();
-    return { store, toolStore, authStore };
+    return { pipelineStore, toolStore, authStore };
   },
 
   mounted() {
@@ -334,28 +311,28 @@ export default {
     this.refreshPipelines();
   },
 
-  emits: ['pipeline-created', 'execution-created', 'pipeline-deleted'],
+  emits: [
+    'pipeline-created',
+    'pipeline-edited',
+    'execution-created',
+    'pipeline-deleted',
+  ],
 
   computed: {
     filteredPipelines() {
-      if (!this.search) return this.store.pipelines;
+      if (!this.search) return this.pipelineStore.pipelines;
       const searchTerm = this.search.toLowerCase();
-      return this.store.pipelines.filter((pipeline) => {
+      return this.pipelineStore.pipelines.filter((pipeline) => {
         const allText =
           pipeline.name + pipeline.description + String(pipeline.tags);
-        return (
-          // (pipeline.description &&
-          //   pipeline.description.toLowerCase().includes(searchTerm)) ||
-          // pipeline.name.toLowerCase().includes(searchTerm)
-          allText.toLowerCase().includes(searchTerm)
-        );
+        return allText.toLowerCase().includes(searchTerm);
       });
     },
   },
 
   methods: {
     async refreshPipelines() {
-      await this.store.fetchPipelines();
+      await this.pipelineStore.fetchPipelines();
     },
 
     async refreshTools() {
@@ -368,21 +345,24 @@ export default {
 
     canCreatePipeline() {
       // Any authenticated user has the right to create pipelines
-      console.log('Username:', this.authStore.username);
       return this.authStore.username != undefined;
     },
 
     canEditPipeline(pipeline) {
       // Check if the user is either an admin or the owner of the pipeline
       return (
-        this.authStore.isAdmin || this.authStore.username == pipeline.owner
+        this.authStore.username != null &&
+        (this.authStore.isAdmin ||
+          this.authStore.username == pipeline.owner_name)
       );
     },
 
     canDeletePipeline(pipeline) {
       // Check if the user is either an admin or the owner of the pipeline
       return (
-        this.authStore.isAdmin || this.authStore.username == pipeline.owner
+        this.authStore.username != null &&
+        (this.authStore.isAdmin ||
+          this.authStore.username == pipeline.owner_name)
       );
     },
 
@@ -391,7 +371,7 @@ export default {
         'name',
         'description',
         'version',
-        'owner',
+        'owner_name',
         'created_at',
         'edited_at',
         'tools',
@@ -400,6 +380,7 @@ export default {
       if (this.authStore.isAdmin) {
         // Only display these properties to admin users
         keysToKeep.push('id');
+        keysToKeep.push('owner');
       }
       return Object.fromEntries(
         Object.entries(pipeline).filter(([key]) => keysToKeep.includes(key)),
@@ -414,7 +395,7 @@ export default {
     viewPipelineExecutions(pipeline) {
       // Store the selected pipeline in the store so it accessible by the executions page
       // Navigate to the executions page
-      this.store.selectedPipelineId = pipeline.id;
+      this.pipelineStore.selectedPipelineId = pipeline.id;
       this.$router.push('/executions');
     },
 
@@ -444,7 +425,6 @@ export default {
       this.creationPanelVisible = false;
       this.refreshPipelines();
       // Display a success message
-      // this.pipelineSuccessMessage = "Pipeline created successfully: " + pipeline.name
       this.$notify({
         title: `Created pipeline "${pipeline.name}"`,
         type: 'success',
@@ -461,6 +441,7 @@ export default {
         name: pipeline.name,
         description: pipeline.description,
         version: pipeline.version,
+        owner: pipeline.owner,
         availableTools: this.toolStore.tools,
         defaultInputs: pipeline.default_inputs,
         // Retrieve the tool objects
@@ -479,12 +460,11 @@ export default {
       this.creationPanelVisible = false;
       this.refreshPipelines();
       // Display a success message
-      // this.pipelineSuccessMessage = "Pipeline edited successfully: " + pipeline.name
       this.$notify({
         title: `Saved pipeline "${pipeline.name}"`,
         type: 'success',
       });
-      this.$emit('pipeline-created', pipeline);
+      this.$emit('pipeline-edited', pipeline);
     },
 
     hideEditionPanel() {
@@ -526,12 +506,16 @@ export default {
       this.refreshTools();
       pipeline['init_params'] = {};
       pipeline['user_params'] = {};
+      pipeline['default_inputs'] = pipeline['default_inputs'] || {};
       for (var tool_id of pipeline['tools']) {
         const tool = this.toolStore.getToolById(tool_id);
         if (this.toolStore.isInitTool(tool_id)) {
           pipeline['init_params'][tool_id] = tool ? tool['user_params'] : null;
         } else {
           pipeline['user_params'][tool_id] = tool ? tool['user_params'] : null;
+        }
+        if (pipeline['default_inputs'][tool_id] === undefined) {
+          pipeline['default_inputs'][tool_id] = tool['user_params'];
         }
       }
 
@@ -560,10 +544,9 @@ export default {
     async confirmDeletePipeline(pipeline) {
       this.deletingPipeline = true;
       try {
-        await this.store.deletePipeline(this.selectedPipeline.id);
+        await this.pipelineStore.deletePipeline(this.selectedPipeline.id);
         this.showDeleteDialog = false;
         // Display a success message
-        // this.pipelineSuccessMessage = "Pipeline deleted successfully: " + pipeline.name
         this.$notify({
           title: `Deleted pipeline "${pipeline.name}"`,
           type: 'success',

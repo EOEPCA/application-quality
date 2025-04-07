@@ -103,7 +103,7 @@
 </template>
 
 <script>
-import { pipelineService } from '@/services/pipelines';
+import { usePipelineStore } from '@/stores/pipelines';
 import { useToolStore } from '@/stores/tools';
 import ToolInputsCard from './ToolInputsCard.vue';
 
@@ -150,8 +150,10 @@ export default {
 
   setup() {
     const toolStore = useToolStore();
+    const pipelineStore = usePipelineStore();
     return {
       toolStore,
+      pipelineStore,
     };
   },
 
@@ -217,9 +219,8 @@ export default {
             }
           }
         }
-        const response = await pipelineService.executePipeline(
-          this.pipeline.id,
-          //this.localModelValue,
+        const response = await this.pipelineStore.executePipeline(
+          this.pipeline,
           { parameters: execParams },
         );
         // The panel is closed when the parent component receives this signal

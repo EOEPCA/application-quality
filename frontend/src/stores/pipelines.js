@@ -21,6 +21,13 @@ export const usePipelineStore = defineStore('pipeline', {
       this.error = null;
       try {
         this.pipelines = await pipelineService.getPipelines();
+        // Use user Id as user name if missing
+        this.pipelines = this.pipelines.map((pipeline) => {
+          if (!pipeline.owner_name && pipeline.owner) {
+            return { ...pipeline, owner_name: pipeline.owner };
+          }
+          return pipeline;
+        });
       } catch (error) {
         const msg_prefix = 'Error fetching pipelines: ';
         if (error.response?.data?.detail) {
@@ -101,6 +108,79 @@ export const usePipelineStore = defineStore('pipeline', {
       }
     },
 
+    async createPipeline(pipeline) {
+      console.log('Create pipeline:', pipeline.name, pipeline);
+      this.loading = true;
+      this.error = null;
+      try {
+        const response = await pipelineService.createPipeline(pipeline);
+        this.fetchPipelines();
+        this.loadingPipelines = false;
+        return response;
+      } catch (error) {
+        const msg_prefix = 'Error creating pipeline ' + pipeline.name + ': ';
+        if (error.response?.data?.detail) {
+          console.error(msg_prefix, error, error.response.data.detail);
+          this.error = msg_prefix + error.response.data.detail;
+        } else {
+          console.error(msg_prefix, error);
+          this.error = msg_prefix + error.message;
+        }
+      } finally {
+        this.loadingPipelines = false;
+      }
+    },
+
+    async updatePipeline(pipeline) {
+      console.log('Update pipeline:', pipeline.name, pipeline);
+      this.loading = true;
+      this.error = null;
+      try {
+        const response = await pipelineService.updatePipeline(pipeline);
+        this.fetchPipelines();
+        this.loadingPipelines = false;
+        return response;
+      } catch (error) {
+        const msg_prefix = 'Error updating pipeline ' + pipeline.name + ': ';
+        if (error.response?.data?.detail) {
+          console.error(msg_prefix, error, error.response.data.detail);
+          this.error = msg_prefix + error.response.data.detail;
+        } else {
+          console.error(msg_prefix, error);
+          this.error = msg_prefix + error.message;
+        }
+      } finally {
+        this.loadingPipelines = false;
+      }
+    },
+
+    async executePipeline(pipeline, inputs) {
+      console.log('Execute pipeline:', pipeline.name, pipeline, inputs);
+      this.loading = true;
+      this.error = null;
+      try {
+        const response = await pipelineService.executePipeline(
+          pipeline.id,
+          inputs,
+        );
+        this.fetchPipelines();
+        this.loadingPipelines = false;
+        return response;
+      } catch (error) {
+        const msg_prefix = 'Error executing pipeline ' + pipeline.name + ': ';
+        if (error.response?.data?.detail) {
+          console.error(msg_prefix, error, error.response.data.detail);
+          this.error = msg_prefix + error.response.data.detail;
+        } else {
+          console.error(msg_prefix, error);
+          this.error = msg_prefix + error.message;
+        }
+        throw error;
+      } finally {
+        this.loadingPipelines = false;
+      }
+    },
+
     executionById(id) {
       if (!this.executions) this.refreshPipelineExecutions();
       const executions = this.executions.filter((execution) => {
@@ -143,7 +223,6 @@ export const usePipelineStore = defineStore('pipeline', {
       this.error = null;
       try {
         await pipelineService.deletePipeline(id);
-        this.fetchPipelines();
       } catch (error) {
         const msg_prefix = 'Error deleting pipeline ' + id + ': ';
         if (error.response?.data?.detail) {
@@ -154,6 +233,7 @@ export const usePipelineStore = defineStore('pipeline', {
           this.error = msg_prefix + error.message;
         }
       } finally {
+        this.fetchPipelines();
         this.loadingPipelines = false;
       }
     },

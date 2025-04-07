@@ -59,7 +59,7 @@ export const pipelineService = {
   async updatePipeline(pipeline) {
     try {
       console.log('Update pipeline data:', pipeline);
-      const response = await pipelineApi.put(`/${pipeline.id}`, pipeline);
+      const response = await pipelineApi.put(`/${pipeline.id}/`, pipeline);
       return response.data;
     } catch (error) {
       console.error(
