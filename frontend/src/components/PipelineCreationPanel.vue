@@ -329,20 +329,20 @@ export default {
     updateCreationPanel() {
       this.selectedTools.init_params = {};
       this.selectedTools.user_params = {};
+      const defaultInputs = this.localModelValue.defaultInputs;
       console.log('Selected tools:', this.localModelValue.selectedTools);
-      console.log('Default inputs:', this.localModelValue.defaultInputs);
+      console.log('Default inputs:', defaultInputs);
       for (var tool of this.localModelValue.selectedTools) {
-        // const tool = this.toolStore.getToolById(tool_id);
         if (this.toolStore.isInitTool(tool.slug)) {
-          this.selectedTools.init_params[tool.slug] = this.localModelValue
-            .defaultInputs[tool.slug]
-            ? this.localModelValue.defaultInputs[tool.slug]
-            : tool['user_params'];
+          this.selectedTools.init_params[tool.slug] =
+            defaultInputs && tool.slug in defaultInputs
+              ? defaultInputs[tool.slug]
+              : tool['user_params'];
         } else {
-          this.selectedTools.user_params[tool.slug] = this.localModelValue
-            .defaultInputs[tool.slug]
-            ? this.localModelValue.defaultInputs[tool.slug]
-            : tool['user_params'];
+          this.selectedTools.user_params[tool.slug] =
+            defaultInputs && tool.slug in defaultInputs
+              ? defaultInputs[tool.slug]
+              : tool['user_params'];
         }
       }
     },
