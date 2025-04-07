@@ -47,7 +47,8 @@ application-quality:
     maxCores: "2"
     maxRam: "2Gi"
 
-  #db:
+  vclusters:
+    enabled: true
 
   opensearch:
     enabled: false
