@@ -5,7 +5,11 @@ metadata:
 data:
   PUBLIC_URL: {{ .Values.web.publicUrl }}
 
+  {{- if .Values.vclusters.enabled }}
+  BACKEND_SERVICE_HOST: backend-service.default.svc.local.cluster
+  {{- else }}
   BACKEND_SERVICE_HOST: {{ include "application-quality.fullname" . }}-api.{{ .Release.Namespace }}.svc.cluster.local
+  {{- end }}
   BACKEND_SERVICE_PORT: {{ .Values.api.containerPort | quote }}
 
   BACKEND_SERVICE_ADMIN_USER: {{ .Values.api.adminUser | quote }}
@@ -37,7 +41,7 @@ data:
   AQBB_MAXRAM: {{ .Values.calrissian.maxRam | quote }}
 
   OIDC_ENABLED: {{ .Values.oidc.enabled | default false | quote }}
-  {{- if eq .Values.oidc.enabled true }}
+  {{- if .Values.oidc.enabled }}
   # From Sealed Secret: OIDC_RP_CLIENT_ID: {{ .Values.oidc.clientId }}
   # From Sealed Secret: OIDC_RP_CLIENT_SECRET: {{ .Values.oidc.clientSecret }}
   OIDC_CONNECT_CONFIG_URL: {{ .Values.oidc.realmBaseUrl }}/.well-known/openid-configuration
@@ -55,15 +59,16 @@ data:
   OIDC_OP_USER_ENDPOINT: {{ .Values.oidc.realmBaseUrl }}/protocol/openid-connect/userinfo
   OIDC_OP_JWKS_ENDPOINT: {{ .Values.oidc.realmBaseUrl }}/protocol/openid-connect/certs
   {{- end }}
-  {{- if eq .Values.sonarqube.enabled true }}
+  {{- if .Values.sonarqube.enabled }}
   SONARQUBE_SERVER: {{ .Values.sonarqube.serverUrl }}
   SONARQUBE_TOKEN: {{ .Values.sonarqube.accessToken }}
   {{- end }}
   # vCluster
   VCLUSTER_ENABLED: {{ .Values.vclusters.enabled | default false | quote }}
-  {{- if eq .Values.vclusters.enabled true }}
+  {{- if .Values.vclusters.enabled }}
   VCLUSTER_NAME: {{ tpl .Values.vclusters.name . }}
   VCLUSTER_NAMESPACE: {{ tpl .Values.vclusters.namespace . }}
   VCLUSTER_SERVICE: {{ .Values.vclusters.backend_service | default "default/backend-service" }}
   HOST_CLUSTER_SERVICE: {{ .Release.Namespace }}/{{ include "application-quality.fullname" . }}-api
+  KUBECONFIG: /root/.kube/config
   {{- end }}

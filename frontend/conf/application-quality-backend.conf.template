@@ -28,7 +28,7 @@ server {
 
         # Use Kubernetes FQDN
         resolver kube-dns.kube-system.svc.cluster.local;
-        set $component backend.application-quality.svc.cluster.local:8000;
+        set $component ${BACKEND_SERVICE_HOST}:${BACKEND_SERVICE_PORT};
         proxy_pass http://$component/api/$1$is_args$args;
     }
 
@@ -36,7 +36,7 @@ server {
     location ~* ^/static/(.*) {
         # Use Kubernetes FQDN
         resolver kube-dns.kube-system.svc.cluster.local;
-        set $component backend.application-quality.svc.cluster.local:8000;
+        set $component ${BACKEND_SERVICE_HOST}:${BACKEND_SERVICE_PORT};
         proxy_pass http://$component/static/$1$is_args$args;
     }
 
@@ -49,7 +49,7 @@ server {
 
         # Use Kubernetes FQDN
         resolver kube-dns.kube-system.svc.cluster.local;
-        set $component backend.application-quality.svc.cluster.local:8000;
+        set $component ${BACKEND_SERVICE_HOST}:${BACKEND_SERVICE_PORT};
         proxy_pass http://$component/admin/$1$is_args$args;
     }
 
@@ -62,7 +62,7 @@ server {
 
         # Use Kubernetes FQDN
         resolver kube-dns.kube-system.svc.cluster.local;
-        set $component backend.application-quality.svc.cluster.local:8000;
+        set $component ${BACKEND_SERVICE_HOST}:${BACKEND_SERVICE_PORT};
         proxy_pass http://$component/oidc/$1$is_args$args;
     }
 }
