@@ -48,7 +48,7 @@ application-quality:
     maxRam: "2Gi"
 
   vclusters:
-    enabled: true
+    enabled: false
 
   opensearch:
     enabled: false
