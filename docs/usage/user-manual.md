@@ -58,7 +58,7 @@ Each row provides the name and version a pipeline as well as a series of action 
 - Use <img src="../img/user-manual/mdi-monitor-eye-blue.png" style="height:20px; width:20px"/> to navigate to the **Monitoring** page and inspect the past and on-going executions of the related pipeline.
 - Use <img src="../img/user-manual/mdi-flash-red.png" style="height:20px; width:20px"/> to execute the analysis pipeline.
 
-If you own the pipeline, a 3-dot menu icon is provided giving access to two additional functions:
+If you own the pipeline, a 3-dot <img src="../img/user-manual/mdi-dots-vertical-black.png" style="height:20px; width:20px"/> menu icon is provided giving access to two additional functions:
 
 - Use <img src="../img/user-manual/mdi-pencil-orange.png" style="height:20px; width:20px"/> "Edit" to modify the pipeline properties, the list of integrated tools and their parameters.
 - Use <img src="../img/user-manual/mdi-delete-red.png" style="height:20px; width:20px"/> "Delete" to delete the pipeline. **Note that this operation cannot be undone.**
@@ -76,7 +76,7 @@ The Application Quality service includes pre-defined pipelines that are accessib
 
 In addition, authenticated users may create and manage their own analysis pipelines, further referred as user-defined pipelines.
 
-To create a new pipeline, enter the **Pipelines** page and click on the pencil icon <img src="../img/user-manual/mdi-pencil-blue.png" style="height:20px; width:20px"/> located next to the search field and the refresh button.
+To create a new pipeline, enter the **Pipelines** page and click on the pencil icon <img src="../img/user-manual/mdi-pencil-circle-orange.png" style="height:20px; width:20px"/> located next to the search field and the refresh button.
 
 A pipeline creation panel slides from the right side of the window. This contains a form with the following fields:
 
@@ -97,11 +97,9 @@ Click on the **CREATE** button to submit the changes. The panel is automatically
 
 #### Pipeline editing
 
-In order to edit one of your analysis pipelines, locate it in the pipelines table, click on the associated 3-dot <img src="../img/user-manual/mdi-dots-vertical-black.png" style="height:20px; width:20px"/> menu icon, and select the <img src="../img/user-manual/mdi-pencil-circle-orange.png" style="height:20px; width:20px"/> "**Edit**" entry.
+In order to edit one of your analysis pipelines, locate it in the pipelines table, click on the associated 3-dot <img src="../img/user-manual/mdi-dots-vertical-black.png" style="height:20px; width:20px"/> menu icon, and select the <img src="../img/user-manual/mdi-pencil-orange.png" style="height:20px; width:20px"/> "**Edit**" entry.
 
 The pipeline editing panel slides from the right side of the window. This contains the form for modifiying the pipeline. Click on **SUBMIT CHANGES** to save the updated pipeline.
-
-![Pipeline Editing Form (cropped)](img/user-manual/app-analysis-pipeline-editing-form.png)
 
 #### Pipeline deletion
 
@@ -121,7 +119,7 @@ In order to execute an analysis pipeline, navigate to the **Pipelines** page, id
 
 Keep or modify the parameters default values as necessary, then click on the **EXECUTE** button.
 
-![Pipeline Execution Form (cropped)](img/user-manual/app-analysis-pipeline-execution-panel.png)
+![Pipeline Execution Form (cropped)](img/user-manual/app-analysis-pipeline-execution-form.png)
 
 The **Monitoring** page is then automatically displayed, showing the executions of the selected pipeline. The newly triggered execution is displayed at the top of the table.
 
