@@ -191,7 +191,7 @@ CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
 CELERY_WORKER_REDIRECT_STDOUTS = False
 
 # OpenID Connect configuration
-OIDC_ENABLED = os.getenv("OIDC_ENABLED")
+OIDC_ENABLED = os.getenv("OIDC_ENABLED", 'false')
 if OIDC_ENABLED.lower() == "true":
     OIDC_CONNECT_CONFIG_URL = os.getenv("OIDC_CONNECT_CONFIG_URL")
     OIDC_RP_CLIENT_ID = os.getenv("OIDC_RP_CLIENT_ID")
@@ -222,9 +222,7 @@ if OIDC_ENABLED.lower() == "true":
 
 
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOWED_ORIGINS = [
-    os.getenv("PUBLIC_URL"), # Frontend URL
-]
+CORS_ALLOWED_ORIGINS = [os.getenv("PUBLIC_URL")] # Frontend URL
 
 CORS_ALLOW_HEADERS = "*"
 

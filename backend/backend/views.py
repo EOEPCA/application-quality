@@ -55,9 +55,9 @@ class PipelineViewSet(viewsets.ModelViewSet):
         serializer.save(owner=self.request.user, template=pipeline_cwl_template)
 
     def get_permissions(self):
-        if self.action in ["list", "retrieve"]:
+        if self.action in ["create", "list", "retrieve"]:
             return [permissions.IsAuthenticated()]
-        elif self.action in ["create", "update", "partial_update", "destroy"]:
+        elif self.action in ["update", "partial_update", "destroy"]:
             return [permissions.IsAuthenticated(), IsOwnerOrAdmin()]
         return super().get_permissions()
 
