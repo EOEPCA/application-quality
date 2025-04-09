@@ -1,20 +1,23 @@
-name: Django CI
+name: Backend Development
 
 on:
   push:
     branches: [ "backend" ]
   pull_request:
-    branches: [ "backend" ]
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
-
+    name: Django tests
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
       matrix:
         python-version: [3.12, 3.13]
-
+    defaults:
+      run:
+        working-directory: ./backend
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
