@@ -3,6 +3,7 @@ cwltool
 Django
 djangorestframework
 django-cors-headers==4.6.0
+djangorestframework-simplejwt
 # To serve admin static files in production
 whitenoise==6.8.2
 # gunicorn
