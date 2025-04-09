@@ -18,8 +18,6 @@ AQBB_MAXCORES = os.getenv("AQBB_MAXCORES", "2")
 AQBB_MAXRAM = os.getenv("AQBB_MAXRAM", "2Gi")
 AQBB_SECRET = os.getenv("AQBB_SECRET", None)
 AQBB_SERVICEACCOUNT = os.getenv("AQBB_SERVICEACCOUNT", None)  # Create a ServiceAccount for Calrissian with the right roles and use it here
-VCLUSTER_NAME = os.getenv("VCLUSTER_NAME", "aqbb")
-VCLUSTER_NAMESPACE = os.getenv("VCLUSTER_NAMESPACE", "vcluster")
 BACKEND_SERVICE_HOST = os.getenv("BACKEND_SERVICE_HOST", "backend-service.default.svc.cluster.local")  # Name of the replicated service in the vcluster
 BACKEND_SERVICE_PORT = os.getenv("BACKEND_SERVICE_PORT", "80")
 SONARQUBE_SERVER = os.getenv("SONARQUBE_SERVER","application-quality-sonarqube-sonarqube.application-quality-sonarqube.svc.cluster.local:9000")
@@ -66,9 +64,6 @@ def run_workflow(
 
     index_pipeline_run(pipeline_run)
 
-    """
-    Create the kubernetes namespace on the cluster
-    """
     kubeconfig = os.getenv("KUBECONFIG", None)
 
     if kubeconfig: # Only useful for debug purposes
@@ -90,6 +85,9 @@ def run_workflow(
     # print(f"Kubernetes API Server: {current_context.host}")
     # print(f"Using Authentication: {current_context.verify_ssl}")
 
+    """
+    Create the kubernetes namespace on the cluster
+    """
     namespace_name = f"applicationqualitypipeline-{run_id}"
     session = CalrissianContext(
         namespace=namespace_name,
@@ -100,7 +98,7 @@ def run_workflow(
 
     session.initialise()
 
-    sonarqube_project = f"{username}-{pipeline_run.pipeline.name}-{str(run_id)}"
+    sonarqube_project = f"{username}-{pipeline_run.pipeline.pk}-{str(run_id)}"
     params = {
         "pipeline_id": str(pipeline_run.pipeline.pk),
         "run_id": str(run_id),
