@@ -1,3 +1,5 @@
+# Architecture
+
 ## Static Architecture
 
 The *Application Quality* Building Block integrates a number of services that together implement its three main components: Development Best Practice, Application Quality Tooling and Application Performance.
@@ -34,7 +36,7 @@ The API (back-end) component has the following main tasks:
   1. In order to perform the performance analysis, it executes applications (processing workflows) in a test environment and collects the execution metrics (execution times, resources consumed, etc.) Note: This may be done by deploying and executing the applications using the [EOEPCA ADES](https://eoepca.readthedocs.io/projects/deploy/en/stable/eoepca/ades-zoo/) provided it allows targeting dedicated worker nodes and provided it gives access to the execution metrics.
   1. It sends notifications through dedicated channels to inform the requesters about the progress. If the Notification Service allows creating channels on-the-fly with hierarchical subjects, a new channel will be created for each running pipeline.
 
-Each individual tool that may be integrated in the Development Best Practice and Application Quality pipelines is containerized and specified in CWL "CommandLineTool" (CLT) resources. Tool-specific input parameters may be exposed and used to control their behaviour. The integrated analysis tools are described in the [Analysis Tools](../usage/analysis-tools/) section.
+Each individual tool that may be integrated in the Development Best Practice and Application Quality pipelines is containerized and specified in CWL "CommandLineTool" (CLT) resources. Tool-specific input parameters may be exposed and used to control their behaviour. The integrated analysis tools are described in the [Analysis Tools](../usage/analysis-tools.md) section.
 
 >**Note**: The static architecture diagram above does not show the interactions that are taking place between the tools integrated in the Application Quality pipelines and external services. Indeed, pipeline steps may need to communicate with external services to perform their tasks. For example, the very first step of a pipeline retrieves the application code and artifacts from a git repository. This is performed by a pipeline job, not the building block itself. Similarly, the SonarQube analysis tool has a client / server architecture: the SonarQube client may be integrated in an analysis pipeline but the actual analysis is performed by the SonarQube server, running independently.
 
@@ -52,7 +54,7 @@ The analysis tools are independent from each other: the failure of one tool does
 
 The tool-specific workfllows are pre-defined in the service. Adding more tools is possible but requires creating Docker images and editing the service database manually.
 
-The current release of the Application Quality Building Block (2025 Q1, 2.0.0-rc1), proposes pre-defined analysis pipelines that may be executed by any authenticated user (see [Analysis Tools](../usage/analysis-tools/)). It also integrates a pipeline editor that allows users creating and configuring user-defined (private) pipelines (see [User Manual](../usage/user-manual/#user-defined-pipelines)).
+The current release of the Application Quality Building Block (2025 Q1, 2.0.0-rc1), proposes pre-defined analysis pipelines that may be executed by any authenticated user (see [Analysis Tools](../usage/analysis-tools.md)). It also integrates a pipeline editor that allows users creating and configuring user-defined (private) pipelines (see [User Manual](../usage/user-manual.md#user-defined-pipelines)).
 
 ![Static Analysis Pipeline Execution](../img/static-analysis-pipeline-execution.png)
 

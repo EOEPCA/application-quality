@@ -37,7 +37,7 @@ In order to log out, click on the **LOGOUT** link. The IAM asks for a confirmati
 
 ### Inspection of analysis tools and pipelines
 
-Select "**Analysis Tools**" in the side menu to display a table listing the analysis tools configured in the service.
+Select "**Analysis Tools**" in the side menu to display a table listing the analysis tools configured in the service (see also [Analysis Tools](analysis-tools.md)).
 
 Analysis tools may not be executed indivitually. They must be integrated in analysis pipelines.
 
@@ -91,7 +91,7 @@ Below the form, buttons allow cancelling the pipeline creation or submitting the
 
 Use the tools selector to select the tools to be added in the analysis pipeline. When a new tool is selected, the form is extended with the tool parameters. The values entered in the tool parameters are used as default values when comes the time to execute the pipeline.
 
-**Important**: Most tools require "**Clone repo**" to be selected as this is responsible for fetching application files from a git repository. When this is selected, it is mandatory to provide a value to its two input parameters: the repository URL and the name of the branch to clone.
+>**Important**: Most tools require "**Git Clone**" to be selected as this is responsible for fetching application files from a git repository. When this is added, a repository URL and a branch name must be provided.
 
 Click on the **CREATE** button to submit the changes. The panel is automatically closed and the new pipeline is added to the list.
 

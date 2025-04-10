@@ -8,7 +8,7 @@ Each of these tools allows analysing and validating application code or executio
 
 The analysis tools are pre-loaded in the database at deployment time (from an embedded fixture document). They may be edited directly in the database using the backend (Django) administration interface however this require a proper understanding of how pipelines and tools are defined.
 
-The available tools are listed with their details in the *Application Quality* Web interface. The same interface allows authenticated users to integrate the tools in custom pipelines. You will find the instructions in the Application Quality [User Manual](https://eoepca.readthedocs.io/projects/application-quality/en/latest/usage/user-manual/).
+The available tools are listed with their details in the *Application Quality* Web interface. The same interface allows authenticated users to integrate the tools in custom pipelines. You will find the instructions in the Application Quality [User Manual](user-manual.md).
 
 ### How Analysis Tools Are Implemented and Executed
 
@@ -105,7 +105,7 @@ Flake8 runs all the tools by launching the single `flake8` command. It displays 
 
 This tool aims at checking the notebooks against the [CEOS Jupyter Notebook Best Practice v1.1](https://ceos.org/document_management/Working_Groups/WGISS/Documents/WGISS%20Best%20Practices/CEOS_JupterNotebooks_Best%20Practice_v1.1.pdf) document.
 
-In its current implemntation, the tool verifies whether a given Jupyter Notebook contains properties defined as mandatory or recommended in different specifications.
+In its current implementation, the tool verifies whether a given Jupyter Notebook contains properties defined as mandatory or recommended in different specifications.
 
 The tool takes as input the name of the "schema" (`eumetsat` or `schema.org`) and checks the presence of mandatory and optional properties. The specifications are based on the content of the Appendix C of the BP document.
 
