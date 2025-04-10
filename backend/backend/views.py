@@ -8,6 +8,7 @@ from backend.tasks import run_workflow_task
 from backend.utils.opensearch import index_pipeline_job_report
 
 from django.utils import timezone
+from django.db.utils import IntegrityError
 from jinja2 import Template
 
 from rest_framework import mixins, permissions, status, viewsets
@@ -52,7 +53,15 @@ class PipelineViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user, template=pipeline_cwl_template)
+        try:
+            serializer.save(owner=self.request.user, template=pipeline_cwl_template)
+        except IntegrityError as ie:
+            logger.error(ie)
+            raise ValidationError(
+                {
+                    "detail": "A pipeline with this name, version, and owner already exists."
+                }
+            )
 
     def get_permissions(self):
         if self.action in ["create", "list", "retrieve"]:

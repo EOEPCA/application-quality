@@ -41,12 +41,14 @@ class PipelineViewTest(TestCase):
         )
         self.client = APIClient()
         self.token = self.get_token()
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
 
     def get_token(self):
         response = self.client.post("/api/token/",{"username": "testuser", "password": "pass"})
         return response.data["access"]
 
     def test_pipeline_create_unauthenticated_fail(self):
+        self.client.credentials()
         url = "/api/pipelines/"
         data = {
             "name": "Dummy",
@@ -57,7 +59,6 @@ class PipelineViewTest(TestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_pipeline_create(self):
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
         url = "/api/pipelines/"
         data = {
             "name": "Dummy",
@@ -68,8 +69,20 @@ class PipelineViewTest(TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Pipeline.objects.count(), 1)
 
+    def test_pipeline_create_duplicate_fail(self):
+        url = "/api/pipelines/"
+        data = {
+            "name": "Dummy",
+            "description": "Dummy pipeline",
+            "version": "0.1",
+        }
+        response1 = self.client.post(url, data, format="json")
+        self.assertEqual(response1.status_code, 201)
+
+        response2 = self.client.post(url, data, format="json")
+        self.assertEqual(response2.status_code, 400)
+
     def test_pipeline_list(self):
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
         Pipeline.objects.create(
             name="Pipeline1",
             template="foo",
