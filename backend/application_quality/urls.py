@@ -36,6 +36,6 @@ urlpatterns = [
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ]
 
-if os.getenv("OIDC_ENABLED").lower() == "true":
+if os.getenv("OIDC_ENABLED", "false").lower() == "true":
     urlpatterns.append(path("oidc/", include("mozilla_django_oidc.urls")))
     urlpatterns.append(path("oidc/user-details/", user_details, name="user_details"))

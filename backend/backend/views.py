@@ -17,7 +17,7 @@ from rest_framework.response import Response
 
 logger = logging.getLogger(__name__)
 
-if os.getenv("OIDC_ENABLED").lower() == "true":
+if os.getenv("OIDC_ENABLED", "false").lower() == "true":
     logger.info("OIDC is ENABLED")
 else:
     logger.info("OIDC is DISABLED")
