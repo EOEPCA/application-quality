@@ -54,7 +54,7 @@ class PipelineViewTest(TestCase):
             "version": "0.1",
         }
         response = self.client.post(url, data, format="json")
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 401)
 
     def test_pipeline_create(self):
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
