@@ -181,7 +181,7 @@ class CalrissianContext:
         else:
             # if nothing is specified, kubernetes-python will use the file
             # in ~/.kube/config
-            config.load_incluster_config()  # was `config.load_incluster_config()`
+            config.load_incluster_config()  # was `config.load_kube_config()`
             api_client = client.ApiClient()
 
         return api_client
