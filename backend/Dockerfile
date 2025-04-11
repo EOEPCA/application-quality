@@ -1,11 +1,15 @@
-FROM python:slim
+FROM python:3.13.3-slim
 
 WORKDIR /app
 
 COPY requirements.txt .
 
 RUN apt-get update \
-	&& apt-get install -y gcc libpq-dev postgresql-client redis-server supervisor \
+	&& apt-get install -y gcc libpq-dev postgresql-client redis-server supervisor curl \
+	&& curl -fSLo /usr/local/bin/kubectl https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl \
+	&& chmod +x /usr/local/bin/kubectl \
+	&& curl -fSLo /usr/local/bin/vcluster https://github.com/loft-sh/vcluster/releases/download/v0.24.1/vcluster-linux-amd64 \
+	&& chmod +x /usr/local/bin/vcluster \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& pip install --no-cache-dir -r requirements.txt
 

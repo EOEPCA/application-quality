@@ -20,6 +20,7 @@ jobs:
         working-directory: ./backend
     steps:
     - uses: actions/checkout@v4
+    - run: cat .env.github >> $GITHUB_ENV
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:
@@ -30,4 +31,5 @@ jobs:
         pip install -r requirements.txt
     - name: Run Tests
       run: |
+        python manage.py collectstatic
         python manage.py test
