@@ -3,8 +3,8 @@ import axios from 'axios';
 const API_URL = '/api';
 const API_TIMEOUT = 5000;
 
-const toolApi = axios.create({
-  baseURL: API_URL + '/tools',
+const tagApi = axios.create({
+  baseURL: API_URL + '/tags',
   timeout: API_TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
@@ -12,23 +12,23 @@ const toolApi = axios.create({
   },
 });
 
-export const toolService = {
-  async getTools() {
+export const tagService = {
+  async getTags() {
     try {
-      const response = await toolApi.get('/');
+      const response = await tagApi.get('/');
       return response.data;
     } catch (error) {
-      console.error('Error fetching analysis tools:', error);
+      console.error('Error fetching tags definitions:', error);
       throw error;
     }
   },
 
-  async getToolById(toolId) {
+  async getTagById(tagId) {
     try {
-      const response = await toolApi.get(`/${toolId}`);
+      const response = await tagApi.get(`/${tagId}`);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching analysis tool ${toolId}:`, error);
+      console.error(`Error fetching definition of tag ${tagId}:`, error);
       throw error;
     }
   },

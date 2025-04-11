@@ -1,9 +1,8 @@
 import { fileURLToPath, URL } from 'node:url'
-
-import { defineConfig, searchForWorkspaceRoot } from 'vite'
+import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-// https://vite.dev/config/
+// Doc: https://vite.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
@@ -14,14 +13,8 @@ export default defineConfig({
     }
   },
   server: {
-    host: process.env.VITE_API_HOST || 'localhost',
-    port: parseInt(process.env.VITE_API_PORT) || 3000,
-    fs: {
-      allow: [
-        searchForWorkspaceRoot(process.cwd()),
-        // Custom rules
-      ],
-    },
+    host: 'localhost',
+    port: 3000,
     cors: {
       origin: '*', // Be careful with this in production
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -36,16 +29,15 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         ws: true,
-        configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
+        configure: (proxy) => {
+          proxy.on('error', (err) => {
             console.log('proxy error', err);
           });
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
-            // Add custom headers here if needed
+          proxy.on('proxyReq', (proxyReq, req) => {
             proxyReq.setHeader('Access-Control-Allow-Origin', '*');
             console.log('Sending Login Request:', req.method, req.url);
           });
-          proxy.on('proxyRes', (proxyRes, req, _res) => {
+          proxy.on('proxyRes', (proxyRes, req) => {
             console.log('Received Login Response:', proxyRes.statusCode, req.url);
           });
         }
@@ -55,16 +47,16 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         ws: true,
-        configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
+        configure: (proxy) => {
+          proxy.on('error', (err) => {
             console.log('proxy error', err);
           });
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
+          proxy.on('proxyReq', (proxyReq, req) => {
             proxyReq.setHeader('Access-Control-Allow-Origin', '*');
             console.log('Sending Login Request:', req.method, req.url);
           });
-          proxy.on('proxyRes', (proxyRes, req, _res) => {
-            console.log('Received Login Response:', proxyRes.statusCode, req.url);
+          proxy.on('proxyRes', (proxyRes, req) => {
+            console.log('Received OIDC Response:', proxyRes.statusCode, req.url);
           });
         }
       },
@@ -73,15 +65,15 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         ws: true,
-        configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
+        configure: (proxy) => {
+          proxy.on('error', (err) => {
             console.log('proxy error', err);
           });
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
+          proxy.on('proxyReq', (proxyReq, req) => {
             proxyReq.setHeader('Access-Control-Allow-Origin', '*');
             console.log('Sending API Request:', req.method, req.url);
           });
-          proxy.on('proxyRes', (proxyRes, req, _res) => {
+          proxy.on('proxyRes', (proxyRes, req) => {
             console.log('Received API Response:', proxyRes.statusCode, req.url);
           });
         }

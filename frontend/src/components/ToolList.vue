@@ -1,8 +1,6 @@
 <template>
   <v-card flat>
-  
     <v-card-title class="d-flex align-center">
-        
       <v-spacer />
       <v-text-field
         v-model="search"
@@ -29,24 +27,19 @@
       />
     </v-card-title>
 
-        <v-alert
-          v-if="store.error"
-          type="error"
-          :text="store.error"
-          closable
-        />
+    <v-alert v-if="store.error" type="error" :text="store.error" closable />
 
     <v-data-table
-        v-if="store.tools.length"
-        v-model:items-per-page="itemsPerPage"
-        v-model:sort-by="sortBy"
-        :headers="headers"
-        :items="filteredTools"
-        :search="search"
-        class="elevation-1"
-        hover
-      >
-        <!-- template v-slot:top>
+      v-if="store.tools.length"
+      v-model:items-per-page="itemsPerPage"
+      v-model:sort-by="sortBy"
+      :headers="headers"
+      :items="filteredTools"
+      :search="search"
+      class="elevation-1"
+      hover
+    >
+      <!-- template v-slot:top>
           <v-toolbar flat>
             <v-toolbar-title>Tools</v-toolbar-title>
             <v-divider
@@ -65,49 +58,59 @@
           </v-toolbar>
         </template -->
 
-        <template v-slot:item="{ item }">
-          <tr>
-            <td>{{ item.description || 'No description' }}</td>
-            <td>{{ item.version || 'N/A' }}</td>
-            <td>{{ formatDate(item.created_at) }}</td>
-            <td class="text-right nowrap">
-              <v-btn
-                icon="mdi-information"
-                __size="small"
-                color="primary"
-                class="mr-2"
-                variant="text"
-                v-tooltip:bottom-end="'Tool information'"
-                :__title="'Information'"
-                @click="viewToolDetails(item)"
-              />
-              <v-btn
-                icon="mdi-pencil"
-                variant="text"
-                disabled
-                v-tooltip:bottom-end="'Edit this tool'"
-                :__title="'Edit this tool'"
-                @click="editTool(item)"
-              />
-              <v-btn
-                icon="mdi-delete"
-                variant="text"
-                disabled
-                v-tooltip:bottom-end="'Delete the tool'"
-                :__title="'Delete the tool'"
-                @click="deleteTool(item)"
-              />
-            </td>
-          </tr>
-        </template>
+      <template v-slot:item="{ item }">
+        <tr>
+          <td>
+            <div class="font-weight-bold">{{ item.name }}</div>
+            <div class="font-weight-light">{{ item.description }}</div>
+          </td>
+          <td>{{ item.version || 'N/A' }}</td>
+          <td class="nowrap">
+            <v-chip
+              v-for="tag_name in item.tags"
+              :key="tag_name"
+              size="small"
+              class="mr-2"
+              :color="tagChipColor(tag_name)"
+              v-tooltip:bottom-end="tagChipTooltip(tag_name)"
+              >{{ tagChipLabel(tag_name) }}</v-chip
+            >
+          </td>
+          <!-- <td>{{ formatDate(item.created_at) }}</td> -->
+          <td class="text-right nowrap">
+            <v-btn
+              icon="mdi-information"
+              __size="small"
+              color="primary"
+              class="mr-2"
+              variant="text"
+              v-tooltip:bottom-end="'Tool information'"
+              :__title="'Information'"
+              @click="viewToolDetails(item)"
+            />
+            <!-- <v-btn
+              icon="mdi-pencil"
+              variant="text"
+              disabled
+              v-tooltip:bottom-end="'Edit this tool'"
+              :__title="'Edit this tool'"
+              @click="editTool(item)"
+            />
+            <v-btn
+              icon="mdi-delete"
+              variant="text"
+              disabled
+              v-tooltip:bottom-end="'Delete the tool'"
+              :__title="'Delete the tool'"
+              @click="deleteTool(item)"
+            /> -->
+          </td>
+        </tr>
+      </template>
 
-        <template v-slot:no-data>
-          <v-alert
-            type="info"
-            text="No tools available"
-            class="ma-2"
-          />
-        </template>
+      <template v-slot:no-data>
+        <v-alert type="info" text="No tools available" class="ma-2" />
+      </template>
     </v-data-table>
 
     <v-alert
@@ -115,15 +118,11 @@
       type="info"
       text="No analysis tools found"
     />
-  
-    <v-progress-circular
-      v-else
-      indeterminate
-      class="ma-4"
-    />
-  
+
+    <v-progress-circular v-else indeterminate class="ma-4" />
+
     <!-- Tools Details Dialog -->
-    <v-dialog v-model="showDetails" max-width="800px">
+    <v-dialog v-model="showDetails" max-width="1200px">
       <v-card v-if="selectedTool">
         <!-- v-card-title>
           {{ selectedTool.name || selectedTool.id }}
@@ -132,31 +131,33 @@
         </v-card-title -->
         <v-card-text>
           <v-alert
-            v-if="selectedTool.description"
+            v-if="selectedTool.name"
             type="info"
-            :text="selectedTool.description"
+            :text="selectedTool.name"
             class="mb-4"
           />
-          <JsonToHtmlTable :data="pruneToolDetails(selectedTool)" />
+          <JsonToHtmlTable
+            :data="pruneToolDetails(selectedTool)"
+            :showDataType="false"
+            :showKey="false"
+          />
           <!-- pre class="tool-json">{{ JSON.stringify(selectedTool, null, 2) }}</pre -->
         </v-card-text>
       </v-card>
     </v-dialog>
-
   </v-card>
-
 </template>
-  
+
 <script>
-import { useToolStore } from '@/stores/tools'
-import JsonToHtmlTable from '@/components/JsonToHtmlTable.vue'
+import { useToolStore } from '@/stores/tools';
+import JsonToHtmlTable from '@/components/JsonToHtmlTable.vue';
 //import VueJsonToHtmlTable from 'vue-json-to-html-table'
 import 'vue-json-to-html-table/dist/style.css';
 
 export default {
   name: 'ToolList',
   components: {
-    JsonToHtmlTable
+    JsonToHtmlTable,
   },
   data() {
     return {
@@ -164,112 +165,163 @@ export default {
       showDetails: false,
       selectedTool: null,
       itemsPerPage: 10,
-      sortBy: [{ key: 'description', order:'asc'}],
+      sortBy: [{ key: 'description', order: 'asc' }],
 
       headers: [
         {
-          title: 'Description',
+          title: 'Tool',
           key: 'description',
           sortable: true,
-          align: 'start'
+          align: 'start',
         },
         {
           title: 'Version',
           key: 'version',
-          sortable: true
+          sortable: true,
         },
         {
-          title: 'Created',
-          key: 'created_at',
-          sortable: true
+          title: 'Purposes',
+          key: 'tags',
+          sortable: true,
         },
         {
           title: 'Actions',
           key: 'actions',
           sortable: false,
-          align: 'center'
-        }
+          align: 'center',
+        },
       ],
       jsonData: {
-        "test": 123
-      }
-    }
+        test: 123,
+      },
+    };
   },
-  
+
   setup() {
-    const store = useToolStore()
-    return { store }
+    const store = useToolStore();
+    return { store };
   },
-  
+
   computed: {
     filteredTools() {
-      if (!this.search) return this.store.tools
+      if (!this.search) return this.store.tools;
 
-      const searchTerm = this.search.toLowerCase()
-      return this.store.tools.filter(tool => {
+      const searchTerm = this.search.toLowerCase();
+      return this.store.tools.filter((tool) => {
         return (
           //(tool.name && tool.name.toLowerCase().includes(searchTerm)) ||
-          (tool.description && tool.description.toLowerCase().includes(searchTerm)) ||
+          (tool.description &&
+            tool.description.toLowerCase().includes(searchTerm)) ||
           //tool.id.toLowerCase().includes(searchTerm)
           tool.slug.toLowerCase().includes(searchTerm)
-        )
-      })
-    }
+        );
+      });
+    },
   },
 
   mounted() {
-    this.refreshTools()
+    this.refreshTools();
   },
-  
+
   methods: {
     async refreshTools() {
-        await this.store.fetchTools()
+      await this.store.fetchTools();
     },
-  
+
     formatDate(date) {
-    if (!date) return 'N/A'
+      if (!date) return 'N/A';
       return new Date(date).toLocaleDateString('en-UK', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: 'numeric',
         minute: 'numeric',
-        second: 'numeric'
-      })
+        second: 'numeric',
+      });
+    },
+
+    tagChipColor(tagName) {
+      // Determine color based on tag name prefix
+      let color = 'grey';
+      if (typeof tagName === 'string') {
+        if (tagName.toLowerCase().startsWith('asset')) {
+          color = 'blue';
+        } else if (tagName.toLowerCase().startsWith('type')) {
+          color = 'green';
+        }
+      }
+      console.log(`Chip color for tag $tagName is $color`);
+      return color;
+    },
+
+    tagChipLabel(tagName) {
+      // Extract the substring after colon
+      if (typeof tagName !== 'string') return tagName;
+      const colonIndex = tagName.indexOf(':');
+      if (colonIndex !== -1 && colonIndex < tagName.length - 1) {
+        return tagName.substring(colonIndex + 1).trim();
+      }
+      return tagName;
+    },
+
+    tagChipTooltip(tagName) {
+      let tooltip = 'Not an analysis tool';
+      let label = this.tagChipLabel(tagName);
+      if (label == 'python') {
+        tooltip = 'Analyses Python scripts';
+      } else if (label == 'notebook') {
+        tooltip = 'Analyses iPython / Jupyter notebooks';
+      } else if (label == 'cwl') {
+        tooltip = 'Analyses Application Package CWL files';
+      } else if (label == 'best practice') {
+        tooltip = 'Verifies the applications compliance with best practices';
+      } else if (label == 'app quality') {
+        tooltip = 'Verifies the applications quality';
+      } else if (label == 'app security') {
+        tooltip = 'Verifies the applications security and safety';
+      }
+      return tooltip;
     },
 
     pruneToolDetails(tool) {
-      const keysToKeep = ['name', 'description', 'version', 'tags', 'tools'];
+      const keysToKeep = [
+        'name',
+        'description',
+        'version',
+        'tags',
+        'tools',
+        'user_params',
+      ];
       return Object.fromEntries(
-        Object.entries(tool).filter(([key]) => keysToKeep.includes(key))
+        Object.entries(tool).filter(([key]) => keysToKeep.includes(key)),
       );
     },
 
     viewToolDetails(tool) {
-      this.selectedTool = tool
-      this.showDetails = true
+      this.selectedTool = tool;
+      this.showDetails = true;
     },
 
     editTool(tool) {
-      this.selectedTool = tool
-      this.showDetails = true
+      this.selectedTool = tool;
+      this.showDetails = true;
     },
 
     deleteTool(tool) {
-      this.selectedTool = tool
-      this.showDetails = true
+      this.selectedTool = tool;
+      this.showDetails = true;
     },
-  }
-}
+  },
+};
 </script>
-  
+
 <style scoped>
 .tool-json {
-    background: #f5f5f5;
-    padding: 1rem;
-    border-radius: 4px;
-    overflow-x: auto;
-    font-family: monospace;
+  background: #f5f5f5;
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: monospace;
 }
 
 .v-table {
