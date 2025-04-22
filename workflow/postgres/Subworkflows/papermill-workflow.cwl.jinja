@@ -1,0 +1,59 @@
+papermill_subworkflow:
+  in:
+    filter.regex: papermill_subworkflow.filter.regex
+    pipeline_id: pipeline_id
+    run_id: run_id
+    server_url: server_url
+    source_directory: clone_subworkflow/repo_directory
+  run: '#papermill_subworkflow'
+  out: []
+
+---
+
+- class: Workflow
+
+  requirements:
+    ScatterFeatureRequirement: {}
+
+  inputs:
+    name:
+      type: string
+      default: papermill
+    filter.regex: string
+    pipeline_id: string
+    run_id: string
+    server_url: string
+    source_directory: Directory
+
+  outputs:
+    []
+
+  steps:
+    filter_papermill_step:
+      in:
+        regex: filter.regex
+        source_directory: source_directory
+      run: '#filter_tool'
+      out:
+      - file_list
+    papermill_step:
+      in:
+        notebook_path: filter_papermill_step/file_list
+        source_directory: source_directory
+      scatter: notebook_path
+      run: '#papermill_tool'
+      out:
+      - output_nb
+    save_papermill_step:
+      in:
+        name: name
+        pipeline_id: pipeline_id
+        report: papermill_step/output_nb
+        run_id: run_id
+        server_url: server_url
+      scatter: report
+      run: '#save_tool'
+      out: []
+  id: papermill_subworkflow
+{% for tool in tools %}{{ tool.definition }}
+{% endfor %}

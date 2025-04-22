@@ -1,0 +1,74 @@
+#!/usr/bin/env cwltool
+
+$graph:
+- class: Workflow
+
+  requirements:
+    SubworkflowFeatureRequirement: {}
+
+  inputs:
+    pipeline_id:
+      type: string
+    repo_branch:
+      type: string
+    repo_url:
+      type: string
+    run_id:
+      type: string
+    server_url:
+      type: string
+    sonarqube_project_key:
+      type: string
+    sonarqube_project_name:
+      type: string
+    sonarqube_server:
+      type: string
+      default: application-quality-sonarqube-sonarqube.application-quality-sonarqube:9000
+    sonarqube_token:
+      type: string
+
+  outputs: []
+
+  steps:
+    clone_step:
+      in:
+        repo_url: repo_url
+        repo_branch: repo_branch
+      run: '#clone_tool'
+      out:
+      - repo_directory
+    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}
+    {% endfor %}
+  id: main
+
+- class: CommandLineTool
+
+  requirements:
+    DockerRequirement:
+      dockerPull: alpine/git
+    InlineJavascriptRequirement: {}
+
+  inputs:
+    repo_branch:
+      type: string
+      default: main
+    repo_url:
+      type: string
+
+  outputs:
+    repo_directory:
+      type: Directory
+      outputBinding:
+        glob: $(inputs.repo_url.split('/').pop().replace('.git',''))
+
+  baseCommand: git
+  arguments:
+  - clone
+  - $(inputs.repo_url)
+  - -b
+  - $(inputs.repo_branch)
+  id: clone_tool
+{% for tool in subworkflows %}
+{{ tool.definition }}
+{% endfor %}
+cwlVersion: v1.0

@@ -1,0 +1,59 @@
+bandit_subworkflow:
+  in:
+    bandit.verbose: bandit_subworkflow.bandit.verbose
+    filter.regex: bandit_subworkflow.filter.regex
+    pipeline_id: pipeline_id
+    run_id: run_id
+    server_url: server_url
+    source_directory: clone_subworkflow/repo_directory
+  run: '#bandit_subworkflow'
+  out: []
+
+---
+
+- class: Workflow
+
+  inputs:
+    name:
+      type: string
+      default: bandit
+    bandit.verbose: boolean
+    filter.regex: string
+    pipeline_id: string
+    run_id: string
+    server_url: string
+    source_directory: Directory
+
+  outputs:
+    bandit_report:
+      type: File
+      outputSource: bandit_step/bandit_report
+
+  steps:
+    bandit_step:
+      in:
+        file_list: filter_bandit_step/file_list
+        source_directory: source_directory
+        verbose: bandit.verbose
+      run: '#bandit_tool'
+      out:
+      - bandit_report
+    filter_bandit_step:
+      in:
+        regex: filter.regex
+        source_directory: source_directory
+      run: '#filter_tool'
+      out:
+      - file_list
+    save_bandit_step:
+      in:
+        name: name
+        pipeline_id: pipeline_id
+        report: bandit_step/bandit_report
+        run_id: run_id
+        server_url: server_url
+      run: '#save_tool'
+      out: []
+  id: bandit_subworkflow
+{% for tool in tools %}{{ tool.definition }}
+{% endfor %}

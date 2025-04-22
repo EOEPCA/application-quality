@@ -1,0 +1,17 @@
+{
+  "ruff": {
+    "verbose": {
+      "label": "Verbose",
+      "type": "boolean",
+      "doc": "Enable verbose logging.",
+      "default": false
+    }
+  },
+  "filter": {
+    "regex": {
+      "label": "regex",
+      "type": "string",
+      "default": ".*\\.py"
+    }
+  }
+}

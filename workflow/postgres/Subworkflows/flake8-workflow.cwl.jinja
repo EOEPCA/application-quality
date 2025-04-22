@@ -1,0 +1,59 @@
+flake8_subworkflow:
+  in:
+    filter.regex: flake8_subworkflow.filter.regex
+    flake8.verbose: flake8_subworkflow.flake8.verbose
+    pipeline_id: pipeline_id
+    run_id: run_id
+    server_url: server_url
+    source_directory: clone_subworkflow/repo_directory
+  run: '#flake8_subworkflow'
+  out: []
+
+---
+
+- class: Workflow
+
+  inputs:
+    name:
+      type: string
+      default: flake8
+    filter.regex: string
+    flake8.verbose: boolean
+    pipeline_id: string
+    run_id: string
+    server_url: string
+    source_directory: Directory
+
+  outputs:
+    flake8_report:
+      type: File
+      outputSource: flake8_step/flake8_report
+
+  steps:
+    filter_flake8_step:
+      in:
+        regex: filter.regex
+        source_directory: source_directory
+      run: '#filter_tool'
+      out:
+      - file_list
+    flake8_step:
+      in:
+        file_list: filter_flake8_step/file_list
+        source_directory: source_directory
+        verbose: flake8.verbose
+      run: '#flake8_tool'
+      out:
+      - flake8_report
+    save_flake8_step:
+      in:
+        name: name
+        pipeline_id: pipeline_id
+        report: flake8_step/flake8_report
+        run_id: run_id
+        server_url: server_url
+      run: '#save_tool'
+      out: []
+  id: flake8_subworkflow
+{% for tool in tools %}{{ tool.definition }}
+{% endfor %}

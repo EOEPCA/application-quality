@@ -1,0 +1,23 @@
+{
+  "ap_validator": {
+    "detail": {
+      "label": "Detail",
+      "doc": "Output detail (none|errors|hints|all). Default: hints",
+      "type": "string",
+      "default": "hints"
+    },
+    "entry_point": {
+      "label": "Entry point",
+      "doc": "Name of entry point (Workflow or CommandLineTool)",
+      "type": "string",
+      "default": "main"
+    }
+  },
+  "filter": {
+    "regex": {
+      "label": "regex",
+      "type": "string",
+      "default": ".*\\.cwl"
+    }
+  }
+}

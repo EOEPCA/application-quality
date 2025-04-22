@@ -1,0 +1,43 @@
+trivy_subworkflow:
+  in:
+    pipeline_id: pipeline_id
+    run_id: run_id
+    server_url: server_url
+    trivy.image: trivy_subworkflow.trivy.image
+  run: '#trivy_subworkflow'
+  out: []
+
+---
+
+- class: Workflow
+
+  inputs:
+    name:
+      type: string
+      default: trivy
+    pipeline_id: string
+    run_id: string
+    server_url: string
+    trivy.image: string
+
+  outputs: []
+
+  steps:
+    save_step:
+      in:
+        name: name
+        pipeline_id: pipeline_id
+        report: trivy_step/trivy_report
+        run_id: run_id
+        server_url: server_url
+      run: '#save_tool'
+      out: []
+    trivy_step:
+      in:
+        image: trivy.image
+      run: '#trivy_tool'
+      out:
+      - trivy_report
+  id: trivy_subworkflow
+{% for tool in tools %}{{ tool.definition }}
+{% endfor %}

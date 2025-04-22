@@ -1,0 +1,15 @@
+{
+  "ipynb_specs_checker": {
+    "schema": {
+      "type": "string",
+      "default": "eumetsat"
+    }
+  },
+  "filter": {
+    "regex": {
+      "label": "regex",
+      "type": "string",
+      "default": ".*\\.ipynb"
+    }
+  }
+}

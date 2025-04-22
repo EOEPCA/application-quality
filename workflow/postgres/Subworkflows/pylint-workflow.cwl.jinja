@@ -1,0 +1,65 @@
+pylint_subworkflow:
+  in:
+    filter.regex: pylint_subworkflow.filter.regex
+    pipeline_id: pipeline_id
+    pylint.disable: pylint_subworkflow.pylint.disable
+    pylint.errors_only: pylint_subworkflow.pylint.errors_only
+    pylint.verbose: pylint_subworkflow.pylint.verbose
+    run_id: run_id
+    server_url: server_url
+    source_directory: clone_subworkflow/repo_directory
+  run: '#pylint_subworkflow'
+  out: []
+
+---
+
+- class: Workflow
+
+  inputs:
+    name:
+      type: string
+      default: pylint
+    filter.regex: string
+    pipeline_id: string
+    pylint.disable: string
+    pylint.errors_only: boolean
+    pylint.verbose: boolean
+    run_id: string
+    server_url: string
+    source_directory: Directory
+
+  outputs:
+    pylint_report:
+      type: File
+      outputSource: pylint_step/pylint_report
+
+  steps:
+    filter_pylint_step:
+      in:
+        regex: filter.regex
+        source_directory: source_directory
+      run: '#filter_tool'
+      out:
+      - file_list
+    pylint_step:
+      in:
+        disable: pylint.disable
+        errors_only: pylint.errors_only
+        file_list: filter_pylint_step/file_list
+        source_directory: source_directory
+        verbose: pylint.verbose
+      run: '#pylint_tool'
+      out:
+      - pylint_report
+    save_pylint_step:
+      in:
+        name: name
+        pipeline_id: pipeline_id
+        report: pylint_step/pylint_report
+        run_id: run_id
+        server_url: server_url
+      run: '#save_tool'
+      out: []
+  id: pylint_subworkflow
+{% for tool in tools %}{{ tool.definition }}
+{% endfor %}

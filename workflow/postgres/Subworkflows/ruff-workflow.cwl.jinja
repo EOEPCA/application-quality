@@ -1,0 +1,59 @@
+ruff_subworkflow:
+  in:
+    filter.regex: ruff_subworkflow.filter.regex
+    pipeline_id: pipeline_id
+    ruff.verbose: ruff_subworkflow.ruff.verbose
+    run_id: run_id
+    server_url: server_url
+    source_directory: clone_subworkflow/repo_directory
+  run: '#ruff_subworkflow'
+  out: []
+
+---
+
+- class: Workflow
+
+  inputs:
+    name:
+      type: string
+      default: ruff
+    filter.regex: string
+    pipeline_id: string
+    ruff.verbose: boolean
+    run_id: string
+    server_url: string
+    source_directory: Directory
+
+  outputs:
+    ruff_report:
+      type: File
+      outputSource: ruff_step/ruff_report
+
+  steps:
+    filter_ruff_step:
+      in:
+        regex: filter.regex
+        source_directory: source_directory
+      run: '#filter_tool'
+      out:
+      - file_list
+    ruff_step:
+      in:
+        file_list: filter_ruff_step/file_list
+        source_directory: source_directory
+        verbose: ruff.verbose
+      run: '#ruff_tool'
+      out:
+      - ruff_report
+    save_ruff_step:
+      in:
+        name: name
+        pipeline_id: pipeline_id
+        report: ruff_step/ruff_report
+        run_id: run_id
+        server_url: server_url
+      run: '#save_tool'
+      out: []
+  id: ruff_subworkflow
+{% for tool in tools %}{{ tool.definition }}
+{% endfor %}

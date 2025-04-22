@@ -1,0 +1,34 @@
+clone_subworkflow:
+  in:
+    clone.repo_branch: clone_subworkflow.clone.repo_branch
+    clone.repo_url: clone_subworkflow.clone.repo_url
+  run: '#clone_subworkflow'
+  out:
+  - repo_directory
+
+---
+
+- class: Workflow
+
+  inputs:
+    clone.repo_branch:
+      type: string
+      default: ''
+    clone.repo_url: string
+
+  outputs:
+    repo_directory:
+      type: Directory
+      outputSource: clone_step/repo_directory
+
+  steps:
+    clone_step:
+      in:
+        repo_branch: clone.repo_branch
+        repo_url: clone.repo_url
+      run: '#clone_tool'
+      out:
+      - repo_directory
+  id: clone_subworkflow
+{% for tool in tools %}{{ tool.definition }}
+{% endfor %}
