@@ -1,0 +1,17 @@
+{
+  "flake8": {
+    "verbose": {
+      "label": "Verbose",
+      "type": "boolean",
+      "doc": "Increase the verbosity of Flake8’s output.",
+      "default": false
+    }
+  },
+  "filter": {
+    "regex": {
+      "label": "regex",
+      "type": "string",
+      "default": ".*\\.py"
+    }
+  }
+}

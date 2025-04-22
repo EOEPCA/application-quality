@@ -1,0 +1,17 @@
+{
+  "bandit": {
+    "verbose": {
+      "label": "Verbose",
+      "type": "boolean",
+      "doc": "Output extra information like excluded and included files.",
+      "default": false
+    }
+  },
+  "filter": {
+    "regex": {
+      "label": "regex",
+      "type": "string",
+      "default": ".*\\.py"
+    }
+  }
+}

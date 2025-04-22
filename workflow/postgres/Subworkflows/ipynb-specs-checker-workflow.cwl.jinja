@@ -1,0 +1,59 @@
+ipynb_specs_checker_subworkflow:
+  in:
+    filter.regex: ipynb_specs_checker_subworkflow.filter.regex
+    pipeline_id: pipeline_id
+    ipynb_specs_checker.schema: ipynb_specs_checker_subworkflow.ipynb_specs_checker.schema
+    run_id: run_id
+    server_url: server_url
+    source_directory: clone_subworkflow/repo_directory
+  run: '#ipynb_specs_checker_subworkflow'
+  out: []
+
+---
+
+- class: Workflow
+
+  inputs:
+    name:
+      type: string
+      default: ipynb_specs_checker
+    filter.regex: string
+    pipeline_id: string
+    ipynb_specs_checker.schema: string
+    run_id: string
+    server_url: string
+    source_directory: Directory
+
+  outputs:
+    ipynb_specs_checker_report:
+      type: File
+      outputSource: ipynb_specs_checker_step/ipynb_specs_checker_report
+
+  steps:
+    filter_ipynb_specs_checker_step:
+      in:
+        regex: filter.regex
+        source_directory: source_directory
+      run: '#filter_tool'
+      out:
+      - file_list
+    ipynb_specs_checker_step:
+      in:
+        file_list: filter_ipynb_specs_checker_step/file_list
+        source_directory: source_directory
+        schema: ipynb_specs_checker.schema
+      run: '#ipynb_specs_checker_tool'
+      out:
+      - ipynb_specs_checker_report
+    save_ipynb_specs_checker_step:
+      in:
+        name: name
+        pipeline_id: pipeline_id
+        report: ipynb_specs_checker_step/ipynb_specs_checker_report
+        run_id: run_id
+        server_url: server_url
+      run: '#save_tool'
+      out: []
+  id: ipynb_specs_checker_subworkflow
+{% for tool in tools %}{{ tool.definition }}
+{% endfor %}

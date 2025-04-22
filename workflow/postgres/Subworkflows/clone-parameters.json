@@ -1,0 +1,16 @@
+{
+  "clone": {
+    "repo_url": {
+      "doc": "URL to the repository to clone.",
+      "type": "string",
+      "label": "Repo URL",
+      "default": ""
+    },
+    "repo_branch": {
+      "doc": "Branch to checkout instead of the remote HEAD.",
+      "type": "string",
+      "label": "Repo branch",
+      "default": ""
+    }
+  }
+}

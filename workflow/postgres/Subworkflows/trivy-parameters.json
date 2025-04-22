@@ -1,0 +1,9 @@
+{
+  "trivy": {
+    "image": {
+      "label": "Docker image",
+      "type": "string",
+      "default": "alpine/git"
+    }
+  }
+}

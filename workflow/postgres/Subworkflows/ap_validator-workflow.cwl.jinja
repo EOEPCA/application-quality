@@ -1,0 +1,65 @@
+ap_validator_subworkflow:
+  in:
+    ap_validator.detail: ap_validator_subworkflow.ap_validator.detail
+    ap_validator.entry_point: ap_validator_subworkflow.ap_validator.entry_point
+    filter.regex: ap_validator_subworkflow.filter.regex
+    pipeline_id: pipeline_id
+    run_id: run_id
+    server_url: server_url
+    source_directory: clone_subworkflow/repo_directory
+  run: '#ap_validator_subworkflow'
+  out: []
+
+---
+
+- class: Workflow
+
+  requirements:
+    ScatterFeatureRequirement: {}
+
+  inputs:
+    name:
+      type: string
+      default: ap_validator
+    ap_validator.detail: string
+    ap_validator.entry_point: string
+    filter.regex: string
+    pipeline_id: string
+    run_id: string
+    server_url: string
+    source_directory: Directory
+
+  outputs:
+    []
+
+  steps:
+    filter_ap_validator_step:
+      in:
+        regex: filter.regex
+        source_directory: source_directory
+      run: '#filter_tool'
+      out:
+      - file_list
+    ap_validator_step:
+      in:
+        file_path: filter_ap_validator_step/file_list
+        source_directory: source_directory
+        detail: ap_validator.detail
+        entry_point: ap_validator.entry_point
+      scatter: file_path
+      run: '#ap_validator_tool'
+      out:
+      - ap_validator_report
+    save_ap_validator_step:
+      in:
+        name: name
+        pipeline_id: pipeline_id
+        report: ap_validator_step/ap_validator_report
+        run_id: run_id
+        server_url: server_url
+      scatter: report
+      run: '#save_tool'
+      out: []
+  id: ap_validator_subworkflow
+{% for tool in tools %}{{ tool.definition }}
+{% endfor %}
