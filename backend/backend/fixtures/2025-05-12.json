@@ -34,7 +34,7 @@
    "version": "0.1",
    "tools": [
     "clone_subworkflow",
-    "ipynb_specs_checker_subworkflow",
+    "notebook-bp-validator_subworkflow",
     "papermill_subworkflow",
     "ruff_ipynb_subworkflow"
    ]
@@ -273,12 +273,12 @@
  },
  {
   "model": "backend.subworkflow",
-  "pk": "ipynb_specs_checker_subworkflow",
+  "pk": "notebook-bp-validator_subworkflow",
   "fields": {
-   "name": "Jupyter Notebook Best Practices Checker",
-   "description": "Best practices checker for Jupyter notebook specs",
-   "pipeline_step": "ipynb_specs_checker_subworkflow:\r\n  in:\r\n    filter.regex: ipynb_specs_checker_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    ipynb_specs_checker.schema: ipynb_specs_checker_subworkflow.ipynb_specs_checker.schema\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#ipynb_specs_checker_subworkflow'\r\n  out: []",
-   "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: ipynb_specs_checker\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    ipynb_specs_checker.schema: string\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    ipynb_specs_checker_report:\r\n      type: File\r\n      outputSource: ipynb_specs_checker_step/ipynb_specs_checker_report\r\n\r\n  steps:\r\n    filter_ipynb_specs_checker_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    ipynb_specs_checker_step:\r\n      in:\r\n        file_list: filter_ipynb_specs_checker_step/file_list\r\n        source_directory: source_directory\r\n        schema: ipynb_specs_checker.schema\r\n      run: '#ipynb_specs_checker_tool'\r\n      out:\r\n      - ipynb_specs_checker_report\r\n    save_ipynb_specs_checker_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: ipynb_specs_checker_step/ipynb_specs_checker_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n  id: ipynb_specs_checker_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+   "name": "Jupyter Notebook Best Practices Validator",
+   "description": "This tool aims at validating the notebooks against the CEOS Jupyter Notebook Best Practice v1.1 document.",
+   "pipeline_step": "notebook-bp-validator_subworkflow:\r\n  in:\r\n    filter.regex: notebook-bp-validator_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    notebook-bp-validator.abspath: notebook-bp-validator_subworkflow.notebook-bp-validator.abspath\r\n    notebook-bp-validator.schema: notebook-bp-validator_subworkflow.notebook-bp-validator.schema\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#notebook-bp-validator_subworkflow'\r\n  out: []",
+   "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: notebook-bp-validator\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    notebook-bp-validator.abspath: boolean\r\n    notebook-bp-validator.schema: string\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    notebook-bp-validator_report:\r\n      type: File\r\n      outputSource: notebook-bp-validator_step/notebook-bp-validator_report\r\n\r\n  steps:\r\n    filter_notebook-bp-validator_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    notebook-bp-validator_step:\r\n      in:\r\n        abspath: notebook-bp-validator.abspath \r\n        file_list: filter_notebook-bp-validator_step/file_list\r\n        source_directory: source_directory\r\n        schema: notebook-bp-validator.schema\r\n      run: '#notebook-bp-validator_tool'\r\n      out:\r\n      - notebook-bp-validator_report\r\n    save_notebook-bp-validator_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: notebook-bp-validator_step/notebook-bp-validator_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n  id: notebook-bp-validator_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
    "user_params": {
     "filter": {
      "regex": {
@@ -287,10 +287,18 @@
       "default": ".*\\.ipynb"
      }
     },
-    "ipynb_specs_checker": {
+    "notebook-bp-validator": {
      "schema": {
+      "doc": "Supported values: 'eumetsat' or 'schema.org'",
       "type": "string",
+      "label": "Schema",
       "default": "eumetsat"
+     },
+     "abspath": {
+      "doc": "Uses absolute paths in output.",
+      "type": "boolean",
+      "label": "Absolute path",
+      "default": false
      }
     }
    },
@@ -301,7 +309,7 @@
    ],
    "tools": [
     "filter",
-    "ipynb_specs_checker",
+    "notebook-bp-validator",
     "save"
    ]
   }
@@ -552,10 +560,10 @@
  },
  {
   "model": "backend.commandlinetool",
-  "pk": "ipynb_specs_checker",
+  "pk": "notebook-bp-validator",
   "fields": {
-   "name": "Jupyter Notebook Best Practices Checker",
-   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: python:slim\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          pip install jsonschema referencing\r\n          cd $(inputs.source_directory.path)\r\n          python ~/script.py > ~/ipynb_specs_checker_report.json\r\n          # exit 0\r\n      - entryname: script.py\r\n        entry: |-\r\n          import os\r\n          import re\r\n          import sys\r\n          import json\r\n          import urllib.request\r\n\r\n          from jsonschema import Draft7Validator\r\n          from referencing import Registry, Resource\r\n          from referencing.exceptions import Unresolvable\r\n\r\n          def add_resource_to_registry(schema_name: str, registry: Registry) -> Registry:\r\n              print(f\"Adding '{schema_name}' to registry\", file=sys.stderr)\r\n              with urllib.request.urlopen(f\"https://raw.githubusercontent.com/charlestati/schema-org-json-schemas/refs/heads/master/schemas/{schema_name}.schema.json\") as response:\r\n                  schema = json.load(response)\r\n              return registry.with_resource(f\"schema:{schema_name}\", Resource.from_contents(schema))\r\n\r\n          def process_notebook(notebook_path: str, encoding: str, registry: Registry) -> dict:\r\n              result = {\r\n                  \"filename\": os.path.relpath(notebook_path, '$(inputs.source_directory.path)/../'),\r\n                  \"schema\": encoding\r\n              }\r\n\r\n              try:\r\n                  with open(notebook_path) as f:\r\n                      notebook = json.load(f)\r\n              except Exception as e:\r\n                  result[\"error\"] = f\"Error reading notebook file: {e}\"\r\n                  return result\r\n\r\n              if \"metadata\" not in notebook:\r\n                  result[\"error\"] = \"Notebook does not contain a 'metadata' section.\"\r\n                  return result\r\n\r\n              metadata = notebook[\"metadata\"]\r\n\r\n              if encoding.lower() == \"eumetsat\":\r\n                  schema_loc = \"https://raw.githubusercontent.com/EOEPCA/application-quality/ab17e5dcf54db8cb1c0c0b0f86dc86b783e6d725/workflow/jsonschema/eumetsat.schema.json\"\r\n              elif encoding.lower() == \"schema.org\":\r\n                  schema_loc = \"https://raw.githubusercontent.com/EOEPCA/application-quality/ab17e5dcf54db8cb1c0c0b0f86dc86b783e6d725/workflow/jsonschema/schema_org.schema.json\"\r\n              else:\r\n                  result[\"error\"] = f\"Unknown encoding type: {encoding}\"\r\n                  return result\r\n\r\n              with urllib.request.urlopen(schema_loc) as f:\r\n                  schema = json.load(f)\r\n\r\n              validator = Draft7Validator(schema, registry=registry)\r\n              errors = sorted(validator.iter_errors(metadata), key=lambda e: e.path)  # returns an Iterable of ValidationErrors\r\n\r\n              missing_mandatory_fields = []\r\n              validation_errors = []\r\n\r\n              for err in errors:\r\n                  if err.validator == \"required\":\r\n                      missing_mandatory_fields.extend(err.message.split(\"'\")[1::2])  # gets missing fields from the message\r\n                  validation_errors.append(f\"At {list(err.path)}: {err.message}\")\r\n\r\n              optional_fields = [\r\n                  key\r\n                  for key in schema.get(\"properties\", {})\r\n                  if key not in metadata and key not in schema.get(\"required\", [])\r\n              ]\r\n\r\n              result[\"valid\"] = len(missing_mandatory_fields) == 0 and len(validation_errors) == 0\r\n\r\n              if missing_mandatory_fields:\r\n                  result[\"missing_mandatory_fields\"] = list(set(missing_mandatory_fields))\r\n\r\n              result[\"missing_optional_fields\"] = optional_fields\r\n\r\n              if validation_errors:\r\n                  result[\"schema_validation_errors\"] = validation_errors\r\n\r\n              return result\r\n\r\n          string_type = Resource.from_contents(\r\n              {\r\n                  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\r\n                  \"type\": \"string\",\r\n              }\r\n          )\r\n          resources = [(\"schema:Text\", string_type), (\"schema:URL\", string_type)]\r\n          registry = Registry().with_resources(resources)\r\n\r\n          schemas = []\r\n          for s in schemas:\r\n              registry = add_resource_to_registry(s, registry)\r\n\r\n          output = []\r\n          for notebook_path in $(inputs.file_list):\r\n              while True:\r\n                  try:\r\n                      output.append(process_notebook(notebook_path, '$(inputs.schema)', registry))\r\n                      break\r\n                  except Unresolvable as e:\r\n                      match = re.search(r\"schema:([A-Za-z]+)\", str(e))\r\n                      schema_name = match.group(1) if match else None\r\n                      print(f\"[{notebook_path.split(\"/\")[-1]}] Unresolved schema '{schema_name}' — fetching and retrying\", file=sys.stderr)\r\n                      registry = add_resource_to_registry(schema_name, registry)\r\n\r\n          print(json.dumps(output, indent=4))\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    file_list: string[]\r\n    schema: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    ipynb_specs_checker_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: ipynb_specs_checker_report.json\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: ipynb_specs_checker_tool",
+   "name": "Jupyter Notebook Best Practices Validator",
+   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: eoepca/notebook-bp-validator:2025-05-12.1\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          cd $(inputs.source_directory.path)\r\n\r\n          PARAMS=\"-s $(inputs.schema)\"\r\n          if [ '$(inputs.abspath)' == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS -p\"\r\n          fi\r\n\r\n          nb-validator $PARAMS $(inputs.file_list.join(\" \")) > ~/notebook-bp-validator_report.json\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    abspath: boolean\r\n    file_list: string[]\r\n    schema: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    notebook-bp-validator_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: notebook-bp-validator_report.json\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: notebook-bp-validator_tool",
    "version": "0.1"
   }
  },
