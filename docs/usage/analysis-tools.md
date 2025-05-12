@@ -35,7 +35,7 @@ As can be seen, a number of tools are readily available. Feedback and requiremen
 |                       |                                                          Best Practices                                                          | Application Quality |                        Application Performance                         |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------- | ---------------------------------------------------------------------- |
 | **Python scripts**    | [Pylint](#pylint), [Ruff](#ruff), [Flake8](#flake8),<br>[SonarQube](#sonarqube) <sup>1</sup>                                     | [Bandit](#bandit)   | [Pytest](#pytest) <sup>2</sup>                                         |
-| **Jupyter Notebooks** | [Ruff](#ruff), [SonarQube](#sonarqube) <sup>1</sup>,<br>[ipynb Best Practices Checker](#jupyter-notebook-best-practices-checker) |                     | [Papermill](#papermill)                                                |
+| **Jupyter Notebooks** | [Ruff](#ruff), [SonarQube](#sonarqube) <sup>1</sup>,<br>[Notebook Best Practices Validator](#jupyter-notebook-best-practices-checker) |                     | [Papermill](#papermill)                                                |
 | **AP CWL**            | [Application Package Validator](#application-package-validator)                                                                  |                     | [Calrissian](#calrissian) <sup>2</sup>                                 |
 | **Docker**            |                                                                                                                                  | [Trivy](#trivy)     | [Kaniko](https://docs.gitlab.com/ci/docker/using_kaniko/) <sup>2</sup> |
 | **openEO**            |                                                                                                                                  |                     |                                                                        |
@@ -71,8 +71,8 @@ It checks for errors, enforces a coding standard, looks for code smells, and can
 
 **Exposed parameters**
 
-| Name | Type | Description |
-| --- | --- | --- |
+|   Name    |   Type    |       Description       |
+| --------- | --------- | ----------------------- |
 | `verbose` | *boolean* | Enable verbose logging. |
 
 #### Flake8
@@ -84,8 +84,8 @@ Flake8 runs all the tools by launching the single `flake8` command. It displays 
 
 **Exposed parameters**
 
-| Name | Type | Description |
-| --- | --- | --- |
+|   Name    |   Type    |                Description                 |
+| --------- | --------- | ------------------------------------------ |
 | `verbose` | *boolean* | Increase the verbosity of Flake8’s output. |
 
 #### Application Package Validator
@@ -101,21 +101,18 @@ Flake8 runs all the tools by launching the single `flake8` command. It displays 
 | `detail`      | *string* | Output detail (none&#124;errors&#124;hints&#124;all). Default: hints. |
 | `entry_point` | *string* | Name of entry point (Workflow or CommandLineTool)                     |
 
-#### Jupyter Notebook Best Practices Checker
+#### Jupyter Notebook Best Practices Validator
 
-This tool aims at checking the notebooks against the [CEOS Jupyter Notebook Best Practice v1.1](https://ceos.org/document_management/Working_Groups/WGISS/Documents/WGISS%20Best%20Practices/CEOS_JupterNotebooks_Best%20Practice_v1.1.pdf) document.
+> This tool aims at validating the notebooks against the [CEOS Jupyter Notebook Best Practice v1.1](https://ceos.org/document_management/Working_Groups/WGISS/Documents/WGISS%20Best%20Practices/CEOS_JupterNotebooks_Best%20Practice_v1.1.pdf) document.
 
-In its current implementation, the tool verifies whether a given Jupyter Notebook contains properties defined as mandatory or recommended in different specifications.
-
-The tool takes as input the name of the "schema" (`eumetsat` or `schema.org`) and checks the presence of mandatory and optional properties. The specifications are based on the content of the Appendix C of the BP document.
-
-[🔗 Documentation](https://github.com/ceos-org/jupyter-best-practice/blob/main/annex/annex-c.md)
+[🔗 Documentation](https://github.com/EOEPCA/notebook-bp-validator#readme)
 
 **Exposed parameters**
 
-|   Name   |   Type   |             Description             |
-| -------- | -------- | ----------------------------------- |
-| `schema` | *string* | Must be `eumetsat` or `schema.org`. | 
+|   Name    |   Type    |                  Description                  |
+| --------- | --------- | --------------------------------------------- |
+| `abspath` | *boolean* | Uses absolute paths in output.                | 
+| `schema`  | *string*  | Supported values: 'eumetsat' or 'schema.org'. | 
 
 #### SonarQube
 
