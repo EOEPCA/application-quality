@@ -1,23 +1,59 @@
 <template>
-  <VueNotifications
-    :reverse="notify.reverse"
-    :width="notify.width"
-    :position="notify.position"
-    :max="notify.max"
-    :close-on-click="notify.closeOnClick"
-    :pause-on-hover="notify.pauseOnHover"
-    :speed="notify.speed"
-    :timeout="notify.timeout"
-    :clean="notify.clean"
-    :ignore-duplicates="notify.ignoreDuplicate"
-  />
   <v-app>
+    <VueNotifications
+      :reverse="notify.reverse"
+      :width="notify.width"
+      :position="notify.position"
+      :max="notify.max"
+      :close-on-click="notify.closeOnClick"
+      :pause-on-hover="notify.pauseOnHover"
+      :speed="notify.speed"
+      :timeout="notify.timeout"
+      :clean="notify.clean"
+      :ignore-duplicates="notify.ignoreDuplicate"
+    />
+
     <v-app-bar color="primary">
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
       <v-app-bar-title>EOEPCA - Application Quality Service</v-app-bar-title>
       <!-- Login / Logout button -->
       <v-spacer></v-spacer>
-      <span class="vuetify-label" v-tooltip:bottom-end="authStore.username">
+
+      <v-btn
+        style="padding: 0px"
+        min-width="0px"
+        v-tooltip:bottom-end="'User Manual (new page)'"
+        target="appquality_user_manual"
+        :href="settings.user_manual__url"
+      >
+        <v-icon size="24px"> mdi-help-box </v-icon>
+      </v-btn>
+
+      <v-btn
+        style="padding: 0px"
+        min-width="0px"
+        v-tooltip:bottom-end="'Dashboards (new page)'"
+        target="_blank"
+        :href="settings.getGrafanaDashboardsURL()"
+      >
+        <v-icon size="24px"> mdi-chart-box </v-icon>
+      </v-btn>
+
+      <v-btn
+        style="padding: 0px"
+        min-width="0px"
+        v-tooltip:bottom-end="'Source Code (new page)'"
+        target="_blank"
+        :href="settings.source__url"
+      >
+        <v-icon size="24px"> mdi-github </v-icon>
+      </v-btn>
+
+      <span
+        style="padding-left: 20px"
+        class="vuetify-label"
+        v-tooltip:bottom-end="authStore.username"
+      >
         {{ authStore.firstname }} {{ authStore.lastname }}
       </span>
       <v-chip v-if="authStore.isAdmin" size="small" class="ml-2">
