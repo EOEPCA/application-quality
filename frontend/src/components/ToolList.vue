@@ -250,7 +250,7 @@ export default {
           color = 'green';
         }
       }
-      console.log(`Chip color for tag $tagName is $color`);
+      console.debug(`Chip color for tag ${tagName} is ${color}`);
       return color;
     },
 

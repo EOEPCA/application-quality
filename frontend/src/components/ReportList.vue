@@ -121,6 +121,15 @@
               :__title="'Information'"
               @click="viewReport(item)"
             />
+            <v-btn
+              v-if="settings.isGrafanaEnabled()"
+              icon="mdi-chart-box"
+              variant="text"
+              color="primary"
+              :disabled="item.job_reports_count == 0"
+              v-tooltip:bottom-end="'View report in dashboard (new page)'"
+              @click="viewPipelineExecutionReportDashboard(item)"
+            />
           </td>
         </tr>
       </template>
@@ -167,6 +176,7 @@
 </template>
 
 <script>
+import { useSettingsStore } from '@/stores/settings';
 import { usePipelineStore } from '@/stores/pipelines';
 import { formatDate } from '@/assets/tools';
 
@@ -224,8 +234,9 @@ export default {
   },
 
   setup() {
+    const settings = useSettingsStore();
     const store = usePipelineStore();
-    return { store };
+    return { settings, store };
   },
 
   computed: {
@@ -297,6 +308,20 @@ export default {
     viewReport(report) {
       this.selectedReport = report;
       this.showDetails = true;
+    },
+
+    viewPipelineExecutionReportDashboard(report) {
+      console.log('Selected execution:', report);
+      // TODO: Currently the backend does not return the report Id
+      // Actually, report.run == pipeline execution Id
+      // => Update when the backend returns the report id
+      const url = this.settings.getGrafanaPipelineExecutionReportURL(
+        this.store.selectedPipelineId,
+        this.store.selectedExecutionId,
+        report.name,
+        report.run, // TODO: change to report.id
+      );
+      window.open(url, '_blank');
     },
   },
 };

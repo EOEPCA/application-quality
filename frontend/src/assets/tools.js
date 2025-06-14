@@ -38,3 +38,11 @@ export function slugify(str) {
       .replace(/^-+|-+$/g, '')
   );
 }
+
+export function removeTrailingSlashes(str) {
+  if (typeof str !== 'string') {
+    console.error('Input must be a string.');
+    return str;
+  }
+  return str.replace(/\/+$/, '');
+}

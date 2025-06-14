@@ -17,15 +17,17 @@
       <v-app-bar-title>EOEPCA - Application Quality Service</v-app-bar-title>
       <!-- Login / Logout button -->
       <v-spacer></v-spacer>
-      <span class="vuetify-label" v-tooltip:bottom-end="store.username">
-        {{ store.firstname }} {{ store.lastname }}
+      <span class="vuetify-label" v-tooltip:bottom-end="authStore.username">
+        {{ authStore.firstname }} {{ authStore.lastname }}
       </span>
-      <v-chip v-if="store.isAdmin" size="small" class="ml-2"> Admin </v-chip>
-      <v-chip v-if="store.isSuperuser" size="small" class="ml-2">
+      <v-chip v-if="authStore.isAdmin" size="small" class="ml-2">
+        Admin
+      </v-chip>
+      <v-chip v-if="authStore.isSuperuser" size="small" class="ml-2">
         Superuser
       </v-chip>
       <v-btn class="ml-2" @click="toggleLogin">{{
-        store.isLoggedIn ? 'Logout' : 'Login'
+        authStore.isLoggedIn ? 'Logout' : 'Login'
       }}</v-btn>
     </v-app-bar>
 
@@ -51,6 +53,7 @@
 
 <script>
 import { useAuthStore } from '@/stores/auth';
+import { useSettingsStore } from '@/stores/settings';
 
 export default {
   name: 'App',
@@ -84,23 +87,27 @@ export default {
     };
   },
   setup() {
-    const store = useAuthStore();
-    return { store };
+    const settings = useSettingsStore();
+    const authStore = useAuthStore();
+    return { settings, authStore };
   },
 
   mounted() {
-    this.store.fetchUserDetails().then((this.userDetails = this.store.details));
+    this.settings.fetchSettings();
+    this.authStore
+      .fetchUserDetails()
+      .then((this.userDetails = this.authStore.details));
   },
 
   methods: {
     toggleLogin() {
       console.log('Toggle Login. Is logged in:', this.isLoggedIn);
-      if (this.store.isLoggedIn) {
+      if (this.authStore.isLoggedIn) {
         // TODO: Navigate to the logout URL
-        this.store.logout();
+        this.authStore.logout();
       } else {
         // Navigate to the login URL
-        this.store.login();
+        this.authStore.login();
 
         //this.loginDialog = true; // Open the login dialog
       }

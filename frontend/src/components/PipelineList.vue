@@ -84,7 +84,7 @@
               @click="viewPipelineDetails(item)"
             />
             <v-btn
-              icon="mdi-monitor-eye"
+              icon="mdi-table-large"
               color="primary"
               class="mr-2"
               variant="text"
@@ -95,7 +95,7 @@
               icon="mdi-flash"
               color="success"
               variant="text"
-              v-tooltip:bottom-end="'Execute ' + item.description"
+              v-tooltip:bottom-end="'Execute ' + item.name"
               @click="showExecutionPanel(item)"
             />
             <!-- Dropdown menu with extra actions: edit, delete -->
@@ -200,8 +200,11 @@
           />
           Are you sure you want to delete the pipeline "<span
             class="font-weight-bold"
-            >{{ selectedPipeline?.description }}</span
+            >{{ selectedPipeline?.name }}</span
           >"?
+          <div class="font-weight-light">
+            {{ selectedPipeline?.description }}
+          </div>
           <v-alert type="warning" variant="outlined" class="mt-4">
             This action cannot be undone.
           </v-alert>

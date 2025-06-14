@@ -102,7 +102,7 @@
               @click="viewPipelineExecutionDetails(item)"
             />
             <v-btn
-              icon="mdi-file-chart"
+              icon="mdi-table-large"
               variant="text"
               color="primary"
               :disabled="item.job_reports_count == 0"
@@ -110,6 +110,15 @@
                 'View execution reports (' + item.job_reports_count + ')'
               "
               @click="viewPipelineExecutionReports(item)"
+            />
+            <v-btn
+              v-if="settings.isGrafanaEnabled()"
+              icon="mdi-chart-box"
+              variant="text"
+              color="primary"
+              :disabled="item.job_reports_count == 0"
+              v-tooltip:bottom-end="'View execution dashboard (new page)'"
+              @click="viewPipelineExecutionDashboard(item)"
             />
           </td>
         </tr>
@@ -173,6 +182,7 @@
 </template>
 
 <script>
+import { useSettingsStore } from '@/stores/settings';
 import { useAuthStore } from '@/stores/auth';
 import { useToolStore } from '@/stores/tools';
 import { usePipelineStore } from '@/stores/pipelines';
@@ -241,10 +251,11 @@ export default {
   },
 
   setup() {
+    const settings = useSettingsStore();
     const store = usePipelineStore();
     const toolStore = useToolStore();
     const authStore = useAuthStore();
-    return { store, toolStore, authStore };
+    return { settings, store, toolStore, authStore };
   },
 
   computed: {
@@ -345,6 +356,15 @@ export default {
       this.store.selectedPipelineId = execution.pipeline;
       this.store.selectedExecutionId = execution.id;
       this.$router.push('/reports');
+    },
+
+    viewPipelineExecutionDashboard(execution) {
+      console.log('Selected execution:', execution);
+      const url = this.settings.getGrafanaPipelineExecutionURL(
+        execution.pipeline,
+        execution.id,
+      );
+      window.open(url, '_blank');
     },
 
     formatDate(date) {

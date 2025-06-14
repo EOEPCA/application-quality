@@ -25,7 +25,8 @@ export default defineConfig({
     },
     proxy: {
       '/login': {
-        target: 'http://eoepca-plus-testing:30002',
+        //target: 'http://eoepca-plus-testing:30002',
+        target: 'http://application-quality-2.eoepca-plus-testing',
         changeOrigin: true,
         secure: false,
         ws: true,
@@ -43,7 +44,8 @@ export default defineConfig({
         }
       },
       '/oidc': {
-        target: 'http://eoepca-plus-testing:30002',
+        //target: 'http://eoepca-plus-testing:30002',
+        target: 'http://application-quality-2.eoepca-plus-testing',
         changeOrigin: true,
         secure: false,
         ws: true,
@@ -61,7 +63,8 @@ export default defineConfig({
         }
       },
       '/api': {
-        target: 'http://eoepca-plus-testing:30002',
+        //target: 'http://eoepca-plus-testing:30002',
+        target: 'http://application-quality-2.eoepca-plus-testing',
         changeOrigin: true,
         secure: false,
         ws: true,

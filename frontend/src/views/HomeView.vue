@@ -12,45 +12,42 @@
       including code quality, software development best practice for open
       reproducible science, and optimisation through performance testing.
     </p>
-    <p>&nbsp;</p>
-    <p>
+    <p style="padding-top: 1em">
       Read about the Service capabilities in the online
-      <a
-        target="_blank"
-        href="https://eoepca.readthedocs.io/projects/application-quality/en/latest/usage/user-manual/"
-        >User Manual</a
+      <a target="_blank" :href="settings.user_manual__url">User Manual</a>.
+    </p>
+    <p v-if="settings.isGrafanaEnabled()" style="padding-top: 1em">
+      Analyse the pipeline execution reports in the
+      <a target="_blank" :href="settings.getGrafanaDashboardsURL()"
+        >Dashboards tool</a
       >.
     </p>
-    <p>&nbsp;</p>
-    <p>
-      Analyse the pipeline execution reports in the OpenSearch powered
-      <a
-        target="_blank"
-        href="https://application-quality.develop.eoepca.org/dashboards/"
-        >Dashboards</a
-      >.
-    </p>
-    <p>&nbsp;</p>
-    <p>More links:</p>
+    <!-- p v-else>
+      The accompagying Dashboards tool has not been deployed or is not configured properly.
+    </p -->
+    <p style="padding-top: 1em">More links:</p>
     <v-list lines="one">
       <v-list-item>
-        <a
-          target="_blank"
-          href="https://eoepca.readthedocs.io/projects/architecture/en/latest/reference-architecture/application-quality-BB/"
+        <a target="_blank" :href="settings.design__url"
           >Reference architecture</a
         >
       </v-list-item>
       <v-list-item>
-        <a target="_blank" href="https://github.com/EOEPCA/application-quality/"
-          >GitHub repository</a
-        >
+        <a target="_blank" :href="settings.source__url">GitHub repository</a>
       </v-list-item>
     </v-list>
   </div>
 </template>
 
 <script>
+import { useSettingsStore } from '@/stores/settings';
+
 export default {
   name: 'HomeView',
+
+  setup() {
+    const settings = useSettingsStore();
+    return { settings };
+  },
 };
 </script>
