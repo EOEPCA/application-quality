@@ -130,10 +130,12 @@ grafana:
   ingress:
     enabled: true
     ingressClassName: nginx
-    path: /dashboards
-    pathType: Prefix
     hosts:
       - application-quality.develop.eoepca.org
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /$1
+    path: /dashboards/?(.*)
+    pathType: Prefix
     tls:
       - secretName: application-quality-tls
         hosts:
@@ -187,3 +189,6 @@ grafana:
       api_url: https://auth.eoepca-testing.spaceapplications.com/realms/eoepca/protocol/openid-connect/userinfo
       use_pkce: true
       use_refresh_token: true
+
+    server:
+      root_url: https://application-quality.develop.eoepca.org/dashboards
