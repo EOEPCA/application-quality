@@ -94,32 +94,40 @@
           </td>
           <td class="text-right nowrap">
             <v-btn
-              icon="mdi-information"
               color="primary"
-              class="mr-2"
               variant="text"
+              style="padding: 5px"
+              min-width="0px"
               v-tooltip:bottom-end="'Execution information'"
               @click="viewPipelineExecutionDetails(item)"
-            />
+            >
+              <v-icon size="26px"> mdi-information </v-icon>
+            </v-btn>
             <v-btn
-              icon="mdi-table-large"
-              variant="text"
               color="primary"
+              variant="text"
+              style="padding: 5px"
+              min-width="0px"
               :disabled="item.job_reports_count == 0"
               v-tooltip:bottom-end="
                 'View execution reports (' + item.job_reports_count + ')'
               "
               @click="viewPipelineExecutionReports(item)"
-            />
+            >
+              <v-icon size="26px"> mdi-table-large </v-icon>
+            </v-btn>
             <v-btn
               v-if="settings.isGrafanaEnabled()"
-              icon="mdi-chart-box"
+              color="secondary"
               variant="text"
-              color="primary"
+              style="padding: 5px"
+              min-width="0px"
               :disabled="item.job_reports_count == 0"
               v-tooltip:bottom-end="'View execution dashboard (new page)'"
               @click="viewPipelineExecutionDashboard(item)"
-            />
+            >
+              <v-icon size="28px"> mdi-chart-box </v-icon>
+            </v-btn>
           </td>
         </tr>
       </template>
@@ -234,7 +242,7 @@ export default {
           sortable: true,
         },
         {
-          title: 'Actions',
+          title: '',
           key: 'actions',
           sortable: false,
           align: 'center',

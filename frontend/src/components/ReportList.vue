@@ -112,24 +112,27 @@
           <td>{{ formatDate(item.created_at) }}</td>
           <td class="text-right nowrap">
             <v-btn
-              icon="mdi-information"
-              __size="small"
               color="primary"
-              class="mr-2"
               variant="text"
+              style="padding: 5px"
+              min-width="0px"
               v-tooltip:bottom-end="'Report content'"
-              :__title="'Information'"
               @click="viewReport(item)"
-            />
+            >
+              <v-icon size="26px"> mdi-information </v-icon>
+            </v-btn>
             <v-btn
               v-if="settings.isGrafanaEnabled()"
-              icon="mdi-chart-box"
+              color="secondary"
               variant="text"
-              color="primary"
+              style="padding: 5px"
+              min-width="0px"
               :disabled="item.job_reports_count == 0"
               v-tooltip:bottom-end="'View report in dashboard (new page)'"
               @click="viewPipelineExecutionReportDashboard(item)"
-            />
+            >
+              <v-icon size="28px"> mdi-chart-box </v-icon>
+            </v-btn>
           </td>
         </tr>
       </template>
@@ -311,15 +314,12 @@ export default {
     },
 
     viewPipelineExecutionReportDashboard(report) {
-      console.log('Selected execution:', report);
-      // TODO: Currently the backend does not return the report Id
-      // Actually, report.run == pipeline execution Id
-      // => Update when the backend returns the report id
+      console.debug('Selected report:', report);
       const url = this.settings.getGrafanaPipelineExecutionReportURL(
         this.store.selectedPipelineId,
         this.store.selectedExecutionId,
         report.name,
-        report.run, // TODO: change to report.id
+        report.id,
       );
       window.open(url, '_blank');
     },
