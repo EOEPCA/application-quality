@@ -139,7 +139,6 @@ grafana:
         hosts:
           - application-quality.develop.eoepca.org
 
-
   persistence:
     type: pvc
     enabled: true
@@ -168,6 +167,8 @@ grafana:
   dashboards: {}
   dashboardsConfigMaps: {}
 
+  envFromSecret: application-quality-grafana-dashboards-oauth-config
+
   grafana.ini:
 
   # https://grafana.com/docs/grafana/next/setup-grafana/configure-security/configure-authentication/generic-oauth/#examples-of-setting-up-generic-oauth
@@ -178,8 +179,8 @@ grafana:
       #team_ids:
       #allowed_organizations:
       name: "OAuth / OIDC"
-      client_id: application-quality-develop-grafana
-      client_secret: IVRUDeiy4RsZBHoSKlb2NYm8Ljvb6VNq
+      #client_id: -- Found in GF_AUTH_GENERIC_OAUTH_CLIENT_ID
+      #client_secret: -- Found in GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET
       scopes: openid roles profile user_name email
       auth_url: https://auth.eoepca-testing.spaceapplications.com/realms/eoepca/protocol/openid-connect/auth
       token_url: https://auth.eoepca-testing.spaceapplications.com/realms/eoepca/protocol/openid-connect/token
