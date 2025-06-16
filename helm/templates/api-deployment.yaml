@@ -45,9 +45,9 @@ spec:
             #    name: application-quality-db-creds
             - secretRef:
                 name: application-quality-auth-client
-            {{- if .Values.opensearch.enabled }}
+            {{- if .Values.grafana.enabled }}
             - secretRef:
-                name: {{ include "application-quality.fullname" . }}-opensearch
+                name: {{ include "application-quality.fullname" . }}-grafana
             {{- end }}
           resources:
             requests:

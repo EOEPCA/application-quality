@@ -24,14 +24,8 @@ data:
   DB_USER: {{ .Values.db.user }}
   DB_PASSWORD: {{ .Values.db.password | quote }}
 
-  # Opensearch
-  OPENSEARCH_ENABLED: {{ .Values.opensearch.enabled | default false | quote }}
-  OPENSEARCH_URL: {{ .Values.opensearch.url }}
-  OPENSEARCH_INDEX_RUNS: {{ .Values.opensearch.indexRuns | default "application-quality-pipeline-runs" }}
-  OPENSEARCH_INDEX_REPORTS: {{ .Values.opensearch.indexReports | default "application-quality-pipeline-run-reports" }}
-  # TODO: From secret
-  OPENSEARCH_USERNAME: {{ .Values.opensearch.username }}
-  OPENSEARCH_PASSWORD: {{ .Values.opensearch.password | quote }}
+  # Grafana
+  GRAFANA_ENABLED: {{ .Values.grafana.enabled | default false | quote }}
 
   # TBD
   AQBB_STORAGECLASS: {{ .Values.calrissian.storageClassName }}
