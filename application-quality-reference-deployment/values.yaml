@@ -53,7 +53,7 @@ application-quality:
     enabled: false
 
   grafana:
-    enabled: false
+    enabled: true
 
   oidc:
     enabled: true
@@ -85,3 +85,104 @@ application-quality:
   service:
     type: ClusterIP
     port: 80
+
+# https://github.com/grafana/helm-charts/blob/main/charts/grafana/values.yaml
+grafana:
+  rbac:
+    create: false
+  serviceAccount:
+    create: false
+  autoscaling:
+    enabled: false
+  testFramework:
+    enabled: false
+  # Enable creating the grafana configmap
+  createConfigmap: true
+
+  # Extra configmaps to mount in grafana pods
+  # Values are templated.
+  extraConfigmapMounts: []
+    # - name: certs-configmap
+    #   mountPath: /etc/grafana/ssl/
+    #   subPath: certificates.crt # (optional)
+    #   configMap: certs-configmap
+    #   readOnly: true
+    #   optional: false
+  
+    extraEmptyDirMounts: []
+    # - name: provisioning-notifiers
+    #   mountPath: /etc/grafana/provisioning/notifiers
+
+  podPortName: grafana
+  gossipPortName: gossip
+  ## Deployment annotations
+  # annotations: {}
+
+  service:
+    # https://github.com/grafana/helm-charts/blob/main/charts/grafana/values.yaml#L231
+    enabled: true
+    type: ClusterIP
+    port: 80
+    targetPort: 3000
+  
+  hostAliases: []
+
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    path: /dashboards
+    pathType: Prefix
+    hosts:
+      - application-quality.develop.eoepca.org
+    tls:
+      - secretName: application-quality-tls
+        hosts:
+          - application-quality.develop.eoepca.org
+
+
+  persistence:
+    type: pvc
+    enabled: true
+    storageClassName: managed-nfs-storage-retain
+    volumeName: application-quality-grafana-pvc
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi
+
+  admin:
+    ## Name of the secret. Can be templated.
+    existingSecret: ""
+    userKey: admin-user
+    passwordKey: admin-password
+
+  ## Pass the plugins you want installed as a list.
+  ##
+  plugins: []
+    # - digrich-bubblechart-panel
+    # - grafana-clock-panel
+
+  datasources: {}
+  alerting: {}
+  notifiers: {}
+  dashboardProviders: {}
+  dashboards: {}
+  dashboardsConfigMaps: {}
+
+  grafana.ini:
+
+  # https://grafana.com/docs/grafana/next/setup-grafana/configure-security/configure-authentication/generic-oauth/#examples-of-setting-up-generic-oauth
+    auth.generic_oauth:
+      enabled: true
+      allow_sign_up: true
+      auto_login: false
+      #team_ids:
+      #allowed_organizations:
+      name: "OAuth / OIDC"
+      client_id: application-quality-develop-grafana
+      client_secret: IVRUDeiy4RsZBHoSKlb2NYm8Ljvb6VNq
+      scopes: openid roles profile user_name email
+      auth_url: https://auth.eoepca-testing.spaceapplications.com/realms/eoepca/protocol/openid-connect/auth
+      token_url: https://auth.eoepca-testing.spaceapplications.com/realms/eoepca/protocol/openid-connect/token
+      api_url: https://auth.eoepca-testing.spaceapplications.com/realms/eoepca/protocol/openid-connect/userinfo
+      use_pkce: true
+      use_refresh_token: true
