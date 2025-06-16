@@ -109,7 +109,7 @@ grafana:
     #   readOnly: true
     #   optional: false
   
-    extraEmptyDirMounts: []
+  extraEmptyDirMounts: []
     # - name: provisioning-notifiers
     #   mountPath: /etc/grafana/provisioning/notifiers
 
