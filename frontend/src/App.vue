@@ -104,7 +104,7 @@ export default {
         { title: 'Analysis Tools', path: '/tools', icon: 'mdi-tools' },
         { title: 'Pipelines', path: '/pipelines', icon: 'mdi-pipe' },
         { title: 'Monitoring', path: '/executions', icon: 'mdi-monitor-eye' },
-        { title: 'Reports', path: '/reports', icon: 'mdi-file-chart' },
+        { title: 'Reports', path: '/reports', icon: 'mdi-note-text-outline' },
         { title: 'Settings', path: '/settings', icon: 'mdi-cog' },
       ],
       userDetails: null,

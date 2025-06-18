@@ -114,8 +114,6 @@
             <v-btn
               color="primary"
               variant="text"
-              style="padding: 5px"
-              min-width="0px"
               v-tooltip:bottom-end="'Report content'"
               @click="viewReport(item)"
             >
@@ -125,13 +123,11 @@
               v-if="settings.isGrafanaEnabled()"
               color="secondary"
               variant="text"
-              style="padding: 5px"
-              min-width="0px"
               :disabled="item.job_reports_count == 0"
               v-tooltip:bottom-end="'View report in dashboard (new page)'"
               @click="viewPipelineExecutionReportDashboard(item)"
             >
-              <v-icon size="28px"> mdi-chart-box </v-icon>
+              <v-icon size="28px"> mdi-chart-box-outline </v-icon>
             </v-btn>
           </td>
         </tr>
@@ -338,6 +334,11 @@ export default {
 
 .v-table {
   margin-top: 1rem;
+}
+
+.v-btn {
+  padding: 5px;
+  min-width: 0px;
 }
 
 .nowrap {

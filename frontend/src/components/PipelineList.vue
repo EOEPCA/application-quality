@@ -76,37 +76,39 @@
           <td>{{ formatDate(item.created_at) }}</td>
           <td class="text-right">
             <v-btn
-              icon="mdi-information"
               color="primary"
-              class="mr-2"
               variant="text"
               v-tooltip:bottom-end="'Pipeline information (' + item.name + ')'"
               @click="viewPipelineDetails(item)"
-            />
+            >
+              <v-icon size="26px"> mdi-information </v-icon>
+            </v-btn>
             <v-btn
-              icon="mdi-table-large"
               color="primary"
-              class="mr-2"
               variant="text"
               v-tooltip:bottom-end="'Pipeline executions'"
               @click="viewPipelineExecutions(item)"
-            />
+            >
+              <v-icon size="26px"> mdi-monitor-eye </v-icon>
+            </v-btn>
             <v-btn
-              icon="mdi-flash"
-              color="success"
+              color="pink"
               variant="text"
               v-tooltip:bottom-end="'Execute ' + item.name"
               @click="showExecutionPanel(item)"
-            />
+            >
+              <v-icon size="26px"> mdi-flash </v-icon>
+            </v-btn>
             <!-- Dropdown menu with extra actions: edit, delete -->
             <v-menu location="bottom end" :disabled="!canEditPipeline(item)">
               <template v-slot:activator="{ props }">
                 <v-btn
-                  icon="mdi-dots-vertical"
                   v-bind="props"
                   variant="text"
                   :disabled="!canEditPipeline(item)"
-                />
+                >
+                  <v-icon size="26px"> mdi-dots-vertical </v-icon>
+                </v-btn>
               </template>
 
               <v-list>
@@ -293,7 +295,7 @@ export default {
           sortable: true,
         },
         {
-          title: 'Actions',
+          title: '',
           key: 'actions',
           sortable: false,
           align: 'center',
@@ -595,5 +597,10 @@ export default {
 
 .v-table {
   margin-top: 1rem;
+}
+
+.v-btn {
+  padding: 5px;
+  min-width: 0px;
 }
 </style>

@@ -79,15 +79,13 @@
           <!-- <td>{{ formatDate(item.created_at) }}</td> -->
           <td class="text-right nowrap">
             <v-btn
-              icon="mdi-information"
-              __size="small"
               color="primary"
-              class="mr-2"
               variant="text"
               v-tooltip:bottom-end="'Tool information'"
-              :__title="'Information'"
               @click="viewToolDetails(item)"
-            />
+            >
+              <v-icon size="26px"> mdi-information </v-icon>
+            </v-btn>
             <!-- <v-btn
               icon="mdi-pencil"
               variant="text"
@@ -185,7 +183,7 @@ export default {
           sortable: true,
         },
         {
-          title: 'Actions',
+          title: '',
           key: 'actions',
           sortable: false,
           align: 'center',
@@ -326,6 +324,11 @@ export default {
 
 .v-table {
   margin-top: 1rem;
+}
+
+.v-btn {
+  padding: 5px;
+  min-width: 0px;
 }
 
 .nowrap {

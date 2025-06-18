@@ -96,8 +96,6 @@
             <v-btn
               color="primary"
               variant="text"
-              style="padding: 5px"
-              min-width="0px"
               v-tooltip:bottom-end="'Execution information'"
               @click="viewPipelineExecutionDetails(item)"
             >
@@ -106,27 +104,23 @@
             <v-btn
               color="primary"
               variant="text"
-              style="padding: 5px"
-              min-width="0px"
               :disabled="item.job_reports_count == 0"
               v-tooltip:bottom-end="
                 'View execution reports (' + item.job_reports_count + ')'
               "
               @click="viewPipelineExecutionReports(item)"
             >
-              <v-icon size="26px"> mdi-table-large </v-icon>
+              <v-icon size="28px"> mdi-note-text-outline </v-icon>
             </v-btn>
             <v-btn
               v-if="settings.isGrafanaEnabled()"
               color="secondary"
               variant="text"
-              style="padding: 5px"
-              min-width="0px"
               :disabled="item.job_reports_count == 0"
               v-tooltip:bottom-end="'View execution dashboard (new page)'"
               @click="viewPipelineExecutionDashboard(item)"
             >
-              <v-icon size="28px"> mdi-chart-box </v-icon>
+              <v-icon size="28px"> mdi-chart-box-outline </v-icon>
             </v-btn>
           </td>
         </tr>
@@ -436,5 +430,10 @@ export default {
 
 .nowrap {
   white-space: nowrap;
+}
+
+.v-btn {
+  padding: 5px;
+  min-width: 0px;
 }
 </style>
