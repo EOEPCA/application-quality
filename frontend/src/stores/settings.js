@@ -9,6 +9,7 @@ export const useSettingsStore = defineStore('settings', {
     instance__version: '1.0',
     instance__date: 'yyyy-mm-dd',
     instance__theme: 'default',
+    debug__enabled: false,
     user_manual__url:
       'https://eoepca.readthedocs.io/projects/application-quality/en/latest/usage/user-manual/',
     source__url: 'https://github.com/EOEPCA/application-quality/',
@@ -33,11 +34,14 @@ export const useSettingsStore = defineStore('settings', {
       this.loading = true;
       this.error = null;
       try {
+        console.debug("Fetching settings from the backend ...");
         const settings = await settingsService.getSettings();
         for (const key in settings) {
           // Ensure the property belongs to the settings object itself
           if (Object.prototype.hasOwnProperty.call(settings, key)) {
-            this[key] = settings[key].replaceAll('.', '__');
+            const local_key = key.replaceAll('.', '__');
+            this[local_key] = settings[key];
+            console.debug(local_key, " = ", this[local_key]);
           }
         }
         // Ensure the Grafana URL does not end with a '/'
@@ -49,6 +53,10 @@ export const useSettingsStore = defineStore('settings', {
       } finally {
         this.loading = false;
       }
+    },
+
+    isDebugEnabled() {
+      return this.debug__enabled == true;
     },
 
     isGrafanaEnabled() {

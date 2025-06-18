@@ -17,9 +17,9 @@
       <a target="_blank" :href="settings.user_manual__url">User Manual</a>.
     </p>
     <p v-if="settings.isGrafanaEnabled()" style="padding-top: 1em">
-      Analyse the pipeline execution reports in the
+      Analyse the pipeline executions and reports in the interactive
       <a target="_blank" :href="settings.getGrafanaDashboardsURL()"
-        >Dashboards tool</a
+        >Dashboards</a
       >.
     </p>
     <!-- p v-else>

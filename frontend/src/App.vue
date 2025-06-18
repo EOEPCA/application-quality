@@ -15,7 +15,7 @@
 
     <v-app-bar color="primary">
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-app-bar-title>EOEPCA - Application Quality Service</v-app-bar-title>
+      <v-app-bar-title>{{ settings.instance__name }}</v-app-bar-title>
       <!-- Login / Logout button -->
       <v-spacer></v-spacer>
 
