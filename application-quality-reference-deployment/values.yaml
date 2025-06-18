@@ -31,7 +31,7 @@ application-quality:
   web:
     image:
       #repository: eoepca/eoepca-appquality-frontend
-      tag: 2025-06-18.1
+      tag: 2025-06-18.2
     publicUrl: "https://application-quality.develop.eoepca.org"
 
   persistence:
