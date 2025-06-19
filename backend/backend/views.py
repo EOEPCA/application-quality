@@ -5,7 +5,6 @@ import yaml
 from . import serializers
 from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag
 from backend.tasks import run_workflow_task
-from backend.utils.opensearch import index_pipeline_job_report
 
 from django.utils import timezone
 from django.db.utils import IntegrityError
@@ -242,7 +241,6 @@ class JobReportViewSet(
             created_at=timezone.now()
         )
 
-        index_pipeline_job_report(job_report)
         logger.info(f"Job report created for tool '{tool_name}' in run {run_id}")
 
         serializer = self.get_serializer(job_report)

@@ -1,6 +1,5 @@
 # from kubernetes.client.models.v1_job import V1Job
 from backend.models import PipelineRun
-from backend.utils.opensearch import index_pipeline_run
 from json.decoder import JSONDecodeError
 from kubernetes import config
 from pycalrissian.context import CalrissianContext
@@ -62,7 +61,6 @@ def run_workflow(
     }
     '''
 
-    index_pipeline_run(pipeline_run)
 
     kubeconfig = os.getenv("KUBECONFIG", None)
 
@@ -116,7 +114,6 @@ def run_workflow(
 
     pipeline_run.inputs = params
     pipeline_run.save(update_fields=['inputs'])  # Overwrite previous value because of server_url
-    index_pipeline_run(pipeline_run)
     logger.debug(f"Run {pipeline_run.id} updated with server url")
 
     """
@@ -147,7 +144,6 @@ def run_workflow(
 
     pipeline_run.status = "running"
     pipeline_run.save(update_fields=["status"])
-    index_pipeline_run(pipeline_run)
     logger.debug(f"Run {pipeline_run.id} status updated: running")
 
     """
@@ -193,5 +189,4 @@ def run_workflow(
     pipeline_run.output = output
 
     pipeline_run.save()
-    index_pipeline_run(pipeline_run)
     logger.info(f"Run {pipeline_run.id} completed")
