@@ -24,6 +24,7 @@
           "inspect": false
         },
         "mappings": [],
+        "noValue": "No pipeline executions found in the selected date range",
         "thresholds": {
           "mode": "absolute",
           "steps": [

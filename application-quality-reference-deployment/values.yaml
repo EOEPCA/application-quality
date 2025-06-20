@@ -152,9 +152,9 @@ grafana:
 
   admin:
     ## Name of the secret. Can be templated.
-    existingSecret: ""
-    userKey: admin-user
-    passwordKey: admin-password
+    existingSecret: application-quality-grafana-dashboards-admin-creds
+    userKey: GRAFANA_SECURITY_ADMIN_USER
+    passwordKey: GRAFANA_SECURITY_ADMIN_PASSWORD
 
   ## Pass the plugins you want installed as a list.
   ##
@@ -206,21 +206,21 @@ grafana:
               echo -e \\n$i
               curl -L 'http://localhost:3000/api/folders' \
                 -H 'Content-Type: application/json' \
-                -u $GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD \
+                -u $GF_SECURITY_ADMIN_USER:$GF_SECURITY_ADMIN_PASSWORD \
                 -d @$i
             done
             for i in library-elements/*.json; do
               echo -e \\n$i
               curl -L 'http://localhost:3000/api/library-elements' \
                 -H 'Content-Type: application/json' \
-                -u $GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD \
+                -u $GF_SECURITY_ADMIN_USER:$GF_SECURITY_ADMIN_PASSWORD \
                 -d @$i
             done
             for i in dashboards/*.json; do
               echo -e \\n$i
               curl -L 'http://localhost:3000/api/dashboards/db' \
                 -H 'Content-Type: application/json' \
-                -u $GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD \
+                -u $GF_SECURITY_ADMIN_USER:$GF_SECURITY_ADMIN_PASSWORD \
                 -d @$i
             done
 

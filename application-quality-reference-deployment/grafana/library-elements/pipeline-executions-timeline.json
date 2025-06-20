@@ -64,7 +64,7 @@
             "type": "value"
           }
         ],
-        "noValue": "No pipeline execution found in the selected date range",
+        "noValue": "No pipeline executions found in the selected date range",
         "thresholds": {
           "mode": "absolute",
           "steps": [
