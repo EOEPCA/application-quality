@@ -1,0 +1,267 @@
+{
+  "folderUid": "application-quality-service",
+  "uid": "pipeline-executions-list",
+  "name": "Pipeline Executions List",
+  "kind": 1,
+  "type": "table",
+  "description": "",
+  "model": {
+    "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "application-quality-db"
+    },
+    "description": "",
+    "fieldConfig": {
+      "defaults": {
+        "color": {
+          "mode": "thresholds"
+        },
+        "custom": {
+          "align": "auto",
+          "cellOptions": {
+            "type": "auto"
+          },
+          "inspect": false
+        },
+        "links": [],
+        "mappings": [],
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {
+              "color": "green",
+              "value": null
+            }
+          ]
+        }
+      },
+      "overrides": [
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "id"
+          },
+          "properties": [
+            {
+              "id": "links",
+              "value": [
+                {
+                  "targetBlank": false,
+                  "title": "Details",
+                  "url": "/d/pipeline-execution/pipeline-execution?orgId=3&from=now-6h&to=now&timezone=browser&var-report_id=&var-execution_id=${__data.fields.Links}&var-pipeline_id=${__data.fields[\"Pipeline name\"]}"
+                }
+              ]
+            },
+            {
+              "id": "custom.cellOptions",
+              "value": {
+                "type": "data-links"
+              }
+            },
+            {
+              "id": "custom.align",
+              "value": "left"
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "pipeline_name"
+          },
+          "properties": [
+            {
+              "id": "links",
+              "value": [
+                {
+                  "targetBlank": true,
+                  "title": "Pipeline details",
+                  "url": "https://www.google.com/search?q=pipeline-${__data.fields[\"Pipeline name\"]}"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "options": {
+      "cellHeight": "sm",
+      "footer": {
+        "countRows": false,
+        "fields": "",
+        "reducer": [
+          "sum"
+        ],
+        "show": false
+      },
+      "showHeader": true,
+      "sortBy": []
+    },
+    "pluginVersion": "12.0.0",
+    "targets": [
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "application-quality-db"
+        },
+        "editorMode": "builder",
+        "format": "table",
+        "rawSql": "SELECT pipeline_name, start_time, completion_time, status, id FROM executions_admin WHERE $__timeFilter(start_time) ORDER BY start_time LIMIT null ",
+        "refId": "A",
+        "sql": {
+          "columns": [
+            {
+              "parameters": [
+                {
+                  "name": "pipeline_name",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            },
+            {
+              "parameters": [
+                {
+                  "name": "start_time",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            },
+            {
+              "parameters": [
+                {
+                  "name": "completion_time",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            },
+            {
+              "parameters": [
+                {
+                  "name": "status",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            },
+            {
+              "parameters": [
+                {
+                  "name": "id",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            }
+          ],
+          "groupBy": [
+            {
+              "property": {
+                "type": "string"
+              },
+              "type": "groupBy"
+            }
+          ],
+          "limit": null,
+          "orderBy": {
+            "property": {
+              "name": [
+                "start_time"
+              ],
+              "type": "string"
+            },
+            "type": "property"
+          },
+          "whereJsonTree": {
+            "children1": [
+              {
+                "id": "bb8aaa89-cdef-4012-b456-719712903b33",
+                "properties": {
+                  "field": "start_time",
+                  "fieldSrc": "field",
+                  "operator": "macros",
+                  "value": [
+                    "timeFilter"
+                  ],
+                  "valueError": [
+                    null
+                  ],
+                  "valueSrc": [
+                    "value"
+                  ],
+                  "valueType": [
+                    "datetime"
+                  ]
+                },
+                "type": "rule"
+              }
+            ],
+            "id": "9b98988b-0123-4456-b89a-b197128fb9b8",
+            "type": "group"
+          },
+          "whereString": "$__timeFilter(start_time)"
+        },
+        "table": "executions_admin"
+      }
+    ],
+    "title": "Pipeline Executions",
+    "transformations": [
+      {
+        "id": "organize",
+        "options": {
+          "excludeByName": {
+            "id": false
+          },
+          "includeByName": {},
+          "indexByName": {
+            "completion_time": 2,
+            "id": 4,
+            "pipeline_name": 0,
+            "start_time": 1,
+            "status": 3
+          },
+          "renameByName": {
+            "completion_time": "End time",
+            "id": "Links",
+            "pipeline_name": "Pipeline name",
+            "start_time": "Start time",
+            "status": "Status"
+          }
+        }
+      },
+      {
+        "id": "sortBy",
+        "options": {
+          "fields": {},
+          "sort": [
+            {
+              "desc": true,
+              "field": "Start time"
+            }
+          ]
+        }
+      }
+    ],
+    "type": "table"
+  },
+  "version": 16,
+  "meta": {
+    "folderName": "Application Quality Service",
+    "folderUid": "application-quality-service",
+    "connectedDashboards": 1,
+    "created": "2025-05-27T16:05:12Z",
+    "updated": "2025-06-10T13:05:23Z",
+    "createdBy": {
+      "id": 1,
+      "name": "admin",
+      "avatarUrl": "/avatar/46d229b033af06a191ff2267bca9ae56"
+    },
+    "updatedBy": {
+      "id": 1,
+      "name": "admin",
+      "avatarUrl": "/avatar/46d229b033af06a191ff2267bca9ae56"
+    }
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "folderUid": "application-quality-service",
+  "overwrite": false,
+  "dashboard": {
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": {
+            "type": "grafana",
+            "uid": "-- Grafana --"
+          },
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "type": "dashboard"
+        }
+      ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "links": [],
+    "panels": [
+      {
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        },
+        "id": 1,
+        "libraryPanel": {
+          "name": "Pipeline Executions Daily Statistics",
+          "uid": "pipeline-executions-daily-statistics"
+        },
+        "title": "Pipeline Executions Daily Statistics",
+        "type": "library-panel-ref"
+      },
+      {
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 8
+        },
+        "id": 2,
+        "libraryPanel": {
+          "name": "Pipeline Executions Timeline",
+          "uid": "pipeline-executions-timeline"
+        },
+        "title": "Pipeline Executions Timeline",
+        "type": "library-panel-ref"
+      },
+      {
+        "gridPos": {
+          "h": 11,
+          "w": 24,
+          "x": 0,
+          "y": 16
+        },
+        "id": 3,
+        "libraryPanel": {
+          "name": "Pipeline Executions List",
+          "uid": "pipeline-executions-list"
+        },
+        "title": "Pipeline Executions",
+        "type": "library-panel-ref"
+      }
+    ],
+    "preload": false,
+    "schemaVersion": 41,
+    "tags": [],
+    "templating": {
+      "list": []
+    },
+    "time": {
+      "from": "now-90d",
+      "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "Pipeline Executions",
+    "id": null,
+    "uid": "pipeline-executions",
+    "version": 1
+  }
+}

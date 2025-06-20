@@ -167,6 +167,7 @@ grafana:
       apiVersion: 1
       datasources:
         - name: "Application Quality DB (Admin)"
+          uid: application-quality-db
           type: postgres
           url: application-quality-core-db.application-quality.svc.cluster.local:5432
           user: admin
@@ -189,6 +190,39 @@ grafana:
   dashboardsConfigMaps: {}
 
   envFromSecret: application-quality-grafana-dashboards-oauth-config
+
+  lifecycleHooks:
+    postStart:
+      exec:
+        command:
+          - bash
+          - -c
+          - |-
+            cd /tmp
+            curl -LO https://github.com/EOEPCA/application-quality/archive/refs/heads/reference-deployment.zip
+            unzip -o reference-deployment.zip
+            cd application-quality-reference-deployment/application-quality-reference-deployment/grafana
+            for i in folders/*.json; do
+              echo -e \\n$i
+              curl -L 'http://localhost:3000/api/folders' \
+                -H 'Content-Type: application/json' \
+                -u $GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD \
+                -d @$i
+            done
+            for i in library-elements/*.json; do
+              echo -e \\n$i
+              curl -L 'http://localhost:3000/api/library-elements' \
+                -H 'Content-Type: application/json' \
+                -u $GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD \
+                -d @$i
+            done
+            for i in dashboards/*.json; do
+              echo -e \\n$i
+              curl -L 'http://localhost:3000/api/dashboards/db' \
+                -H 'Content-Type: application/json' \
+                -u $GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASSWORD \
+                -d @$i
+            done
 
   grafana.ini:
 
