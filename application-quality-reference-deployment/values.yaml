@@ -209,7 +209,7 @@ grafana:
                 -u $GF_SECURITY_ADMIN_USER:$GF_SECURITY_ADMIN_PASSWORD \
                 -d @$i
             done
-            for i in library-elements/*.json; do
+            for i in library-panels/*.json; do
               echo -e \\n$i
               curl -L 'http://localhost:3000/api/library-elements' \
                 -H 'Content-Type: application/json' \
@@ -223,6 +223,8 @@ grafana:
                 -u $GF_SECURITY_ADMIN_USER:$GF_SECURITY_ADMIN_PASSWORD \
                 -d @$i
             done
+            # Otherwise if anything goes wrong the pod fails to start
+            exit 0
 
   grafana.ini:
 
