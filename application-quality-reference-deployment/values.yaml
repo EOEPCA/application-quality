@@ -208,21 +208,21 @@ grafana:
                 -H 'Content-Type: application/json' \
                 -u $GF_SECURITY_ADMIN_USER:$GF_SECURITY_ADMIN_PASSWORD \
                 -d @$i
-            done
+            done | tee -a $GF_PATHS_LOGS/post-start-script.log
             for i in library-panels/*.json; do
               echo -e \\n$i
               curl -L 'http://localhost:3000/api/library-elements' \
                 -H 'Content-Type: application/json' \
                 -u $GF_SECURITY_ADMIN_USER:$GF_SECURITY_ADMIN_PASSWORD \
                 -d @$i
-            done
+            done | tee -a $GF_PATHS_LOGS/post-start-script.log
             for i in dashboards/*.json; do
               echo -e \\n$i
               curl -L 'http://localhost:3000/api/dashboards/db' \
                 -H 'Content-Type: application/json' \
                 -u $GF_SECURITY_ADMIN_USER:$GF_SECURITY_ADMIN_PASSWORD \
                 -d @$i
-            done
+            done | tee -a $GF_PATHS_LOGS/post-start-script.log
             # Otherwise if anything goes wrong the pod fails to start
             exit 0
 
