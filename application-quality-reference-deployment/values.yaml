@@ -113,6 +113,64 @@ grafana:
     # - name: provisioning-notifiers
     #   mountPath: /etc/grafana/provisioning/notifiers
 
+  extraContainers:
+    - name: init-application-quality-data
+      image: curlimages/curl:8.14.1
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          echo "Starting initialisation script in Grafana pod..."
+          # Wait for the Grafana API to repond
+          GRAFANA_API_URL="http://application-quality-core-grafana:80"
+          echo "Waiting for Grafana API at ${GRAFANA_API_URL}/api/health to respond..."
+          until curl --fail --silent "${GRAFANA_API_URL}/api/health"; do
+            echo "Grafana API not yet available, retrying in 5 seconds..."
+            sleep 5
+          done
+          echo "Grafana API is now available. Proceeding with the initialisation."
+          cd /tmp
+          curl -LO https://github.com/EOEPCA/application-quality/archive/refs/heads/reference-deployment.zip
+          unzip -o reference-deployment.zip
+          cd application-quality-reference-deployment/application-quality-reference-deployment/grafana
+          for i in folders/*.json; do
+            echo -e "\\nCreating folder defined in: $i"
+            curl -L "${GRAFANA_API_URL}/api/folders" \
+              -H "Content-Type: application/json" \
+              -u $GF_SECURITY_ADMIN_USER:$GF_SECURITY_ADMIN_PASSWORD \
+              -d @$i
+          done
+          for i in library-panels/*.json; do
+            echo -e "\\nCreating library panel defined in: $i"
+            curl -L "${GRAFANA_API_URL}/api/library-elements" \
+              -H "Content-Type: application/json" \
+              -u $GF_SECURITY_ADMIN_USER:$GF_SECURITY_ADMIN_PASSWORD \
+              -d @$i
+          done
+          for i in dashboards/*.json; do
+            echo -e "\\nCreating dashboard defined in: $i"
+            curl -L "${GRAFANA_API_URL}/api/dashboards/db" \
+              -H "Content-Type: application/json" \
+              -u $GF_SECURITY_ADMIN_USER:$GF_SECURITY_ADMIN_PASSWORD \
+              -d @$i
+          done
+          echo "Initialisation complete - Keeping the container alive."
+          while true; do sleep 5; done
+
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
+        limits:
+          cpu: 50m
+          memory: 64Mi
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+        runAsNonRoot: true
+
   podPortName: grafana
   gossipPortName: gossip
   ## Deployment annotations
@@ -190,41 +248,6 @@ grafana:
   dashboardsConfigMaps: {}
 
   envFromSecret: application-quality-grafana-dashboards-oauth-config
-
-  lifecycleHooks:
-    postStart:
-      exec:
-        command:
-          - bash
-          - -c
-          - |-
-            cd /tmp
-            curl -LO https://github.com/EOEPCA/application-quality/archive/refs/heads/reference-deployment.zip
-            unzip -o reference-deployment.zip
-            cd application-quality-reference-deployment/application-quality-reference-deployment/grafana
-            for i in folders/*.json; do
-              echo -e \\n$i
-              curl -L 'http://localhost:3000/api/folders' \
-                -H 'Content-Type: application/json' \
-                -u $GF_SECURITY_ADMIN_USER:$GF_SECURITY_ADMIN_PASSWORD \
-                -d @$i
-            done |& tee -a $GF_PATHS_LOGS/post-start-script.log
-            for i in library-panels/*.json; do
-              echo -e \\n$i
-              curl -L 'http://localhost:3000/api/library-elements' \
-                -H 'Content-Type: application/json' \
-                -u $GF_SECURITY_ADMIN_USER:$GF_SECURITY_ADMIN_PASSWORD \
-                -d @$i
-            done |& tee -a $GF_PATHS_LOGS/post-start-script.log
-            for i in dashboards/*.json; do
-              echo -e \\n$i
-              curl -L 'http://localhost:3000/api/dashboards/db' \
-                -H 'Content-Type: application/json' \
-                -u $GF_SECURITY_ADMIN_USER:$GF_SECURITY_ADMIN_PASSWORD \
-                -d @$i
-            done |& tee -a $GF_PATHS_LOGS/post-start-script.log
-            # Otherwise if anything goes wrong the pod fails to start
-            exit 0
 
   grafana.ini:
 
