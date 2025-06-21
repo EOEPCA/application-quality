@@ -113,7 +113,7 @@ grafana:
     # - name: provisioning-notifiers
     #   mountPath: /etc/grafana/provisioning/notifiers
 
-  extraContainers:
+  extraContainers: |
     - name: init-application-quality-data
       image: curlimages/curl:8.14.1
       command: ["/bin/sh", "-c"]
