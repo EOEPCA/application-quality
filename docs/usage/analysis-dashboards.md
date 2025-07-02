@@ -2,7 +2,7 @@
 
 The Application Quality Service integrates with **Grafana** to visualise the various reports and metrics generated during pipeline executions.
 
-Dashboards are accessible from the **Service User Portal** by clicking the dashboards icon <img src="../img/user-manual/mdi-chart-box.png" style="height:20px; width:20px"/> in the navigation bar. Each report and pipeline is also associated with a dedicated dashboard in Grafana, accessible through the dashboards icon <img src="../img/user-manual/mdi-chart-box.png" style="height:20px; width:20px"/> next to each row on the **Pipelines** and **Reports** page.
+Dashboards are accessible from the **Service User Portal** by clicking the dashboards icon <img src="../img/user-manual/mdi-chart-box.png" style="height:20px; width:20px"/> in the navigation bar. Each report and pipeline is also associated with a dedicated dashboard in Grafana, accessible through the dashboards icon <img src="../img/user-manual/mdi-chart-box-outline-cyan.png" style="height:20px; width:20px"/> in each row on the **Monitoring** and **Reports** pages.
 
 > Grafana Open Source Software (OSS) enables you to query, visualise, alert on, and explore your metrics, logs, and traces wherever they're stored. [...] Grafana OSS provides you with tools to display that data on live dashboards with insightful graphs and visualizations.
 
@@ -32,11 +32,11 @@ The default dashboards are organised into these two folders:
 
 A set of preconfigured library panels is provided. Users can import these panels into their own dashboards as needed. New panels may be created as well.
 
-![Library panels](/docs/usage/img/user-manual/grafana-library-panels.png)
+![Library panels](img/user-manual/grafana-library-panels.png)
 
 > NOTE: Some panels use **dashboard variables** in their SQL requests and will display errors if these are not correctly set up. You can create them by navigating to the dashboard settings: **Edit** > **Settings** > **Variables**.
 
-![Grafana settings - Variables](/docs/usage/img/user-manual/grafana-settings-variables.png) <!-- This should show `executions` instead of `executions_admin` -->
+![Grafana settings - Variables](img/user-manual/grafana-settings-variables.png) <!-- This should show `executions` instead of `executions_admin` -->
 
 ### Custom Dashboards
 
