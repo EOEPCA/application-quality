@@ -25,7 +25,7 @@ In a default setup, the authentication is performed using the EOEPCA Identity an
 
 ![Login Form](img/user-manual/iam-login.png)
 
-Note: A confirmation is requested the first time a GitHub account is used to authenticate in an EOEPCA service. In particular it is asked if the user name and email address may be shared with the service.
+> Note: A confirmation is requested the first time a GitHub account is used to authenticate in an EOEPCA service. In particular it is asked if the user name and email address may be shared with the service.
 
 Upon successful authentication, the web browser is automatically redirected to the service portal. The navigation bar now shows the user name and a **LOGOUT** link.
 
@@ -56,7 +56,7 @@ Each row provides the name and version a pipeline as well as a series of action 
 
 - Use <img src="../img/user-manual/mdi-information-blue.png" style="height:20px; width:20px"/> to display the pipeline properties, including the list of integrated tools.
 - Use <img src="../img/user-manual/mdi-monitor-eye-blue.png" style="height:20px; width:20px"/> to navigate to the **Monitoring** page and inspect the past and on-going executions of the related pipeline.
-- Use <img src="../img/user-manual/mdi-flash-red.png" style="height:20px; width:20px"/> to execute the analysis pipeline.
+- Use <img src="../img/user-manual/mdi-flash-pink.png" style="height:20px; width:20px"/> to execute the analysis pipeline.
 
 If you own the pipeline, a 3-dot <img src="../img/user-manual/mdi-dots-vertical-black.png" style="height:20px; width:20px"/> menu icon is provided giving access to two additional functions:
 
@@ -115,7 +115,7 @@ A dialog box appears asking for confirmation.
 
 Note: The Application Quality service currently supports on-demand pipeline executions. In a future release, it will be possible to configure unattended executions triggered by external events.
 
-In order to execute an analysis pipeline, navigate to the **Pipelines** page, identify the pipeline to be executed and click on its <img src="../img/user-manual/mdi-flash-red.png" style="height:20px; width:20px"/> icon. The pipeline execution panel slides from the right side of the window. This panel contains a form with the input parameters of the analysis tools integrated in the pipeline.
+In order to execute an analysis pipeline, navigate to the **Pipelines** page, identify the pipeline to be executed and click on its <img src="../img/user-manual/mdi-flash-pink.png" style="height:20px; width:20px"/> icon. The pipeline execution panel slides from the right side of the window. This panel contains a form with the input parameters of the analysis tools integrated in the pipeline.
 
 Keep or modify the parameters default values as necessary, then click on the **EXECUTE** button.
 
@@ -141,12 +141,12 @@ Upon successful completion of the pipeline execution, the status becomes **Succe
 Each row provides the name and version of the pipeline as well as action icons:
 
 - Use <img src="../img/user-manual/mdi-information-blue.png" style="height:20px; width:20px"/> to display the pipeline execution properties.
-- Use <img src="../img/user-manual/mdi-file-chart-blue.png" style="height:20px; width:20px"/> to navigate to the **Reports** page and inspect the execution report of each tool integrated in the pipeline.
-
+- Use <img src="../img/user-manual/mdi-note-text-outline-blue.png" style="height:20px; width:20px"/> to navigate to the **Reports** page and inspect the execution report of each tool integrated in the pipeline.
+- Use <img src="../img/user-manual/mdi-chart-box-outline-cyan.png" style="height:20px; width:20px"/> to display the dashboard associated with this pipeline execution in **Grafana** (see [Analysis Dashboards](analysis-dashboards.md)).
 
 ### Inspection of the execution reports
 
-Select **Monitoring** in the side menu to access the list of past and on-going executions. Select an analysis pipeline in the list above the page to reveal its most recent executions in the table, then identify an execution and click on its associated <img src="../img/user-manual/mdi-file-chart-blue.png" style="height:20px; width:20px"/> icon. The **Reports** page is then displayed, showing the list of reports generated during the pipeline execution.
+Select **Monitoring** in the side menu to access the list of past and on-going executions. Select an analysis pipeline in the list above the page to reveal its most recent executions in the table, then identify an execution and click on its associated <img src="../img/user-manual/mdi-note-text-outline-blue.png" style="height:20px; width:20px"/> icon. The **Reports** page is then displayed, showing the list of reports generated during the pipeline execution.
 
 Alternatively, select **Reports** in the side menu and select on the page the pipeline and the execution start time to reveal the generated reports.
 
@@ -156,7 +156,6 @@ Individual reports may be displayed by clicking on their <img src="../img/user-m
 
 ![Execution Report of the "pylint" Analysis Tool](img/user-manual/app-analysis-pipeline-execution-report.png)
 
+The reports may also be visualised in individual dashboards in Grafana by clicking on their <img src="../img/user-manual/mdi-chart-box-outline-cyan.png" style="height:20px; width:20px"/> icon (see [Analysis Dashboards](analysis-dashboards.md)).
 
-## Analysis Dashboards
-
-This feature is in preparation and will be available in a future release of the Application Quality service.  
+!["Pylint Report" Dashboard in Grafana](img/user-manual/grafana-pylint-report.png)

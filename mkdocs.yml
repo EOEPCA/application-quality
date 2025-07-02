@@ -16,6 +16,7 @@ nav:
       - design/use-cases.md
     - Usage:
       - usage/user-manual.md
+      - usage/analysis-dashboards.md
       - usage/analysis-tools.md
     #  - usage/tutorials.md
     #  - usage/howtos.md
