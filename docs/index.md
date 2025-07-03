@@ -63,7 +63,7 @@ Users may use the Web Portal to monitor the execution of the pipelines and acces
 
 ## Analysis Dashboards
 
-The *Application Quality* BB integrates with Grafana to visualize the various reports and metrics generated during pipeline executions.
+The *Application Quality* BB integrates with Grafana to visualise the various reports and metrics generated during pipeline executions.
 
 Default panels and dashboards are provided. Users may use the provided panels to create new dashboards.
 
