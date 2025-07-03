@@ -94,7 +94,7 @@
         {
           "matcher": {
             "id": "byName",
-            "options": "Active"
+            "options": "Running"
           },
           "properties": [
             {
@@ -270,8 +270,8 @@
         "format": "table",
         "hide": false,
         "rawQuery": true,
-        "rawSql": "SELECT start_time::date AS \"Date\", COUNT(*) AS \"Active\"\nFROM executions_admin\nWHERE (status = 'active' AND $__timeFilter(start_time))\nGROUP BY start_time::date\nORDER BY start_time::date ASC",
-        "refId": "Active runs",
+        "rawSql": "SELECT start_time::date AS \"Date\", COUNT(*) AS \"Running\" FROM executions_admin WHERE (status = 'running' AND $__timeFilter(start_time)) GROUP BY start_time::date ORDER BY start_time::date ASC",
+        "refId": "Running runs",
         "sql": {
           "columns": [
             {
@@ -361,7 +361,7 @@
       {
         "datasource": {
           "type": "grafana-postgresql-datasource",
-   "uid": "application-quality-db"
+          "uid": "application-quality-db"
         },
         "editorMode": "code",
         "format": "table",
@@ -680,7 +680,7 @@
         "format": "table",
         "hide": true,
         "rawQuery": true,
-        "rawSql": "SELECT\n  start_time :: date AS \"Date\",\n  SUM((usage_report->>'total_tasks')::int) AS \"Total tasks\",\n  SUM((usage_report->>'total_cpu_hours')::float) AS \"Total CPU [h]\",\n  SUM((usage_report->>'elapsed_hours')::float) AS \"Total elapsed [h]]\",\n  SUM((usage_report->>'total_disk_megabytes')::float) AS \"Total disk [MB]\",\n  SUM((usage_report->>'total_ram_megabyte_hours')::float) AS \"Total RAM [MB/h]\"\nFROM\n  executions_admin\nWHERE\n  $__timeFilter(start_time)\nGROUP BY\n  start_time :: date\nORDER BY\n  start_time :: date ASC",
+        "rawSql": "SELECT\n  start_time :: date AS \"Date\",\n  SUM((usage_report->>'total_tasks')::int) AS \"Total tasks\",\n  SUM((usage_report->>'total_cpu_hours')::float) AS \"Total CPU [h]\",\n  SUM((usage_report->>'elapsed_hours')::float) AS \"Total elapsed [h]\",\n  SUM((usage_report->>'total_disk_megabytes')::float) AS \"Total disk [MB]\",\n  SUM((usage_report->>'total_ram_megabyte_hours')::float) AS \"Total RAM [MB/h]\"\nFROM\n  executions_admin\nWHERE\n  $__timeFilter(start_time)\nGROUP BY\n  start_time :: date\nORDER BY\n  start_time :: date ASC",
         "refId": "Total reports",
         "sql": {
           "columns": [
@@ -806,23 +806,5 @@
       }
     ],
     "type": "timeseries"
-  },
-  "version": 3,
-  "meta": {
-    "folderName": "Application Quality Service",
-    "folderUid": "aen20sne7pn28b",
-    "connectedDashboards": 1,
-    "created": "2025-06-10T08:34:37Z",
-    "updated": "2025-06-10T12:56:01Z",
-    "createdBy": {
-      "id": 1,
-      "name": "admin",
-      "avatarUrl": "/avatar/46d229b033af06a191ff2267bca9ae56"
-    },
-    "updatedBy": {
-      "id": 1,
-      "name": "admin",
-      "avatarUrl": "/avatar/46d229b033af06a191ff2267bca9ae56"
-    }
   }
 }
