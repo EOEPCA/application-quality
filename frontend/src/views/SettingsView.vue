@@ -7,7 +7,8 @@
     <p>Version: {{ settings.instance__version }}</p>
     <p>Date: {{ settings.instance__date }}</p>
 
-    <p v-if="settings.isGrafanaEnabled() == true">Grafana powered 
+    <p v-if="settings.isGrafanaEnabled() == true">
+      Grafana powered
       <a target="_blank" :href="settings.getGrafanaDashboardsURL()"
         >Dashboards</a
       >

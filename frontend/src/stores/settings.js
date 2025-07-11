@@ -34,14 +34,14 @@ export const useSettingsStore = defineStore('settings', {
       this.loading = true;
       this.error = null;
       try {
-        console.debug("Fetching settings from the backend ...");
+        console.debug('Fetching settings from the backend ...');
         const settings = await settingsService.getSettings();
         for (const key in settings) {
           // Ensure the property belongs to the settings object itself
           if (Object.prototype.hasOwnProperty.call(settings, key)) {
             const local_key = key.replaceAll('.', '__');
             this[local_key] = settings[key];
-            console.debug(local_key, " = ", this[local_key]);
+            console.debug(local_key, ' = ', this[local_key]);
           }
         }
         // Ensure the Grafana URL does not end with a '/'

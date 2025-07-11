@@ -205,17 +205,29 @@ export default {
           console.log('Tool:', toolId);
           execParams[toolId] = {};
           for (var stepId in this.localModelValue.parameters[toolId]) {
-            console.log('  Step:', stepId);
+            console.debug('  Step:', stepId);
             execParams[toolId][stepId] = {};
             for (var paramId in this.localModelValue.parameters[toolId][
               stepId
             ]) {
-              console.log('    Param:', paramId);
-              execParams[toolId][stepId][paramId] =
-                this.localModelValue.parameters[toolId][stepId][
-                  paramId
-                ].default;
-              console.log('    Value:', execParams[toolId][stepId][paramId]);
+              console.debug('    Param:', paramId);
+              let value =
+                this.localModelValue.parameters[toolId][stepId][paramId]
+                  .default;
+              if (stepId == 'clone' && paramId == 'repo_url') {
+                // Special treatment for Git repo URLs
+                console.debug('      Repo URL entered by the user:', value);
+                // Prevent URLs ending with '/' or '.git'
+                if (value) {
+                  if (value.endsWith('/') || value.endsWith('.git')) {
+                    value = value.replace(/\/$/, '');
+                    value = value.replace(/\.git$/, '');
+                    console.debug('      Repo URL replaced with:', value);
+                  }
+                }
+              }
+              execParams[toolId][stepId][paramId] = value;
+              console.debug('    Value:', execParams[toolId][stepId][paramId]);
             }
           }
         }

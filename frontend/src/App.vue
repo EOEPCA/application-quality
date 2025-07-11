@@ -14,7 +14,7 @@
     />
 
     <v-app-bar color="primary">
-      <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
+      <v-app-bar-nav-icon @click="rail = !rail"></v-app-bar-nav-icon>
       <v-app-bar-title>{{ settings.instance__name }}</v-app-bar-title>
       <!-- Login / Logout button -->
       <v-spacer></v-spacer>
@@ -67,8 +67,18 @@
       }}</v-btn>
     </v-app-bar>
 
-    <v-navigation-drawer v-model="drawer" permanent app persistent>
-      <v-list>
+    <v-navigation-drawer :rail="rail">
+      <v-list v-if="rail">
+        <v-list-item
+          v-for="item in menuItems"
+          v-tooltip="item.title"
+          :key="item.title"
+          :to="item.path"
+          :prepend-icon="item.icon"
+          :title="item.title"
+        />
+      </v-list>
+      <v-list v-else>
         <v-list-item
           v-for="item in menuItems"
           :key="item.title"
@@ -96,7 +106,7 @@ export default {
   components: {},
   data() {
     return {
-      drawer: true, // Displayed by default
+      rail: true, // Show only icons in the side menu by default
       isLoggedIn: false,
       //loginDialog: false, // Control the visibility of the login dialog
       menuItems: [
