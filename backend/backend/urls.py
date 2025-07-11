@@ -4,21 +4,15 @@ from backend.views import (
     PipelineRunViewSet,
     JobReportViewSet,
     SubworkflowViewSet,
+    TagViewSet,
 )
 
 router = DefaultRouter()
 
-router.register(r"pipelines", PipelineViewSet, basename="pipeline")
-router.register(
-    r"pipelines/(?P<pipeline_slug>[^/.]+)/runs",
-    PipelineRunViewSet,
-    basename="pipeline-run",
-)
-router.register(
-    r"pipelines/(?P<pipeline_slug>[^/.]+)/runs/(?P<run_id>[^/.]+)/jobreports",
-    JobReportViewSet,
-    basename="pipeline-run-jobreport",
-)
-router.register(r"tools", SubworkflowViewSet, basename="tool")
+router.register(r"pipelines",                                                               PipelineViewSet,    basename="pipeline")
+router.register(r"pipelines/(?P<pipeline_id>[^/.]+)/runs",                                  PipelineRunViewSet, basename="pipeline-run")
+router.register(r"pipelines/(?P<pipeline_id>[^/.]+)/runs/(?P<run_id>[^/.]+)/jobreports",    JobReportViewSet,   basename="pipeline-run-jobreport")
+router.register(r"tools",                                                                   SubworkflowViewSet, basename="tool")
+router.register(r"tags",                                                                    TagViewSet,         basename="tag")
 
 urlpatterns = router.urls

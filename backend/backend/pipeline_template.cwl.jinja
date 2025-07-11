@@ -1,0 +1,37 @@
+#!/usr/bin/env cwltool
+
+$graph:
+- class: Workflow
+
+  requirements:
+    SubworkflowFeatureRequirement: {}
+
+  inputs:
+{%- for tool in subworkflows %}
+  {%- for tool_name, params in tool.user_params.items() %}
+    {%- for param_name, param in params.items() %}
+    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:
+      label: "{{ param.label or param_name }}"
+      {%- if param.doc %}
+      doc: |-
+        {{ param.doc }}
+      {%- endif %}
+      type: {{ param.type }}
+      default: {{ param.default | tojson }}
+    {%- endfor %}
+  {%- endfor %}
+{%- endfor %}
+    pipeline_id: string
+    run_id: string
+    server_url: string
+
+  outputs: []
+
+  steps:
+    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}
+    {% endfor %}
+  id: main
+{% for tool in subworkflows %}
+{{ tool.definition }}
+{% endfor %}
+cwlVersion: v1.0

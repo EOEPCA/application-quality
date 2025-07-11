@@ -42,7 +42,7 @@
               {{ item.name.charAt(0) }}
             </v-avatar>
           </template>
-          
+
           <template v-slot:append>
             <v-btn
               icon="mdi-dots-vertical"
@@ -52,7 +52,7 @@
           </template>
         </v-list-item>
       </v-list>
-      
+
       <v-alert
         v-else
         type="info"
@@ -65,46 +65,47 @@
 <script>
 export default {
   name: 'FilterableList',
-  
+
   props: {
     items: {
       type: Array,
       required: true,
-      default: () => []
-    }
+      default: () => [],
+    },
   },
 
   data() {
     return {
       searchQuery: '',
-      selectedCategory: null
-    }
+      selectedCategory: null,
+    };
   },
 
   computed: {
     // Get unique categories from items
     categories() {
-      return [...new Set(this.items.map(item => item.category))]
+      return [...new Set(this.items.map((item) => item.category))];
     },
 
     // Filter items based on search query and selected category
     filteredItems() {
-      return this.items.filter(item => {
-        const matchesSearch = this.searchQuery === '' || 
-          item.name.toLowerCase().includes(this.searchQuery.toLowerCase())
-        
-        const matchesCategory = !this.selectedCategory || 
-          item.category === this.selectedCategory
+      return this.items.filter((item) => {
+        const matchesSearch =
+          this.searchQuery === '' ||
+          item.name.toLowerCase().includes(this.searchQuery.toLowerCase());
 
-        return matchesSearch && matchesCategory
-      })
-    }
+        const matchesCategory =
+          !this.selectedCategory || item.category === this.selectedCategory;
+
+        return matchesSearch && matchesCategory;
+      });
+    },
   },
 
   methods: {
     handleItemAction(item) {
-      this.$emit('item-action', item)
-    }
-  }
-}
+      this.$emit('item-action', item);
+    },
+  },
+};
 </script>
