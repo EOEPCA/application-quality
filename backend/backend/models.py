@@ -42,7 +42,7 @@ class PipelineRun(models.Model):
         return self.jobreports.count()
 
     def __str__(self):
-        return f"{"✅" if self.status == "succeeded" else "❌"} Run {self.id}: {self.pipeline.name}"
+        return f"{"✅" if self.status == "succeeded" else "❌"} Run {self.id}: {self.pipeline.name}"  # pylint: disable=E0001
 
 
 class JobReport(models.Model):
