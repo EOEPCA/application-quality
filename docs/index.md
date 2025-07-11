@@ -61,6 +61,12 @@ Operators may use the Web Portal to manage the integrated tools, configure pipel
 usage metrics.
 Users may use the Web Portal to monitor the execution of the pipelines and access the results.
 
+## Analysis Dashboards
+
+The *Application Quality* BB integrates with Grafana to visualise the various reports and metrics generated during pipeline executions.
+
+Default panels and dashboards are provided. Users may use the provided panels to create new dashboards.
+
 ## Pipeline Automation
 
 The *Application Quality* BB supports the automated execution of pipelines triggered by updates to

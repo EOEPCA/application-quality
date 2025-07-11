@@ -1,0 +1,634 @@
+[
+ {
+  "model": "backend.pipeline",
+  "pk": 6,
+  "fields": {
+   "name": "Python pipeline",
+   "description": "Runs a series of static analysis tools on python files",
+   "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n{%- for tool in subworkflows %}\r\n  {%- for tool_name, params in tool.user_params.items() %}\r\n    {%- for param_name, param in params.items() %}\r\n    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:\r\n      label: \"{{ param.label or param_name }}\"\r\n      {%- if param.doc %}\r\n      doc: |-\r\n        {{ param.doc }}\r\n      {%- endif %}\r\n      type: {{ param.type }}\r\n      default: {{ param.default | tojson }}\r\n    {%- endfor %}\r\n  {%- endfor %}\r\n{%- endfor %}\r\n    branch:\r\n      type: string\r\n      default: ''\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n  id: main\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.0",
+   "default_inputs": {},
+   "owner": null,
+   "created_at": null,
+   "edited_at": null,
+   "version": "0.1",
+   "tools": [
+    "bandit_subworkflow",
+    "clone_subworkflow",
+    "flake8_subworkflow",
+    "pylint_subworkflow",
+    "ruff_subworkflow"
+   ]
+  }
+ },
+ {
+  "model": "backend.pipeline",
+  "pk": 8,
+  "fields": {
+   "name": "Notebook pipeline",
+   "description": "Runs a static analysis and then executes Jupyter Notebooks files (ipynb).",
+   "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n{%- for tool in subworkflows %}\r\n  {%- for tool_name, params in tool.user_params.items() %}\r\n    {%- for param_name, param in params.items() %}\r\n    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:\r\n      label: \"{{ param.label or param_name }}\"\r\n      {%- if param.doc %}\r\n      doc: |-\r\n        {{ param.doc }}\r\n      {%- endif %}\r\n      type: {{ param.type }}\r\n      default: {{ param.default | tojson }}\r\n    {%- endfor %}\r\n  {%- endfor %}\r\n{%- endfor %}\r\n    branch:\r\n      type: string\r\n      default: ''\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n  id: main\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.0",
+   "default_inputs": {},
+   "owner": null,
+   "created_at": null,
+   "edited_at": null,
+   "version": "0.1",
+   "tools": [
+    "clone_subworkflow",
+    "ipynb_specs_checker_subworkflow",
+    "papermill_subworkflow",
+    "ruff_ipynb_subworkflow"
+   ]
+  }
+ },
+ {
+  "model": "backend.pipeline",
+  "pk": 11,
+  "fields": {
+   "name": "Docker pipeline",
+   "description": "Finds vulnerabilities and misconfigurations in Docker images.",
+   "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n{%- for tool in subworkflows %}\r\n  {%- for tool_name, params in tool.user_params.items() %}\r\n    {%- for param_name, param in params.items() %}\r\n    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:\r\n      label: \"{{ param.label or param_name }}\"\r\n      {%- if param.doc %}\r\n      doc: |-\r\n        {{ param.doc }}\r\n      {%- endif %}\r\n      type: {{ param.type }}\r\n      default: {{ param.default | tojson }}\r\n    {%- endfor %}\r\n  {%- endfor %}\r\n{%- endfor %}\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n  id: main\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.0",
+   "default_inputs": {},
+   "owner": null,
+   "created_at": null,
+   "edited_at": null,
+   "version": "0.1",
+   "tools": [
+    "trivy_subworkflow"
+   ]
+  }
+ },
+ {
+  "model": "backend.tag",
+  "pk": 1,
+  "fields": {
+   "name": "asset: python"
+  }
+ },
+ {
+  "model": "backend.tag",
+  "pk": 2,
+  "fields": {
+   "name": "asset: other"
+  }
+ },
+ {
+  "model": "backend.tag",
+  "pk": 3,
+  "fields": {
+   "name": "asset: cwl"
+  }
+ },
+ {
+  "model": "backend.tag",
+  "pk": 4,
+  "fields": {
+   "name": "asset: notebook"
+  }
+ },
+ {
+  "model": "backend.tag",
+  "pk": 5,
+  "fields": {
+   "name": "type: best practice"
+  }
+ },
+ {
+  "model": "backend.tag",
+  "pk": 6,
+  "fields": {
+   "name": "type: app quality"
+  }
+ },
+ {
+  "model": "backend.tag",
+  "pk": 7,
+  "fields": {
+   "name": "type: app performance"
+  }
+ },
+ {
+  "model": "backend.tag",
+  "pk": 8,
+  "fields": {
+   "name": "type: init"
+  }
+ },
+ {
+  "model": "backend.tag",
+  "pk": 9,
+  "fields": {
+   "name": "asset: docker"
+  }
+ },
+ {
+  "model": "backend.subworkflow",
+  "pk": "ap_validator_subworkflow",
+  "fields": {
+   "name": "Application Package Validator",
+   "description": "Validation tool for checking OGC compliance of CWL files for application packages.",
+   "pipeline_step": "ap_validator_subworkflow:\r\n  in:\r\n    ap_validator.detail: ap_validator_subworkflow.ap_validator.detail\r\n    ap_validator.entry_point: ap_validator_subworkflow.ap_validator.entry_point\r\n    filter.regex: ap_validator_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#ap_validator_subworkflow'\r\n  out: []",
+   "definition": "- class: Workflow\r\n\r\n  requirements:\r\n    ScatterFeatureRequirement: {}\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: ap_validator\r\n    ap_validator.detail: string\r\n    ap_validator.entry_point: string\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    []\r\n\r\n  steps:\r\n    filter_ap_validator_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    ap_validator_step:\r\n      in:\r\n        file_path: filter_ap_validator_step/file_list\r\n        source_directory: source_directory\r\n        detail: ap_validator.detail\r\n        entry_point: ap_validator.entry_point\r\n      scatter: file_path\r\n      run: '#ap_validator_tool'\r\n      out:\r\n      - ap_validator_report\r\n    save_ap_validator_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: ap_validator_step/ap_validator_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      scatter: report\r\n      run: '#save_tool'\r\n      out: []\r\n  id: ap_validator_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+   "user_params": {
+    "filter": {
+     "regex": {
+      "type": "string",
+      "label": "regex",
+      "default": ".*\\.cwl"
+     }
+    },
+    "ap_validator": {
+     "detail": {
+      "doc": "Output detail (none|errors|hints|all). Default: hints",
+      "type": "string",
+      "label": "Detail",
+      "default": "hints"
+     },
+     "entry_point": {
+      "doc": "Name of entry point (Workflow or CommandLineTool)",
+      "type": "string",
+      "label": "Entry point",
+      "default": "main"
+     }
+    }
+   },
+   "version": "0.1",
+   "tags": [
+    3,
+    5
+   ],
+   "tools": [
+    "ap_validator",
+    "filter",
+    "save"
+   ]
+  }
+ },
+ {
+  "model": "backend.subworkflow",
+  "pk": "bandit_subworkflow",
+  "fields": {
+   "name": "Bandit",
+   "description": "Bandit - Bandit is a tool designed to find common security issues in Python code",
+   "pipeline_step": "bandit_subworkflow:\r\n  in:\r\n    bandit.verbose: bandit_subworkflow.bandit.verbose\r\n    filter.regex: bandit_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#bandit_subworkflow'\r\n  out: []",
+   "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: bandit\r\n    bandit.verbose: boolean\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    bandit_report:\r\n      type: File\r\n      outputSource: bandit_step/bandit_report\r\n\r\n  steps:\r\n    bandit_step:\r\n      in:\r\n        file_list: filter_bandit_step/file_list\r\n        source_directory: source_directory\r\n        verbose: bandit.verbose\r\n      run: '#bandit_tool'\r\n      out:\r\n      - bandit_report\r\n    filter_bandit_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    save_bandit_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: bandit_step/bandit_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n  id: bandit_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+   "user_params": {
+    "bandit": {
+     "verbose": {
+      "doc": "Output extra information like excluded and included files.",
+      "type": "boolean",
+      "label": "Verbose",
+      "default": false
+     }
+    },
+    "filter": {
+     "regex": {
+      "type": "string",
+      "label": "regex",
+      "default": ".*\\.py"
+     }
+    }
+   },
+   "version": "0.1",
+   "tags": [
+    1,
+    6
+   ],
+   "tools": [
+    "bandit",
+    "filter",
+    "save"
+   ]
+  }
+ },
+ {
+  "model": "backend.subworkflow",
+  "pk": "clone_subworkflow",
+  "fields": {
+   "name": "Clone repo",
+   "description": "git-clone - Clone a repository into a new directory",
+   "pipeline_step": "clone_step:\r\n  in:\r\n    clone.repo_branch: clone_subworkflow.clone.repo_branch\r\n    clone.repo_url: clone_subworkflow.clone.repo_url\r\n  run: '#clone_subworkflow'\r\n  out:\r\n  - repo_directory",
+   "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    clone.repo_branch:\r\n      type: string\r\n      default: ''\r\n    clone.repo_url: string\r\n\r\n  outputs:\r\n    repo_directory:\r\n      type: Directory\r\n      outputSource: clone_tool_step/repo_directory\r\n\r\n  steps:\r\n    clone_tool_step:\r\n      in:\r\n        repo_branch: clone.repo_branch\r\n        repo_url: clone.repo_url\r\n      run: '#clone_tool'\r\n      out:\r\n      - repo_directory\r\n  id: clone_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+   "user_params": {
+    "clone": {
+     "repo_url": {
+      "doc": "URL to the repository to clone.",
+      "type": "string",
+      "label": "Repo URL",
+      "default": ""
+     },
+     "repo_branch": {
+      "doc": "Branch to checkout instead of the remote HEAD.",
+      "type": "string",
+      "label": "Repo branch",
+      "default": ""
+     }
+    }
+   },
+   "version": "0.1",
+   "tags": [
+    2,
+    8
+   ],
+   "tools": [
+    "clone"
+   ]
+  }
+ },
+ {
+  "model": "backend.subworkflow",
+  "pk": "flake8_subworkflow",
+  "fields": {
+   "name": "Flake8",
+   "description": "flake8 - Style guide enforcement tool for Python",
+   "pipeline_step": "flake8_subworkflow:\r\n  in:\r\n    filter.regex: flake8_subworkflow.filter.regex\r\n    flake8.verbose: flake8_subworkflow.flake8.verbose\r\n    pipeline_id: pipeline_id\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#flake8_subworkflow'\r\n  out: []",
+   "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: flake8\r\n    filter.regex: string\r\n    flake8.verbose: boolean\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    flake8_report:\r\n      type: File\r\n      outputSource: flake8_step/flake8_report\r\n\r\n  steps:\r\n    filter_flake8_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    flake8_step:\r\n      in:\r\n        file_list: filter_flake8_step/file_list\r\n        source_directory: source_directory\r\n        verbose: flake8.verbose\r\n      run: '#flake8_tool'\r\n      out:\r\n      - flake8_report\r\n    save_flake8_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: flake8_step/flake8_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n  id: flake8_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+   "user_params": {
+    "filter": {
+     "regex": {
+      "type": "string",
+      "label": "regex",
+      "default": ".*\\.py"
+     }
+    },
+    "flake8": {
+     "verbose": {
+      "doc": "Increase the verbosity of Flake8’s output.",
+      "type": "boolean",
+      "label": "Verbose",
+      "default": false
+     }
+    }
+   },
+   "version": "0.1",
+   "tags": [
+    1,
+    5
+   ],
+   "tools": [
+    "filter",
+    "flake8",
+    "save"
+   ]
+  }
+ },
+ {
+  "model": "backend.subworkflow",
+  "pk": "ipynb_specs_checker_subworkflow",
+  "fields": {
+   "name": "Jupyter Notebook Best Practices Checker",
+   "description": "Best practices checker for Jupyter notebook specs",
+   "pipeline_step": "ipynb_specs_checker_subworkflow:\r\n  in:\r\n    filter.regex: ipynb_specs_checker_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    ipynb_specs_checker.schema: ipynb_specs_checker_subworkflow.ipynb_specs_checker.schema\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#ipynb_specs_checker_subworkflow'\r\n  out: []",
+   "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: ipynb_specs_checker\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    ipynb_specs_checker.schema: string\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    ipynb_specs_checker_report:\r\n      type: File\r\n      outputSource: ipynb_specs_checker_step/ipynb_specs_checker_report\r\n\r\n  steps:\r\n    filter_ipynb_specs_checker_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    ipynb_specs_checker_step:\r\n      in:\r\n        file_list: filter_ipynb_specs_checker_step/file_list\r\n        source_directory: source_directory\r\n        schema: ipynb_specs_checker.schema\r\n      run: '#ipynb_specs_checker_tool'\r\n      out:\r\n      - ipynb_specs_checker_report\r\n    save_ipynb_specs_checker_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: ipynb_specs_checker_step/ipynb_specs_checker_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n  id: ipynb_specs_checker_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+   "user_params": {
+    "filter": {
+     "regex": {
+      "type": "string",
+      "label": "regex",
+      "default": ".*\\.ipynb"
+     }
+    },
+    "ipynb_specs_checker": {
+     "schema": {
+      "type": "string",
+      "default": "eumetsat"
+     }
+    }
+   },
+   "version": "0.1",
+   "tags": [
+    4,
+    5
+   ],
+   "tools": [
+    "filter",
+    "ipynb_specs_checker",
+    "save"
+   ]
+  }
+ },
+ {
+  "model": "backend.subworkflow",
+  "pk": "papermill_subworkflow",
+  "fields": {
+   "name": "Papermill",
+   "description": "Papermill is a tool for parameterizing and executing Jupyter Notebooks.",
+   "pipeline_step": "papermill_subworkflow:\r\n  in:\r\n    filter.regex: papermill_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#papermill_subworkflow'\r\n  out: []",
+   "definition": "- class: Workflow\r\n\r\n  requirements:\r\n    ScatterFeatureRequirement: {}\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: papermill\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    []\r\n\r\n  steps:\r\n    filter_papermill_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    papermill_step:\r\n      in:\r\n        notebook_path: filter_papermill_step/file_list\r\n        source_directory: source_directory\r\n      scatter: notebook_path\r\n      run: '#papermill_tool'\r\n      out:\r\n      - output_nb\r\n    save_papermill_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: papermill_step/output_nb\r\n        run_id: run_id\r\n        server_url: server_url\r\n      scatter: report\r\n      run: '#save_tool'\r\n      out: []\r\n  id: papermill_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+   "user_params": {
+    "filter": {
+     "regex": {
+      "type": "string",
+      "label": "regex",
+      "default": ".*\\.ipynb"
+     }
+    }
+   },
+   "version": "0.1",
+   "tags": [
+    4,
+    7
+   ],
+   "tools": [
+    "filter",
+    "papermill",
+    "save"
+   ]
+  }
+ },
+ {
+  "model": "backend.subworkflow",
+  "pk": "pylint_subworkflow",
+  "fields": {
+   "name": "Pylint",
+   "description": "pylint - Static code analyser tool for Python",
+   "pipeline_step": "pylint_subworkflow:\r\n  in:\r\n    filter.regex: pylint_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    pylint.disable: pylint_subworkflow.pylint.disable\r\n    pylint.errors_only: pylint_subworkflow.pylint.errors_only\r\n    pylint.verbose: pylint_subworkflow.pylint.verbose\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#pylint_subworkflow'\r\n  out: []",
+   "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: pylint\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    pylint.disable: string\r\n    pylint.errors_only: boolean\r\n    pylint.verbose: boolean\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    pylint_report:\r\n      type: File\r\n      outputSource: pylint_step/pylint_report\r\n\r\n  steps:\r\n    filter_pylint_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    pylint_step:\r\n      in:\r\n        disable: pylint.disable\r\n        errors_only: pylint.errors_only\r\n        file_list: filter_pylint_step/file_list\r\n        source_directory: source_directory\r\n        verbose: pylint.verbose\r\n      run: '#pylint_tool'\r\n      out:\r\n      - pylint_report\r\n    save_pylint_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: pylint_step/pylint_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n  id: pylint_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+   "user_params": {
+    "filter": {
+     "regex": {
+      "type": "string",
+      "label": "regex",
+      "default": ".*\\.py"
+     }
+    },
+    "pylint": {
+     "disable": {
+      "doc": "Disable the message, report, category or checker with the given id(s).",
+      "type": "string",
+      "label": "Disable IDs",
+      "default": "E0401"
+     },
+     "verbose": {
+      "doc": "In verbose mode, extra non-checker-related info will be displayed.",
+      "type": "boolean",
+      "label": "Verbose",
+      "default": false
+     },
+     "errors_only": {
+      "doc": "In error mode, messages with a category besides ERROR or FATAL are suppressed, and no reports are done by default. Error mode is compatible with disabling specific errors.",
+      "type": "boolean",
+      "label": "Errors only",
+      "default": false
+     }
+    }
+   },
+   "version": "0.1",
+   "tags": [
+    1,
+    5
+   ],
+   "tools": [
+    "filter",
+    "pylint",
+    "save"
+   ]
+  }
+ },
+ {
+  "model": "backend.subworkflow",
+  "pk": "ruff_ipynb_subworkflow",
+  "fields": {
+   "name": "Ruff - Notebook",
+   "description": "Ruff - An extremely fast Python linter and code formatter, written in Rust",
+   "pipeline_step": "ruff_ipynb_subworkflow:\r\n  in:\r\n    filter.regex: ruff_ipynb_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    ruff.verbose: ruff_ipynb_subworkflow.ruff.verbose\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#ruff_ipynb_subworkflow'\r\n  out: []",
+   "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: ruff\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    ruff.verbose: boolean\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    ruff_report:\r\n      type: File\r\n      outputSource: ruff_step/ruff_report\r\n\r\n  steps:\r\n    filter_ruff_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    ruff_step:\r\n      in:\r\n        file_list: filter_ruff_step/file_list\r\n        source_directory: source_directory\r\n        verbose: ruff.verbose\r\n      run: '#ruff_tool'\r\n      out:\r\n      - ruff_report\r\n    save_ruff_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: ruff_step/ruff_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n  id: ruff_ipynb_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+   "user_params": {
+    "ruff": {
+     "verbose": {
+      "doc": "Enable verbose logging.",
+      "type": "boolean",
+      "label": "Verbose",
+      "default": false
+     }
+    },
+    "filter": {
+     "regex": {
+      "type": "string",
+      "label": "regex",
+      "default": ".*\\.ipynb"
+     }
+    }
+   },
+   "version": "0.1",
+   "tags": [
+    4,
+    5
+   ],
+   "tools": [
+    "filter",
+    "ruff",
+    "save"
+   ]
+  }
+ },
+ {
+  "model": "backend.subworkflow",
+  "pk": "ruff_subworkflow",
+  "fields": {
+   "name": "Ruff",
+   "description": "Ruff - An extremely fast Python linter and code formatter, written in Rust",
+   "pipeline_step": "ruff_subworkflow:\r\n  in:\r\n    filter.regex: ruff_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    ruff.verbose: ruff_subworkflow.ruff.verbose\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#ruff_subworkflow'\r\n  out: []",
+   "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: ruff\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    ruff.verbose: boolean\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    ruff_report:\r\n      type: File\r\n      outputSource: ruff_step/ruff_report\r\n\r\n  steps:\r\n    filter_ruff_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    ruff_step:\r\n      in:\r\n        file_list: filter_ruff_step/file_list\r\n        source_directory: source_directory\r\n        verbose: ruff.verbose\r\n      run: '#ruff_tool'\r\n      out:\r\n      - ruff_report\r\n    save_ruff_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: ruff_step/ruff_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n  id: ruff_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+   "user_params": {
+    "ruff": {
+     "verbose": {
+      "doc": "Enable verbose logging.",
+      "type": "boolean",
+      "label": "Verbose",
+      "default": false
+     }
+    },
+    "filter": {
+     "regex": {
+      "type": "string",
+      "label": "regex",
+      "default": ".*\\.py"
+     }
+    }
+   },
+   "version": "0.1",
+   "tags": [
+    1,
+    5
+   ],
+   "tools": [
+    "filter",
+    "ruff",
+    "save"
+   ]
+  }
+ },
+ {
+  "model": "backend.subworkflow",
+  "pk": "sonarqube",
+  "fields": {
+   "name": "SonarQube",
+   "description": "SonarQube - Code Quality, Security & Static Analysis Tool\r\n\r\nThis tool creates a project in our internal SonarQube server, sends it the code for analysis, and then retrieves the analysis results for storage in the database.",
+   "pipeline_step": "sonarqube_workflow_step:\r\n  in:\r\n    pipeline_id: pipeline_id\r\n    repo_path: clone_step/repo_directory\r\n    run_id: run_id\r\n    server_url: server_url\r\n    sonarqube_project_key: sonarqube_project_key\r\n    sonarqube_project_name: sonarqube_project_name\r\n    sonarqube_server: sonarqube_server\r\n    sonarqube_token: sonarqube_token\r\n  run: '#sonarqube_workflow'\r\n  out: []",
+   "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: sonarqube\r\n    pipeline_id:\r\n      type: string\r\n    repo_path:\r\n      type: Directory\r\n    run_id:\r\n      type: string\r\n    server_url:\r\n      type: string\r\n    sonarqube_project_key:\r\n      type: string\r\n    sonarqube_project_name:\r\n      type: string\r\n    sonarqube_server:\r\n      type: string\r\n      default: sonarqube-sonarqube.sonarqube:9000\r\n    sonarqube_token:\r\n      type: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    save_sonarqube_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: sonarqube_get_report_step/sonarqube_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n    sonarqube_create_project_step:\r\n      in:\r\n        sonarqube_project_key: sonarqube_project_key\r\n        sonarqube_project_name: sonarqube_project_name\r\n        sonarqube_server: sonarqube_server\r\n        sonarqube_token: sonarqube_token\r\n      run: '#sonarqube_create_project_tool'\r\n      out:\r\n      - sonarqube_project_key\r\n      - sonarqube_server\r\n      - sonarqube_token\r\n    sonarqube_get_report_step:\r\n      in:\r\n        sonarqube_project_key: sonarqube_scan_step/sonarqube_project_key\r\n        sonarqube_server: sonarqube_scan_step/sonarqube_server\r\n        sonarqube_token: sonarqube_scan_step/sonarqube_token\r\n      run: '#sonarqube_get_report_tool'\r\n      out:\r\n      - sonarqube_project_key\r\n      - sonarqube_server\r\n      - sonarqube_token\r\n      - sonarqube_report\r\n    sonarqube_scan_step:\r\n      in:\r\n        sonarqube_project_key: sonarqube_create_project_step/sonarqube_project_key\r\n        sonarqube_server: sonarqube_create_project_step/sonarqube_server\r\n        sonarqube_token: sonarqube_create_project_step/sonarqube_token\r\n        source_directory: repo_path\r\n      run: '#sonarqube_scan_tool'\r\n      out:\r\n      - sonarqube_project_key\r\n      - sonarqube_server\r\n      - sonarqube_token\r\n  id: sonarqube_workflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+   "user_params": {},
+   "version": "0.1",
+   "tags": [],
+   "tools": [
+    "save",
+    "sonarqube_create_project",
+    "sonarqube_get_report",
+    "sonarqube_scan"
+   ]
+  }
+ },
+ {
+  "model": "backend.subworkflow",
+  "pk": "trivy_subworkflow",
+  "fields": {
+   "name": "Trivy",
+   "description": "The all-in-one open source security scanner\r\nUse Trivy to find vulnerabilities (CVE) & misconfigurations (IaC) across code repositories, binary artifacts, container images, Kubernetes clusters, and more.",
+   "pipeline_step": "trivy_subworkflow:\r\n  in:\r\n    pipeline_id: pipeline_id\r\n    run_id: run_id\r\n    server_url: server_url\r\n    trivy.image: trivy_subworkflow.trivy.image\r\n  run: '#trivy_subworkflow'\r\n  out: []",
+   "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: trivy\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n    trivy.image: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    save_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: trivy_step/trivy_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n    trivy_step:\r\n      in:\r\n        image: trivy.image\r\n      run: '#trivy_tool'\r\n      out:\r\n      - trivy_report\r\n  id: trivy_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+   "user_params": {
+    "trivy": {
+     "image": {
+      "type": "string",
+      "label": "Docker image",
+      "default": "alpine/git"
+     }
+    }
+   },
+   "version": "0.1",
+   "tags": [
+    6,
+    9
+   ],
+   "tools": [
+    "save",
+    "trivy"
+   ]
+  }
+ },
+ {
+  "model": "backend.commandlinetool",
+  "pk": "ap_validator",
+  "fields": {
+   "name": "Application Package Validator",
+   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: nexus.spaceapplications.com/repository/docker-eoepca/ap_validator:2025-03-05.1\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          cd $(inputs.source_directory.path)\r\n\r\n          ap-validator \\\\\r\n              --format json \\\\\r\n              --detail '$(inputs.detail)' \\\\\r\n              --entry-point '$(inputs.entry_point)' \\\\\r\n              '$(inputs.file_path)' > ~/ap_validator_report.json\r\n\r\n          exit 0\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    file_path: string\r\n    source_directory: Directory\r\n    detail: string\r\n    entry_point: string\r\n\r\n  outputs:\r\n    ap_validator_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: ap_validator_report.json\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: ap_validator_tool",
+   "version": "0.1"
+  }
+ },
+ {
+  "model": "backend.commandlinetool",
+  "pk": "bandit",
+  "fields": {
+   "name": "Bandit",
+   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: cytopia/bandit\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          cd $(inputs.source_directory.path)\r\n\r\n          PARAMS=\"-f $(inputs.output_format) -o $HOME/$(inputs.output_file)\"\r\n          if [ \"$(inputs.exit_zero)\" == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS --exit-zero\"\r\n          fi\r\n          if [ \"$(inputs.verbose)\" == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS -v\"\r\n          fi\r\n\r\n          bandit $PARAMS $(inputs.file_list.join(\" \"))\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    exit_zero:\r\n      label: Exit with zero\r\n      doc: Exit with 0, even with results found.\r\n      type: boolean\r\n      default: true\r\n    file_list: string[]\r\n    output_file:\r\n      label: Output file\r\n      doc: Write report to filename.\r\n      type: string\r\n      default: bandit_report.json\r\n    output_format:\r\n      label: Output format\r\n      doc: Specify output format.\r\n      type: string\r\n      default: json\r\n    source_directory: Directory\r\n    verbose: boolean\r\n\r\n  outputs:\r\n    bandit_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: $(inputs.output_file)\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: bandit_tool",
+   "version": "0.1"
+  }
+ },
+ {
+  "model": "backend.commandlinetool",
+  "pk": "clone",
+  "fields": {
+   "name": "Clone repo",
+   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: alpine/git\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: clone_branch.sh\r\n        entry: |-\r\n          set -e\r\n\r\n          if [ $(inputs.repo_branch) ]; then\r\n              echo 'Branch specified: $(inputs.repo_branch). Cloning branch...'\r\n              git clone $(inputs.repo_url) -b $(inputs.repo_branch)\r\n          else\r\n              echo 'No branch specified. Cloning default branch...'\r\n              git clone $(inputs.repo_url)\r\n          fi\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    repo_branch: string\r\n    repo_url: string\r\n\r\n  outputs:\r\n    repo_directory:\r\n      type: Directory\r\n      outputBinding:\r\n        glob: $(inputs.repo_url.split('/').pop().replace('.git',''))\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - clone_branch.sh\r\n  id: clone_tool",
+   "version": "0.1"
+  }
+ },
+ {
+  "model": "backend.commandlinetool",
+  "pk": "filter",
+  "fields": {
+   "name": "Filter",
+   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: alpine:latest\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          cd $(inputs.source_directory.path)\r\n          find . -type f -regex \"$(inputs.regex)\" > $HOME/filter.out\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    regex: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    file_list:\r\n      type: string[]\r\n      outputBinding:\r\n        glob: filter.out\r\n        outputEval: $(self[0].contents.split('\\n').filter(line => line.trim() !== ''))\r\n        loadContents: true\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: filter_tool",
+   "version": "0.1"
+  }
+ },
+ {
+  "model": "backend.commandlinetool",
+  "pk": "flake8",
+  "fields": {
+   "name": "Flake8",
+   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: eoepca/appquality-flake8-json:v0.1.0\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          cd $(inputs.source_directory.path)\r\n\r\n          PARAMS=\"--format=$(inputs.output_format) --output-file=$HOME/$(inputs.output_file)\"\r\n          if [ \"$(inputs.exit_zero)\" == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS --exit-zero\"\r\n          fi\r\n          if [ \"$(inputs.verbose)\" == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS -v\"\r\n          fi\r\n\r\n          flake8 $PARAMS $(inputs.file_list.join(\" \"))\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    exit_zero:\r\n      label: Exit with zero\r\n      doc: Force Flake8 to use the exit status code 0 even if there are errors.\r\n      type: boolean\r\n      default: true\r\n    file_list: string[]\r\n    output_file:\r\n      label: Output file\r\n      doc: Redirect all output to the specified file.\r\n      type: string\r\n      default: flake8_report.json\r\n    output_format:\r\n      label: Output format\r\n      doc: Select the formatter used to display errors to the user.\r\n      type: string\r\n      default: json\r\n    source_directory: Directory\r\n    verbose: boolean\r\n\r\n  outputs:\r\n    flake8_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: $(inputs.output_file)\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: flake8_tool",
+   "version": "0.1"
+  }
+ },
+ {
+  "model": "backend.commandlinetool",
+  "pk": "ipynb_specs_checker",
+  "fields": {
+   "name": "Jupyter Notebook Best Practices Checker",
+   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: python:slim\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          cd $(inputs.source_directory.path)\r\n          python ~/script.py > ~/ipynb_specs_checker_report.json\r\n          exit 0\r\n      - entryname: script.py\r\n        entry: |-\r\n          import json\r\n          import os\r\n\r\n          schema = '$(inputs.schema)'\r\n\r\n          def read_notebook(notebook_path: str):\r\n              result = {\"filename\": os.path.relpath(notebook_path, os.path.expanduser('$(inputs.source_directory.path)/..')), \"schema\": schema}\r\n              try:\r\n                  with open(notebook_path) as f:\r\n                      notebook = json.load(f)\r\n              except Exception as e:\r\n                  result['error'] = (f\"Error reading notebook file: {e}\")\r\n                  return result\r\n\r\n              if \"metadata\" not in notebook:\r\n                  result['error'] = (\"Notebook does not contain a 'metadata' section.\")\r\n                  return result\r\n\r\n              metadata = notebook[\"metadata\"]\r\n\r\n              if schema.lower() == \"eumetsat\":\r\n                  mandatory_fields = [\"author\", \"title\", \"description\", \"services\"]\r\n                  optional_fields = [\"image\", \"tags\"]\r\n              elif schema.lower() == \"schema.org\":\r\n                  mandatory_fields = [\"author\", \"name\", \"description\", \"keywords\"]\r\n                  optional_fields = [\"identifier\", \"image\", \"potentialAction\", \"domain\", \"platform\", \"instruments\", \"tags\", \"license\"]\r\n              else:\r\n                  result['error'] = f\"Unknown schema type: {schema}\"\r\n                  return result\r\n\r\n              errors = []\r\n              for field in mandatory_fields:\r\n                  if field not in metadata:\r\n                      errors.append(field)\r\n\r\n              warnings = []\r\n              for field in optional_fields:\r\n                  if field not in metadata:\r\n                      warnings.append(field)\r\n\r\n              result['valid'] = (len(errors) == 0)\r\n              result['missing_mandatory_fields'] = errors\r\n              result['missing_optional_fields'] = warnings\r\n\r\n              return result\r\n\r\n          output = []\r\n\r\n          for notebook_path in $(inputs.file_list):\r\n              output.append(read_notebook(notebook_path))\r\n\r\n          print(json.dumps(output, indent=4))\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    schema: string\r\n    file_list: string[]\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    ipynb_specs_checker_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: ipynb_specs_checker_report.json\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: ipynb_specs_checker_tool",
+   "version": "0.1"
+  }
+ },
+ {
+  "model": "backend.commandlinetool",
+  "pk": "papermill",
+  "fields": {
+   "name": "Papermill",
+   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: continuumio/miniconda3\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          set -e\r\n\r\n          cat ~/err.ipynb > ~/out.ipynb\r\n          cd $(inputs.source_directory.path)\r\n\r\n          pip install pyyaml\r\n\r\n          python ~/script.py $(inputs.notebook_path) | tee ~/environment.yml\r\n\r\n          if [ ! -s ~/environment.yml ]; then\r\n            echo \"Error: environment.yml is empty. Aborting environment creation.\"\r\n            exit 1\r\n          fi\r\n\r\n          ENV=`grep \"name: \" ~/environment.yml | cut - -d' ' -f2`\r\n\r\n          conda env create -f ~/environment.yml\r\n          conda run -n $ENV pip install ipykernel papermill\r\n          conda run -n $ENV ipython kernel install --user --name $ENV \r\n          conda run -n $ENV papermill $(inputs.notebook_path) ~/out.ipynb\r\n      - entryname: script.py\r\n        entry: |-\r\n          import json\r\n          import yaml\r\n          import sys\r\n\r\n          try:\r\n              with open('$(inputs.notebook_path)') as f:\r\n                  nb_json = json.load(f)\r\n          except Exception as e:\r\n              sys.stderr.write(f\"Failed to load notebook: {e}\\\\n\")\r\n              sys.exit(1)\r\n\r\n          try:\r\n              env = nb_json[\"metadata\"][\"software_requirements\"][\"conda_environment\"]\r\n              kernelspec = nb_json[\"metadata\"][\"kernelspec\"][\"name\"]\r\n          except KeyError as e:\r\n              sys.stderr.write(f\"Missing key in notebook metadata: {e}\\\\n\")\r\n              sys.exit(1)\r\n\r\n          if env[\"name\"] == kernelspec:\r\n              if env.get(\"dependencies\"):\r\n                  res = yaml.dump({\"name\": env[\"name\"], \"dependencies\": env[\"dependencies\"]})\r\n                  print(res)\r\n              else:\r\n                  sys.stderr.write(\"No dependencies found in the environment specification.\\\\n\")\r\n                  sys.exit(1)\r\n          else:\r\n              sys.stderr.write(\"Kernel name does not match the conda environment name.\\\\n\")\r\n              sys.exit(1)\r\n      - entryname: err.ipynb\r\n        entry: |-\r\n          {\r\n            \"cells\": [\r\n              {\r\n                \"cell_type\": \"markdown\",\r\n                \"metadata\": {},\r\n                \"source\": [\r\n                  \"Error: The notebook could not be run.\"\r\n                ]\r\n              }\r\n            ],\r\n            \"metadata\": {\r\n              \"language_info\": {\r\n                \"name\": \"python\"\r\n              }\r\n            },\r\n            \"nbformat\": 4,\r\n            \"nbformat_minor\": 2\r\n          }\r\n\r\n  inputs:\r\n    notebook_path: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    output_nb:\r\n      type: File\r\n      outputBinding:\r\n        glob: out.ipynb\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: papermill_tool",
+   "version": "0.1"
+  }
+ },
+ {
+  "model": "backend.commandlinetool",
+  "pk": "pylint",
+  "fields": {
+   "name": "Pylint",
+   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: cytopia/pylint\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          cd $(inputs.source_directory.path)\r\n\r\n          PARAMS=\"--output-format=$(inputs.output_format) --output=$HOME/$(inputs.output_file) --disable=$(inputs.disable)\"\r\n          if [ \"$(inputs.exit_zero)\" == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS --exit-zero\"\r\n          fi\r\n          if [ \"$(inputs.errors_only)\" == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS -E\"\r\n          fi\r\n          if [ \"$(inputs.verbose)\" == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS -v\"\r\n          fi\r\n\r\n          pylint $PARAMS $(inputs.file_list.join(\" \"))\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    disable: string\r\n    errors_only: boolean\r\n    exit_zero:\r\n      doc: |-\r\n        Always return a 0 (non-error) status code, even if lint errors are found. This is primarily useful in continuous integration scripts.\r\n      type: boolean\r\n      default: true\r\n    file_list: string[]\r\n    output_file:\r\n      doc: Specify an output file.\r\n      type: string\r\n      default: pylint_report.json\r\n    output_format:\r\n      doc: |-\r\n        Set the output format. Available formats are: text, parseable, colorized, json2 (improved json format), json (old json format) and msvs (visual studio). You can also give a reporter class, e.g. mypackage.mymodule.MyReporterClass.\r\n      type: string\r\n      default: json\r\n    source_directory: Directory\r\n    verbose: boolean\r\n\r\n  outputs:\r\n    pylint_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: $(inputs.output_file)\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: pylint_tool",
+   "version": "0.1"
+  }
+ },
+ {
+  "model": "backend.commandlinetool",
+  "pk": "ruff",
+  "fields": {
+   "name": "Ruff",
+   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: ghcr.io/astral-sh/ruff:alpine\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          cd $(inputs.source_directory.path)\r\n\r\n          PARAMS=\"--output-format $(inputs.output_format) -o $HOME/$(inputs.output_file)\"\r\n          if [ \"$(inputs.exit_zero)\" == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS -e\"\r\n          fi\r\n          if [ \"$(inputs.no_cache)\" == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS -n\"\r\n          fi\r\n          if [ \"$(inputs.verbose)\" == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS -v\"\r\n          fi\r\n\r\n          ruff check $PARAMS $(inputs.file_list.join(\" \"))\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    exit_zero:\r\n      label: Exit with zero\r\n      doc: Exit with status code \"0\", even upon detecting lint violations.\r\n      type: boolean\r\n      default: true\r\n    no_cache:\r\n      label: Disable cache\r\n      doc: Disable cache reads.\r\n      type: boolean\r\n      default: true\r\n    file_list: string[]\r\n    output_file:\r\n      label: Output file\r\n      doc: Specify file to write the linter output to.\r\n      type: string\r\n      default: ruff_report.json\r\n    output_format:\r\n      label: Output format\r\n      doc: |-\r\n        Output serialization format for violations. Possible values: concise, full, json, json-lines, junit, grouped, github, gitlab, pylint, rdjson, azure, sarif.\r\n      type: string\r\n      default: json\r\n    source_directory: Directory\r\n    verbose: boolean\r\n\r\n  outputs:\r\n    ruff_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: $(inputs.output_file)\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: ruff_tool",
+   "version": "0.1"
+  }
+ },
+ {
+  "model": "backend.commandlinetool",
+  "pk": "save",
+  "fields": {
+   "name": "Save report",
+   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: curlimages/curl\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    name: string\r\n    pipeline_id: string\r\n    report: File\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  baseCommand: curl\r\n  arguments:\r\n  - prefix: -X\r\n    valueFrom: POST\r\n  - prefix: -L\r\n    valueFrom: |-\r\n      $('http://' + inputs.server_url + '/api/pipelines/' + inputs.pipeline_id + '/runs/' + inputs.run_id + '/jobreports/?name=' + inputs.name)\r\n  - prefix: -H\r\n    valueFrom: Content-Type:application/json\r\n  - prefix: -d\r\n    valueFrom: $('@' + inputs.report.path)\r\n  id: save_tool",
+   "version": "0.1"
+  }
+ },
+ {
+  "model": "backend.commandlinetool",
+  "pk": "sonarqube_create_project",
+  "fields": {
+   "name": "[SonarQube] Create project",
+   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: curlimages/curl\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    sonarqube_project_key:\r\n      type: string\r\n    sonarqube_project_name:\r\n      type: string\r\n    sonarqube_server:\r\n      type: string\r\n      default: sonarqube-sonarqube.sonarqube:9000\r\n    sonarqube_token:\r\n      type: string\r\n\r\n  outputs:\r\n    sonarqube_project_key:\r\n      type: string\r\n      outputBinding:\r\n        outputEval: $(inputs.sonarqube_project_key)\r\n    sonarqube_server:\r\n      type: string\r\n      outputBinding:\r\n        outputEval: $(inputs.sonarqube_server)\r\n    sonarqube_token:\r\n      type: string\r\n      outputBinding:\r\n        outputEval: $(inputs.sonarqube_token)\r\n\r\n  baseCommand:\r\n  - curl\r\n  arguments:\r\n  - prefix: -X\r\n    valueFrom: POST\r\n  - prefix: -L\r\n    valueFrom: $('http://' + inputs.sonarqube_server + '/api/projects/create')\r\n  - prefix: -u\r\n    valueFrom: $(inputs.sonarqube_token + ':')\r\n  - prefix: -d\r\n    valueFrom: $('name=' + inputs.sonarqube_project_name)\r\n  - prefix: -d\r\n    valueFrom: $('project=' + inputs.sonarqube_project_key)\r\n  id: sonarqube_create_project_tool",
+   "version": "0.1"
+  }
+ },
+ {
+  "model": "backend.commandlinetool",
+  "pk": "sonarqube_get_report",
+  "fields": {
+   "name": "[SonarQube] Get report",
+   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: curlimages/curl\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    sonarqube_project_key:\r\n      type: string\r\n    sonarqube_server:\r\n      type: string\r\n      default: sonarqube-sonarqube.sonarqube:9000\r\n    sonarqube_token:\r\n      type: string\r\n\r\n  outputs:\r\n    sonarqube_project_key:\r\n      type: string\r\n      outputBinding:\r\n        outputEval: $(inputs.sonarqube_project_key)\r\n    sonarqube_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: sonarqube_report.json\r\n    sonarqube_server:\r\n      type: string\r\n      outputBinding:\r\n        outputEval: $(inputs.sonarqube_server)\r\n    sonarqube_token:\r\n      type: string\r\n      outputBinding:\r\n        outputEval: $(inputs.sonarqube_token)\r\n  stdout: sonarqube_report.json\r\n\r\n  baseCommand:\r\n  - curl\r\n  arguments:\r\n  - prefix: -L\r\n    valueFrom: |-\r\n      $('http://' + inputs.sonarqube_server + '/api/issues/search?components=' + inputs.sonarqube_project_key)\r\n  - prefix: -u\r\n    valueFrom: $(inputs.sonarqube_token + ':')\r\n  id: sonarqube_get_report_tool",
+   "version": "0.1"
+  }
+ },
+ {
+  "model": "backend.commandlinetool",
+  "pk": "sonarqube_scan",
+  "fields": {
+   "name": "[SonarQube] Scan repo",
+   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: sonarsource/sonar-scanner-cli\r\n    EnvVarRequirement:\r\n      envDef:\r\n        SONAR_HOST_URL: $('http://' + inputs.sonarqube_server)\r\n        SONAR_TOKEN: $(inputs.sonarqube_token)\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    sonarqube_project_key:\r\n      type: string\r\n    sonarqube_server:\r\n      type: string\r\n      default: sonarqube-sonarqube.sonarqube:9000\r\n    sonarqube_token:\r\n      type: string\r\n    source_directory:\r\n      type: Directory\r\n\r\n  outputs:\r\n    sonarqube_project_key:\r\n      type: string\r\n      outputBinding:\r\n        glob:\r\n        outputEval: $(inputs.sonarqube_project_key)\r\n    sonarqube_server:\r\n      type: string\r\n      outputBinding:\r\n        glob:\r\n        outputEval: $(inputs.sonarqube_server)\r\n    sonarqube_token:\r\n      type: string\r\n      outputBinding:\r\n        glob:\r\n        outputEval: $(inputs.sonarqube_token)\r\n\r\n  baseCommand:\r\n  - sonar-scanner\r\n  arguments:\r\n  - prefix: -D\r\n    valueFrom: $('sonar.projectKey=' + inputs.sonarqube_project_key)\r\n    separate: false\r\n  # - prefix: -D\r\n  #   valueFrom: $('sonar.userHome=$HOME')\r\n  #   separate: false\r\n  - prefix: -D\r\n    valueFrom: $('sonar.projectBaseDir=' + inputs.source_directory.path + '/../')\r\n    separate: false\r\n  # - prefix: -D\r\n  #   valueFrom: $('sonar.source=$HOME' /*+ inputs.source_directory.path*/)\r\n  #   separate: false\r\n  - prefix: -X\r\n  id: sonarqube_scan_tool",
+   "version": "0.1"
+  }
+ },
+ {
+  "model": "backend.commandlinetool",
+  "pk": "trivy",
+  "fields": {
+   "name": "Trivy",
+   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: aquasec/trivy:latest\r\n\r\n  inputs:\r\n    image: string\r\n\r\n  outputs:\r\n    trivy_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: trivy_report.json\r\n\r\n  baseCommand: trivy\r\n  arguments:\r\n  - image\r\n  - prefix: -f\r\n    valueFrom: json\r\n  - prefix: -o\r\n    valueFrom: trivy_report.json\r\n  - $(inputs.image)\r\n  id: trivy_tool",
+   "version": "0.1"
+  }
+ }
+]

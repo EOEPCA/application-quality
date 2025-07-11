@@ -112,7 +112,7 @@ This requires:
 - A configurable dashboard that allows
 
   - Selecting a particular pipeline execution
-  - Selecting a set of executions of the same pipeline on the same application (e.g. Between two dates).
+  - Selecting a set of executions of the same pipeline on the same application (e.g. between two dates).
   - Visualising the metrics using various chart types: area charts, line and bar charts, pie charts, point cloud, data tables, etc. Applicable chart types depend on the characteristics of the collected metrics.
   - Exporting reports.
 

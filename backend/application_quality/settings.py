@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 import os
+import sys
 
 from pathlib import Path
 
@@ -181,6 +182,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.TokenAuthentication",
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     #'DEFAULT_PERMISSION_CLASSES': [
     #    'rest_framework.permissions.AllowAny',
@@ -194,6 +196,7 @@ CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
 CELERY_WORKER_REDIRECT_STDOUTS = False
 
 # OpenID Connect configuration
+OIDC_ENABLED = os.getenv("OIDC_ENABLED", 'false')
 OIDC_ENABLED = os.getenv("OIDC_ENABLED", 'false')
 if OIDC_ENABLED.lower() == "true":
     OIDC_CONNECT_CONFIG_URL = os.getenv("OIDC_CONNECT_CONFIG_URL")
@@ -226,9 +229,11 @@ if OIDC_ENABLED.lower() == "true":
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOWED_ORIGINS = [os.getenv("PUBLIC_URL")] # Frontend URL
+CORS_ALLOWED_ORIGINS = [os.getenv("PUBLIC_URL")] # Frontend URL
 
 CORS_ALLOW_HEADERS = "*"
 
 #CSRF_COOKIE_SECURE = False
 #CSRF_USE_SESSIONS = True
+CSRF_TRUSTED_ORIGINS = [os.getenv("PUBLIC_URL")]  # (Api Base Url)
 CSRF_TRUSTED_ORIGINS = [os.getenv("PUBLIC_URL")]  # (Api Base Url)

@@ -14,8 +14,10 @@ nav:
       - design/architecture.md
       - design/requirements.md
       - design/use-cases.md
+      - design/validation.md
     - Usage:
       - usage/user-manual.md
+      - usage/analysis-dashboards.md
       - usage/analysis-tools.md
     #  - usage/tutorials.md
     #  - usage/howtos.md
