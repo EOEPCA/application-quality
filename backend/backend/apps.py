@@ -6,4 +6,4 @@ class BackendConfig(AppConfig):
     name = 'backend'
 
     def ready(self):
-        import backend.tasks
+        import backend.tasks  # noqa: F401  # pylint: disable=C0415, W0611

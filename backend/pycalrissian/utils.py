@@ -362,6 +362,9 @@ def copy_from_volume(
         volume_mount=volume_mount,
     )
 
+    old_out_fd = None
+    old_out = None
+
     try:
         old_out_fd = os.dup(sys.stdout.fileno())
         old_out = sys.stdout
