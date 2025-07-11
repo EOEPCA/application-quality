@@ -1,0 +1,299 @@
+{
+  "folderUid": "application-quality-service",
+  "uid": "pipeline-usage-report",
+  "name": "Pipeline Usage Report",
+  "kind": 1,
+  "type": "table",
+  "description": "",
+  "model": {
+    "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "application-quality-db"
+    },
+    "description": "",
+    "fieldConfig": {
+      "defaults": {
+        "color": {
+          "mode": "thresholds"
+        },
+        "custom": {
+          "align": "auto",
+          "cellOptions": {
+            "type": "auto"
+          },
+          "filterable": false,
+          "inspect": false
+        },
+        "mappings": [],
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {
+              "color": "green",
+              "value": null
+            }
+          ]
+        }
+      },
+      "overrides": [
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "elapsed_seconds"
+          },
+          "properties": [
+            {
+              "id": "unit",
+              "value": "s"
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "total_disk_megabytes"
+          },
+          "properties": [
+            {
+              "id": "unit",
+              "value": "decmbytes"
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "total_ram_megabyte_hours"
+          },
+          "properties": [
+            {
+              "id": "unit",
+              "value": "h"
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "max_parallel_ram_megabytes"
+          },
+          "properties": [
+            {
+              "id": "unit",
+              "value": "decmbytes"
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "ram_mb_allowed"
+          },
+          "properties": [
+            {
+              "id": "unit",
+              "value": "decmbytes"
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "total_cpu_hours"
+          },
+          "properties": [
+            {
+              "id": "unit",
+              "value": "h"
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "start_time"
+          },
+          "properties": [
+            {
+              "id": "unit",
+              "value": "dateTimeAsIsoNoDateIfToday"
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "finish_time"
+          },
+          "properties": [
+            {
+              "id": "unit",
+              "value": "dateTimeAsIsoNoDateIfToday"
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Max parallel RAM [MB]"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 182
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "status"
+          },
+          "properties": []
+        }
+      ]
+    },
+    "options": {
+      "cellHeight": "sm",
+      "footer": {
+        "countRows": false,
+        "fields": "",
+        "reducer": [
+          "sum"
+        ],
+        "show": false
+      },
+      "showHeader": true,
+      "sortBy": []
+    },
+    "pluginVersion": "12.0.1",
+    "targets": [
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "application-quality-db"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT status, usage_report FROM executions_admin WHERE id = $execution_id",
+        "refId": "A",
+        "sql": {
+          "columns": [
+            {
+              "parameters": [
+                {
+                  "name": "usage_report",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            }
+          ],
+          "groupBy": [
+            {
+              "property": {
+                "type": "string"
+              },
+              "type": "groupBy"
+            }
+          ],
+          "limit": 50,
+          "whereJsonTree": {
+            "children1": [
+              {
+                "id": "aab8baa9-89ab-4cde-b012-3197a65a737f",
+                "properties": {
+                  "field": "id",
+                  "fieldSrc": "field",
+                  "operator": "equal",
+                  "value": [
+                    1
+                  ],
+                  "valueError": [
+                    null
+                  ],
+                  "valueSrc": [
+                    "value"
+                  ],
+                  "valueType": [
+                    "number"
+                  ]
+                },
+                "type": "rule"
+              }
+            ],
+            "id": "9b9b89ba-0123-4456-b89a-b197a63a721f",
+            "type": "group"
+          },
+          "whereString": "id = 1"
+        },
+        "table": "executions_admin"
+      }
+    ],
+    "title": "Pipeline Usage Report",
+    "transformations": [
+      {
+        "id": "extractFields",
+        "options": {
+          "delimiter": ",",
+          "format": "auto",
+          "keepTime": false,
+          "replace": false,
+          "source": "usage_report"
+        }
+      },
+      {
+        "id": "organize",
+        "options": {
+          "excludeByName": {
+            "children": true,
+            "cores_allowed": false,
+            "finish_time": false,
+            "max_parallel_tasks": false,
+            "start_time": false,
+            "total_disk_megabytes": false,
+            "total_tasks": false,
+            "usage_report": true
+          },
+          "includeByName": {},
+          "indexByName": {
+            "children": 1,
+            "cores_allowed": 6,
+            "elapsed_hours": 7,
+            "elapsed_seconds": 9,
+            "finish_time": 4,
+            "max_parallel_cpus": 10,
+            "max_parallel_ram_megabytes": 12,
+            "max_parallel_tasks": 11,
+            "ram_mb_allowed": 8,
+            "start_time": 3,
+            "status": 2,
+            "total_cpu_hours": 13,
+            "total_disk_megabytes": 14,
+            "total_ram_megabyte_hours": 15,
+            "total_tasks": 5,
+            "usage_report": 0
+          },
+          "renameByName": {
+            "cores_allowed": "Cores",
+            "elapsed_hours": "Elapsed [h]",
+            "elapsed_seconds": "Duration [s]",
+            "finish_time": "Finish time",
+            "max_parallel_cpus": "Max parallel CPUs",
+            "max_parallel_ram_megabytes": "Max parallel RAM [MB]",
+            "max_parallel_tasks": "Max parallel tasks",
+            "ram_mb_allowed": "RAM allowed [MB]",
+            "start_time": "Start time",
+            "status": "Status",
+            "total_cpu_hours": "CPU [h]ours",
+            "total_disk_megabytes": "Total disk [MB]",
+            "total_ram_megabyte_hours": "Total RAM [MB/h]",
+            "total_tasks": "Tasks"
+          }
+        }
+      }
+    ],
+    "type": "table"
+  }
+}

@@ -1,6 +1,6 @@
 apiVersion: v2
 name: application-quality-reference-deployment
-description: A reference deployment of the Application Quality BB (including OpenSearch and SonarQube)
+description: A reference deployment of the Application Quality BB (including Grafana)
 
 icon: https://upload.wikimedia.org/wikipedia/commons/3/3b/PlaceholderRoss.png
 
@@ -26,12 +26,10 @@ version: 0.1.0
 appVersion: "0.1.0"
 
 dependencies:
-- name: opensearch
-  version: "2.27.0"
-  repository: "https://opensearch-project.github.io/helm-charts/"
-- name: opensearch-dashboards
-  version: "2.25.0"
-  repository: "https://opensearch-project.github.io/helm-charts/"
+- name: grafana
+  version: "9.2.4"
+  repository: "https://grafana.github.io/helm-charts"
+  condition: grafana.enabled
 - name: application-quality
   version: "0.1.0"
   repository: "file://../helm"

@@ -1,0 +1,173 @@
+{
+  "folderUid": "application-quality-service",
+  "uid": "pipeline-executions-report-list",
+  "name": "Pipeline Execution Reports List",
+  "kind": 1,
+  "type": "table",
+  "description": "",
+  "model": {
+    "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "application-quality-db"
+    },
+    "description": "",
+    "fieldConfig": {
+      "defaults": {
+        "color": {
+          "mode": "thresholds"
+        },
+        "custom": {
+          "align": "auto",
+          "cellOptions": {
+            "type": "auto"
+          },
+          "inspect": false
+        },
+        "mappings": [],
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {
+              "color": "green",
+              "value": null
+            },
+            {
+              "color": "red",
+              "value": 80
+            }
+          ]
+        }
+      },
+      "overrides": [
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Report"
+          },
+          "properties": [
+            {
+              "id": "links",
+              "value": [
+                {
+                  "title": "Go to report",
+                  "url": "/d/default-${__data.fields.Tool}-report/${__data.fields.Tool}-report?${__all_variables}&var-report_id=${__data.fields.Report}"
+                }
+              ]
+            },
+            {
+              "id": "custom.align",
+              "value": "left"
+            },
+            {
+              "id": "custom.cellOptions",
+              "value": {
+                "type": "data-links"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "options": {
+      "cellHeight": "sm",
+      "footer": {
+        "countRows": false,
+        "fields": "",
+        "reducer": [
+          "sum"
+        ],
+        "show": false
+      },
+      "showHeader": true
+    },
+    "pluginVersion": "12.0.1",
+    "targets": [
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "application-quality-db"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "hide": false,
+        "rawQuery": true,
+        "rawSql": "SELECT name AS \"Tool\", created_at AS \"Created\", id AS \"Report\" FROM reports_admin WHERE run_id = ${execution_id:int}",
+        "refId": "A",
+        "sql": {
+          "columns": [
+            {
+              "alias": "\"Name\"",
+              "parameters": [
+                {
+                  "name": "name",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            },
+            {
+              "alias": "\"Output creation\"",
+              "parameters": [
+                {
+                  "name": "created_at",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            },
+            {
+              "alias": "\"Link\"",
+              "parameters": [
+                {
+                  "name": "id",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            }
+          ],
+          "groupBy": [
+            {
+              "property": {
+                "type": "string"
+              },
+              "type": "groupBy"
+            }
+          ],
+          "limit": 50,
+          "whereJsonTree": {
+            "children1": [
+              {
+                "id": "999b8aa9-cdef-4012-b456-7197a2227454",
+                "properties": {
+                  "field": "run_id",
+                  "fieldSrc": "field",
+                  "operator": "equal",
+                  "value": [
+                    2
+                  ],
+                  "valueError": [
+                    null
+                  ],
+                  "valueSrc": [
+                    "value"
+                  ],
+                  "valueType": [
+                    "number"
+                  ]
+                },
+                "type": "rule"
+              }
+            ],
+            "id": "8abb8b8a-0123-4456-b89a-b197a20c2547",
+            "type": "group"
+          },
+          "whereString": "run_id = 2"
+        },
+        "table": "reports_admin"
+      }
+    ],
+    "title": "Pipeline Execution Reports",
+    "type": "table"
+  }
+}
