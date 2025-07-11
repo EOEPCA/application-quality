@@ -67,7 +67,7 @@
       }}</v-btn>
     </v-app-bar>
 
-    <v-navigation-drawer v-model="drawer" permanent persistent>
+    <v-navigation-drawer v-model="drawer" permanent app persistent>
       <v-list>
         <v-list-item
           v-for="item in menuItems"
@@ -79,8 +79,8 @@
       </v-list>
     </v-navigation-drawer>
 
-    <v-main style="--v-layout-left: 0px">
-      <v-container :width="1200">
+    <v-main>
+      <v-container>
         <router-view />
       </v-container>
     </v-main>
@@ -155,3 +155,11 @@ export default {
   },
 };
 </script>
+
+<style>
+#app {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 0fr;
+}
+</style>
