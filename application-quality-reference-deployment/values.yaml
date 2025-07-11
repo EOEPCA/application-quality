@@ -18,18 +18,21 @@ global:
 application-quality:
   # Values for deploying the Application Quality Building Block in the EOEPCA Develop cluster.
 
+  publicUrl: "https://application-quality.develop.eoepca.org"
+
   namespace:
     application-quality
 
   # Application Quality backend
   api:
     image:
-      tag: 2025-01-10.1
+      tag: 2025-04-07.1
 
   # Application Quality frontend
   web:
     image:
-      tag: 2025-01-15.1
+      tag: 2025-04-07.2
+    publicUrl: "https://application-quality.develop.eoepca.org"
 
   persistence:
     enabled: true
@@ -46,7 +49,8 @@ application-quality:
     maxCores: "2"
     maxRam: "2Gi"
 
-  #db:
+  vclusters:
+    enabled: false
 
   opensearch:
     enabled: false
@@ -454,24 +458,20 @@ opensearch-dashboards:
 
       opensearch_security:
         # https://opensearch.org/docs/latest/security/authentication-backends/openid-connect/#configuration-settings
-        #auth.multiple_auth_enabled: true
-        #auth.type: ["basicauth", "openid"]
-        auth.type: basicauth
-        #auth.type: openid
+        auth.multiple_auth_enabled: true
+        auth.type: ["basicauth", "openid"]
 
-        # openid:
-        #   connect_url: https://auth.eoepca-testing.spaceapplications.com/realms/eoepca/.well-known/openid-configuration
-        #   base_redirect_url: https://application-quality.develop.eoepca.org/dashboards/
-        #   client_id: application-quality-develop-dashboards
-        #   client_secret: 2Oz8olwAgHD5oRuEmtFsYsnrdkeWEAln
-        #   # scope: openid profile email
-        #   scope: openid roles profile user_name email
-        #   header: Authorization
-        #   verify_hostnames: false
-        #   #root_ca: /usr/share/dashboards/root-ca/root.ca.crt
-        #   #root_ca: /etc/ssl/certs/ca-certificates.crt
-        #   #root_ca: /usr/share/opensearch-dashboards/certs/ca.crt
-        #   trust_dynamic_headers: "true"
+        openid:
+          # OIDC parameters provided using environment variables
+          connect_url: ${OPENSEARCH_SECURITY_OPENID_CONNECT_URL}
+          client_id: ${OPENSEARCH_SECURITY_OPENID_CLIENT_ID}
+          client_secret: ${OPENSEARCH_SECURITY_OPENID_CLIENT_SECRET}
+          base_redirect_url: ${OPENSEARCH_SECURITY_OPENID_BASE_REDIRECT_URL}
+          # scope: openid profile email
+          scope: openid roles profile user_name email
+          header: Authorization
+          verify_hostnames: false
+          trust_dynamic_headers: "true"
 
       opensearchDashboards:
         # The default application to load.
@@ -510,6 +510,13 @@ opensearch-dashboards:
       home:
         disableWelcomeScreen: false
         disableNewThemeModal: false
+
+  # Load environment variables from kubernetes secret or config map
+  envFrom:
+  - secretRef:
+      name: application-quality-opensearch-dashboards-openid-config
+  # - configMapRef:
+  #     name: application-quality-opensearch-dashboards-openid-config
 
   secretMounts:
     - name: certs

@@ -84,6 +84,7 @@
               <v-icon size="26px"> mdi-information </v-icon>
             </v-btn>
             <v-btn
+              icon="mdi-monitor-eye"
               color="primary"
               variant="text"
               v-tooltip:bottom-end="'Pipeline executions'"

@@ -2,6 +2,8 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+publicUrl: ""
+
 ingress:
   enabled: false
   className: nginx
@@ -18,6 +20,8 @@ web:
   servicePort: 80
   containerPort: 80
   replicaCount: 1
+  # The URL used to access the frontend (required by the backend to authorize the requests)
+  publicUrl: ""
 
 api:
   image:
@@ -41,6 +45,15 @@ persistence:
   accessMode:
   - ReadWriteOnce
   size: 1Gi
+
+vclusters:
+  enabled: false
+  # Templated
+  name: "{{ .Release.Namespace }}-vcluster"
+  # Templated
+  namespace: "{{ .Release.Namespace }}-vcluster"
+  # Local "namespace/service" to the backend service inside the vcluster:
+  #service: default/backend-service
 
 calrissian:
   image: "terradue/calrissian:0.14.0"

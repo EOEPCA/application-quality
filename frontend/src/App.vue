@@ -12,7 +12,6 @@
       :clean="notify.clean"
       :ignore-duplicates="notify.ignoreDuplicate"
     />
-
     <v-app-bar color="primary">
       <v-app-bar-nav-icon @click="rail = !rail"></v-app-bar-nav-icon>
       <v-app-bar-title>{{ settings.instance__name }}</v-app-bar-title>
@@ -88,7 +87,6 @@
         />
       </v-list>
     </v-navigation-drawer>
-
     <v-main>
       <v-container>
         <router-view />

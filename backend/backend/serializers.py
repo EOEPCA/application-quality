@@ -1,13 +1,24 @@
-from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow
+from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag
 from rest_framework import serializers
 
 
 class PipelineSerializer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source="owner.username")
+    owner_name = serializers.ReadOnlyField(source="owner.username")
 
     class Meta:
         model = Pipeline
-        fields = "__all__"
+        fields = [
+            "id",
+            "name",
+            "description",
+            "tools",
+            "default_inputs",
+            "owner",
+            "owner_name",
+            "created_at",
+            "edited_at",
+            "version",
+        ]
 
 
 class PipelineRunSerializer(serializers.ModelSerializer):
@@ -45,4 +56,18 @@ class JobReportSerializer(serializers.ModelSerializer):
 class SubworkflowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subworkflow
-        fields = "__all__"
+        fields = [
+            "slug",
+            "name",
+            "description",
+            "user_params",
+            "tags",
+            "tools",
+            "version",
+        ]
+
+
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ["id", "name"]
