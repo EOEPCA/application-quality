@@ -24,14 +24,14 @@ application-quality:
   # Application Quality backend
   api:
     image:
-      #repository: eoepca/eoepca-appquality-backend
-      tag: 2025-06-18.1
+      repository: eoepca/eoepca-appquality-backend
+      tag: 2.0.0-rc2
 
   # Application Quality frontend
   web:
     image:
-      #repository: eoepca/eoepca-appquality-frontend
-      tag: 2025-06-18.2
+      repository: eoepca/eoepca-appquality-frontend
+      tag: 2.0.0-rc2
     publicUrl: "https://application-quality.develop.eoepca.org"
 
   persistence:
