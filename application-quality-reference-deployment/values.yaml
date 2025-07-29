@@ -101,6 +101,29 @@ grafana:
   # Enable creating the grafana configmap
   createConfigmap: true
 
+  # Variables used by the datasource definition, below
+  envValueFrom:
+    APPLICATION_QUALITY_DB_HOST:
+      configMapKeyRef:
+        name: "{{ .Release.Name }}-api-env"
+        key: DB_HOST
+    APPLICATION_QUALITY_DB_PORT:
+      configMapKeyRef:
+        name: "{{ .Release.Name }}-api-env"
+        key: DB_PORT
+    APPLICATION_QUALITY_DB_NAME:
+      configMapKeyRef:
+        name: "{{ .Release.Name }}-api-env"
+        key: DB_NAME
+    APPLICATION_QUALITY_DB_USER:
+      configMapKeyRef:
+        name: "{{ .Release.Name }}-api-env"
+        key: DB_USER
+    APPLICATION_QUALITY_DB_PASSWORD:
+      configMapKeyRef:
+        name: "{{ .Release.Name }}-api-env"
+        key: DB_PASSWORD
+
   # Extra configmaps to mount in grafana pods
   # Values are templated.
   extraConfigmapMounts: []
@@ -123,7 +146,7 @@ grafana:
         - |
           echo "Starting initialisation script in Grafana pod..."
           # Wait for the Grafana API to repond
-          GRAFANA_API_URL="http://${APPLICATION_QUALITY_CORE_GRAFANA_SERVICE_HOST}:${APPLICATION_QUALITY_CORE_GRAFANA_SERVICE_PORT}"
+          GRAFANA_API_URL="http://{{ .Release.Name }}-grafana.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}"
           echo "Waiting for Grafana API at ${GRAFANA_API_URL}/api/health to respond..."
           until curl --fail --silent "${GRAFANA_API_URL}/api/health"; do
             echo "Grafana API not yet available, retrying in 5 seconds..."
@@ -157,8 +180,8 @@ grafana:
           done
           echo -e "\\nInitialisation complete - Keeping the container alive ..."
           while true; do sleep 5; done
-      envFrom:                          
-      - secretRef:                                                 
+      envFrom:
+      - secretRef:
           name: application-quality-grafana-dashboards-admin-creds
       resources:
         requests:
@@ -231,12 +254,12 @@ grafana:
         - name: "Application Quality DB (Admin)"
           uid: application-quality-db
           type: postgres
-          url: application-quality-core-db.application-quality.svc.cluster.local:5432
-          user: admin
+          url: $APPLICATION_QUALITY_DB_HOST:$APPLICATION_QUALITY_DB_PORT
+          user: $APPLICATION_QUALITY_DB_USER
           secureJsonData:
-            password: changeme
+            password: $APPLICATION_QUALITY_DB_PASSWORD
           jsonData:
-            database: appquality
+            database: $APPLICATION_QUALITY_DB_NAME
             sslmode: "disable" # disable/require/verify-ca/verify-full
             maxOpenConns: 100
             maxIdleConns: 100
