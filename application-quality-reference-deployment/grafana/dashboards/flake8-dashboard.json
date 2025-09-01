@@ -1,0 +1,143 @@
+{
+  "folderUid": "application-quality-service-reports",
+  "overwrite": false,
+  "dashboard": {
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 8,
+    "links": [
+      {
+        "asDropdown": false,
+        "icon": "dashboard",
+        "includeVars": true,
+        "keepTime": false,
+        "tags": [],
+        "targetBlank": false,
+        "title": "Pipeline Execution ${execution_id}",
+        "tooltip": "Go to pipeline run ${execution_id} dashboard",
+        "type": "link",
+        "url": "/d/pipeline-execution/pipeline-execution?${__all_values}"
+      }
+    ],
+    "panels": [
+      {
+        "gridPos": {
+          "h": 5,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        },
+        "id": 2,
+        "libraryPanel": {
+          "name": "Pipeline Execution Report Header",
+          "uid": "pipeline-execution-report-header"
+        },
+        "title": "",
+        "type": "library-panel-ref"
+      },
+      {
+        "gridPos": {
+          "h": 10,
+          "w": 24,
+          "x": 0,
+          "y": 5
+        },
+        "id": 3,
+        "libraryPanel": {
+          "name": "Flake8 Report",
+          "uid": "flake8-report"
+        },
+        "title": "Flake8 Report",
+        "type": "library-panel-ref"
+      }
+    ],
+    "preload": false,
+    "schemaVersion": 41,
+    "tags": [],
+    "templating": {
+      "list": [
+        {
+          "current": {
+            "text": "107",
+            "value": "107"
+          },
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "application-quality-db"
+          },
+          "definition": "SELECT id FROM reports_admin WHERE name = 'flake8'",
+          "hide": 2,
+          "label": "Report ID",
+          "name": "report_id",
+          "options": [],
+          "query": "SELECT id FROM reports_admin WHERE name = 'flake8'",
+          "refresh": 1,
+          "regex": "",
+          "type": "query"
+        },
+        {
+          "current": {
+            "text": "41",
+            "value": "41"
+          },
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "application-quality-db"
+          },
+          "definition": "SELECT run_id FROM reports_admin WHERE id = $report_id",
+          "hide": 2,
+          "label": "Execution ID",
+          "name": "execution_id",
+          "options": [],
+          "query": "SELECT run_id FROM reports_admin WHERE id = $report_id",
+          "refresh": 1,
+          "regex": "",
+          "type": "query"
+        },
+        {
+          "current": {
+            "text": "6",
+            "value": "6"
+          },
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "application-quality-db"
+          },
+          "definition": "SELECT pipeline_id FROM executions_admin WHERE id = $execution_id",
+          "hide": 2,
+          "name": "pipeline_id",
+          "options": [],
+          "query": "SELECT pipeline_id FROM executions_admin WHERE id = $execution_id",
+          "refresh": 1,
+          "regex": "",
+          "type": "query"
+        },
+        {
+          "current": {
+            "text": "Python pipeline",
+            "value": "Python pipeline"
+          },
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "application-quality-db"
+          },
+          "definition": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
+          "hide": 2,
+          "name": "pipeline_name",
+          "options": [],
+          "query": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
+          "refresh": 1,
+          "regex": "",
+          "type": "query"
+        }
+      ]
+    },
+    "timepicker": {
+      "hidden": true
+    },
+    "timezone": "browser",
+    "title": "Flake8 Report",
+    "uid": "default-flake8-report"
+  }
+}

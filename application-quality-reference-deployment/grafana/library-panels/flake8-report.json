@@ -1,0 +1,131 @@
+{
+  "folderUid": "application-quality-service-reports",
+  "uid": "flake8-report",
+  "name": "Flake8 Report",
+  "kind": 1,
+  "type": "table",
+  "description": "",
+  "model": {
+    "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "application-quality-db"
+    },
+    "description": "",
+    "fieldConfig": {
+      "defaults": {
+        "color": {
+          "mode": "thresholds"
+        },
+        "custom": {
+          "align": "auto",
+          "cellOptions": {
+            "type": "auto"
+          },
+          "inspect": false
+        },
+        "mappings": [],
+        "noValue": "This report is empty",
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {
+              "color": "green",
+              "value": null
+            }
+          ]
+        }
+      },
+      "overrides": [
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Code"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 80
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Location"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 120
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Code"
+          },
+          "properties": [
+            {
+              "id": "links",
+              "value": [
+                {
+                  "targetBlank": true,
+                  "title": "Open documentation for ${__data.fields.Code}",
+                  "url": "https://www.flake8rules.com/rules/${__data.fields.Code}.html"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "options": {
+      "cellHeight": "sm",
+      "footer": {
+        "countRows": false,
+        "fields": "",
+        "reducer": [
+          "sum"
+        ],
+        "show": false
+      },
+      "showHeader": true,
+      "sortBy": []
+    },
+    "pluginVersion": "12.0.1",
+    "targets": [
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "application-quality-db"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "hide": false,
+        "rawQuery": true,
+        "rawSql": "SELECT\n  (t.row_data :: jsonb) ->> 'filename' AS \"Path to File\",\n  (t.row_data :: jsonb) ->> 'text' AS \"Message\",\n  (t.row_data :: jsonb) ->> 'code' AS \"Code\",\n  'L' || ((t.row_data :: jsonb) ->> 'line_number') || 'C' || ((t.row_data :: jsonb) ->> 'column_number') AS \"Location\",\n  -- (t.row_data :: jsonb) ->> 'line_number' AS Line,\n  -- (t.row_data :: jsonb) ->> 'column_number' AS Column,\n  (t.row_data :: jsonb) ->> 'physical_line' AS \"Source Code\"\n  -- t.row_data AS val\nFROM (\n  SELECT\n  unnest(\n  ARRAY(\n    SELECT\n      ARRAY[val]\n    FROM\n      jsonb_each(report.output::jsonb) as t,\n      jsonb_array_elements_text(t.value) AS val\n  )\n  ) AS row_data\nFROM reports_admin as report\nWHERE report.id = ${report_id}\n) AS t;",
+        "refId": "A",
+        "sql": {
+          "columns": [
+            {
+              "parameters": [],
+              "type": "function"
+            }
+          ],
+          "groupBy": [
+            {
+              "property": {
+                "type": "string"
+              },
+              "type": "groupBy"
+            }
+          ],
+          "limit": 50
+        }
+      }
+    ],
+    "title": "Flake8 Report",
+    "type": "table"
+  }
+}
