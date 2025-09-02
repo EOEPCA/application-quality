@@ -70,7 +70,9 @@
     "preload": false,
     "refresh": "10s",
     "schemaVersion": 41,
-    "tags": [],
+    "tags": [
+      "pipeline-executions-dashboard"
+    ],
     "templating": {
       "list": []
     },

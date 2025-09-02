@@ -44,7 +44,21 @@
           "properties": [
             {
               "id": "custom.width",
-              "value": 80
+              "value": 100
+            },
+            {
+              "id": "links",
+              "value": [
+                {
+                  "targetBlank": true,
+                  "title": "Open documentation for ${__data.fields.Code}",
+                  "url": "https://www.flake8rules.com/rules/${__data.fields.Code}.html"
+                }
+              ]
+            },
+            {
+              "id": "custom.filterable",
+              "value": true
             }
           ]
         },
@@ -63,18 +77,24 @@
         {
           "matcher": {
             "id": "byName",
-            "options": "Code"
+            "options": "Path to File"
           },
           "properties": [
             {
-              "id": "links",
-              "value": [
-                {
-                  "targetBlank": true,
-                  "title": "Open documentation for ${__data.fields.Code}",
-                  "url": "https://www.flake8rules.com/rules/${__data.fields.Code}.html"
-                }
-              ]
+              "id": "custom.filterable",
+              "value": true
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Message"
+          },
+          "properties": [
+            {
+              "id": "custom.filterable",
+              "value": true
             }
           ]
         }

@@ -48,7 +48,21 @@
           "properties": [
             {
               "id": "custom.width",
-              "value": 80
+              "value": 100
+            },
+            {
+              "id": "custom.filterable",
+              "value": true
+            },
+            {
+              "id": "links",
+              "value": [
+                {
+                  "targetBlank": true,
+                  "title": "Open documentation for ${__data.fields.Code}",
+                  "url": "https://pylint.readthedocs.io/en/stable/user_guide/messages/${__data.fields.type}/${__data.fields.symbol}.html"
+                }
+              ]
             }
           ]
         },
@@ -76,24 +90,10 @@
             },
             {
               "id": "noValue"
-            }
-          ]
-        },
-        {
-          "matcher": {
-            "id": "byName",
-            "options": "Code"
-          },
-          "properties": [
+            },
             {
-              "id": "links",
-              "value": [
-                {
-                  "targetBlank": true,
-                  "title": "Open documentation for ${__data.fields.Code}",
-                  "url": "https://pylint.readthedocs.io/en/stable/user_guide/messages/${__data.fields.type}/${__data.fields.symbol}.html"
-                }
-              ]
+              "id": "custom.filterable",
+              "value": true
             }
           ]
         },
@@ -112,11 +112,23 @@
         {
           "matcher": {
             "id": "byName",
-            "options": "symbol"
+            "options": "type"
           },
           "properties": [
             {
               "id": "custom.hidden",
+              "value": true
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Path to File"
+          },
+          "properties": [
+            {
+              "id": "custom.filterable",
               "value": true
             }
           ]
