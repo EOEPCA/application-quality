@@ -1,0 +1,109 @@
+{
+  "folderUid": "application-quality-service-reports",
+  "uid": "bandit-metrics-report",
+  "name": "Bandit Metrics Report",
+  "kind": 1,
+  "type": "table",
+  "description": "",
+  "model": {
+    "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "application-quality-db"
+    },
+    "description": "",
+    "fieldConfig": {
+      "defaults": {
+        "color": {
+          "mode": "thresholds"
+        },
+        "custom": {
+          "align": "auto",
+          "cellOptions": {
+            "type": "auto",
+            "wrapText": false
+          },
+          "filterable": false,
+          "inspect": false,
+          "minWidth": 80
+        },
+        "mappings": [],
+        "noValue": "This report is empty",
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {
+              "color": "green",
+              "value": null
+            }
+          ]
+        }
+      },
+      "overrides": [
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "File"
+          },
+          "properties": [
+            {
+              "id": "custom.minWidth",
+              "value": 350
+            },
+            {
+              "id": "custom.filterable",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    "options": {
+      "cellHeight": "sm",
+      "footer": {
+        "countRows": false,
+        "enablePagination": true,
+        "fields": "",
+        "reducer": [
+          "sum"
+        ],
+        "show": true
+      },
+      "showHeader": true,
+      "sortBy": []
+    },
+    "pluginVersion": "12.0.1",
+    "targets": [
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "application-quality-db"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "hide": false,
+        "rawQuery": true,
+        "rawSql": "SELECT\n  metrics.key AS \"File\",\n  (metrics.value ->> 'loc') :: int AS \"Lines of Code\",\n  (metrics.value ->> 'nosec') :: int AS \"No Security Issues\",\n  (metrics.value ->> 'skipped_tests') :: int AS \"Skipped Tests\",\n  (metrics.value ->> 'SEVERITY.LOW') :: int AS \"Low Severity\",\n  (metrics.value ->> 'SEVERITY.MEDIUM') :: int AS \"Medium Severity\",\n  (metrics.value ->> 'SEVERITY.HIGH') :: int AS \"High Severity\",\n  (metrics.value ->> 'SEVERITY.UNDEFINED') :: int AS \"Undefined Severity\",\n  (metrics.value ->> 'CONFIDENCE.LOW') :: int AS \"Low Confidence\",\n  (metrics.value ->> 'CONFIDENCE.MEDIUM') :: int AS \"Medium Confidence\",\n  (metrics.value ->> 'CONFIDENCE.HIGH') :: int AS \"High Confidence\",\n  (metrics.value ->> 'CONFIDENCE.UNDEFINED') :: int AS \"Undefined Confidence\"\nFROM\n  (\n    SELECT\n      *\n    FROM\n      reports_admin\n    WHERE\n      id = ${report_id}\n  ) AS sub,\n  jsonb_each((sub.output :: jsonb) -> 'metrics') AS metrics\nWHERE\n  metrics.key != '_totals'",
+        "refId": "A",
+        "sql": {
+          "columns": [
+            {
+              "parameters": [],
+              "type": "function"
+            }
+          ],
+          "groupBy": [
+            {
+              "property": {
+                "type": "string"
+              },
+              "type": "groupBy"
+            }
+          ],
+          "limit": 50
+        }
+      }
+    ],
+    "title": "Bandit Metrics",
+    "type": "table"
+  }
+}

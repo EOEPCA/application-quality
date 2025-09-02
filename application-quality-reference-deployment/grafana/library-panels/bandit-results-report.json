@@ -1,0 +1,254 @@
+{
+  "folderUid": "application-quality-service-reports",
+  "uid": "bandit-results-report",
+  "name": "Bandit Results Report",
+  "kind": 1,
+  "type": "table",
+  "description": "",
+  "model": {
+    "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "application-quality-db"
+    },
+    "description": "",
+    "fieldConfig": {
+      "defaults": {
+        "color": {
+          "mode": "thresholds"
+        },
+        "custom": {
+          "align": "auto",
+          "cellOptions": {
+            "type": "auto"
+          },
+          "inspect": false
+        },
+        "mappings": [],
+        "noValue": "This report is empty",
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {
+              "color": "green",
+              "value": null
+            },
+            {
+              "color": "red",
+              "value": 80
+            }
+          ]
+        }
+      },
+      "overrides": [
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Code"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 80
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Location"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 120
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "File"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 300
+            },
+            {
+              "id": "custom.filterable",
+              "value": true
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Code"
+          },
+          "properties": [
+            {
+              "id": "links",
+              "value": [
+                {
+                  "targetBlank": true,
+                  "title": "Open documentation for ${__data.fields.Code}",
+                  "url": "${__data.fields.link}"
+                }
+              ]
+            },
+            {
+              "id": "custom.width",
+              "value": 100
+            },
+            {
+              "id": "custom.filterable",
+              "value": true
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "issue_cwe_link"
+          },
+          "properties": [
+            {
+              "id": "custom.hidden",
+              "value": true
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "link"
+          },
+          "properties": [
+            {
+              "id": "custom.hidden",
+              "value": true
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Weakness (CWE)"
+          },
+          "properties": [
+            {
+              "id": "links",
+              "value": [
+                {
+                  "targetBlank": true,
+                  "title": "Link",
+                  "url": "${__data.fields.issue_cwe_link}"
+                }
+              ]
+            },
+            {
+              "id": "custom.filterable",
+              "value": true
+            },
+            {
+              "id": "custom.width",
+              "value": 200
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Severity"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 150
+            },
+            {
+              "id": "custom.filterable",
+              "value": true
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Confidence"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 150
+            },
+            {
+              "id": "custom.filterable",
+              "value": true
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Message"
+          },
+          "properties": [
+            {
+              "id": "custom.filterable",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    "options": {
+      "cellHeight": "sm",
+      "footer": {
+        "countRows": false,
+        "enablePagination": true,
+        "fields": "",
+        "reducer": [
+          "sum"
+        ],
+        "show": false
+      },
+      "showHeader": true,
+      "sortBy": []
+    },
+    "pluginVersion": "12.0.1",
+    "targets": [
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "application-quality-db"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "hide": false,
+        "rawQuery": true,
+        "rawSql": "SELECT\n  elem ->> 'filename' AS \"File\",\n  elem ->> 'test_id' AS \"Code\",\n  elem ->> 'more_info' AS \"link\",\n  elem -> 'issue_cwe' ->> 'id' AS \"Weakness (CWE)\",\n  elem -> 'issue_cwe' ->> 'link' AS \"issue_cwe_link\",\n  -- (elem -> 'line_number') :: int AS \"Line\",\n  -- (elem -> 'col_offset') :: int AS \"Column\",\n  'L' || (elem ->> 'line_number') || 'C' || (elem ->> 'col_offset') AS \"Location\",\n  elem ->> 'issue_severity' AS \"Severity\",\n  elem ->> 'issue_confidence' AS \"Confidence\",\n  elem ->> 'issue_text' AS \"Message\"\nFROM\n  (\n    SELECT\n      jsonb_array_elements(output :: jsonb -> 'results') AS elem\n    FROM\n      reports_admin\n    WHERE\n      id = ${report_id}\n  ) AS sub;",
+        "refId": "A",
+        "sql": {
+          "columns": [
+            {
+              "parameters": [],
+              "type": "function"
+            }
+          ],
+          "groupBy": [
+            {
+              "property": {
+                "type": "string"
+              },
+              "type": "groupBy"
+            }
+          ],
+          "limit": 50
+        }
+      }
+    ],
+    "title": "Bandit Results",
+    "type": "table"
+  }
+}
