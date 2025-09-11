@@ -176,7 +176,7 @@ class CalrissianContext:
             config.load_kube_config(config_file=kubeconfig)
             api_client = client.ApiClient()
         elif kubeconfig_file:
-            config.load_kube_config(config_file=kubeconfig)
+            config.load_kube_config(config_file=kubeconfig_file)
             api_client = client.ApiClient()
         else:
             # if nothing is specified, kubernetes-python will use the file
