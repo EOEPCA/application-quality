@@ -26,8 +26,10 @@ application-quality:
   # Application Quality backend
   api:
     image:
-      repository: eoepca/eoepca-appquality-backend
-      tag: 2.0.0-rc2
+      repository: nexus.spaceapplications.com/repository/docker-asb-public/eoepca/eoepca-appquality-backend
+      tag: 2025-09-12a
+      # repository: eoepca/eoepca-appquality-backend
+      # tag: 2.0.0-rc2
 
   # Application Quality frontend
   web:
@@ -53,6 +55,13 @@ application-quality:
 
   vclusters:
     enabled: false
+    required: false
+
+  workspace:
+    apiServiceUrl: "http://workspace-api.workspace.svc.cluster.local:8080"
+    vcluster:
+      enabled: true
+      required: false
 
   grafana:
     enabled: true

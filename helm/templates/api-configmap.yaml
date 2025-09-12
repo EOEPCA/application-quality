@@ -58,11 +58,18 @@ data:
   SONARQUBE_TOKEN: {{ .Values.sonarqube.accessToken }}
   {{- end }}
   # vCluster
-  VCLUSTER_ENABLED: {{ .Values.vclusters.enabled | default false | quote }}
+  SHARED_VCLUSTER_ENABLED: {{ .Values.vclusters.enabled | default false | quote }}
   {{- if .Values.vclusters.enabled }}
-  VCLUSTER_NAME: {{ tpl .Values.vclusters.name . }}
-  VCLUSTER_NAMESPACE: {{ tpl .Values.vclusters.namespace . }}
-  VCLUSTER_SERVICE: {{ .Values.vclusters.backend_service | default "default/backend-service" }}
+  SHARED_VCLUSTER_REQUIRED: {{ .Values.vclusters.required | default false | quote }}
+  SHARED_VCLUSTER_NAME: {{ tpl .Values.vclusters.name . }}
+  SHARED_VCLUSTER_NAMESPACE: {{ tpl .Values.vclusters.namespace . }}
+  SHARED_VCLUSTER_SERVICE: {{ .Values.vclusters.backend_service | default "default/backend-service" }}
   HOST_CLUSTER_SERVICE: {{ .Release.Namespace }}/{{ include "application-quality.fullname" . }}-api
   KUBECONFIG: /root/.kube/config
+  {{- end }}
+  # Workspace vClusters
+  WORKSPACE_VCLUSTER_ENABLED: {{ .Values.workspace.vcluster.enabled | default false | quote }}
+  {{- if .Values.workspace.vcluster.enabled }}
+  WORKSPACE_VCLUSTER_REQUIRED: {{ .Values.workspace.vcluster.required | default false | quote }}
+  WORKSPACE_API_SERVICE_URL: {{ .Values.workspace.apiServiceUrl | default "" }}
   {{- end }}
