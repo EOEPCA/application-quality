@@ -72,7 +72,7 @@
           "properties": [
             {
               "id": "custom.width",
-              "value": 300
+              "value": 368
             },
             {
               "id": "custom.filterable",
@@ -169,6 +169,31 @@
             {
               "id": "custom.filterable",
               "value": true
+            },
+            {
+              "id": "mappings",
+              "value": [
+                {
+                  "options": {
+                    "HIGH": {
+                      "color": "red",
+                      "index": 2,
+                      "text": "High"
+                    },
+                    "LOW": {
+                      "color": "yellow",
+                      "index": 0,
+                      "text": "Low"
+                    },
+                    "MEDIUM": {
+                      "color": "orange",
+                      "index": 1,
+                      "text": "Medium"
+                    }
+                  },
+                  "type": "value"
+                }
+              ]
             }
           ]
         },
@@ -185,6 +210,28 @@
             {
               "id": "custom.filterable",
               "value": true
+            },
+            {
+              "id": "mappings",
+              "value": [
+                {
+                  "options": {
+                    "HIGH": {
+                      "index": 2,
+                      "text": "High"
+                    },
+                    "LOW": {
+                      "index": 0,
+                      "text": "Low"
+                    },
+                    "MEDIUM": {
+                      "index": 1,
+                      "text": "Medium"
+                    }
+                  },
+                  "type": "value"
+                }
+              ]
             }
           ]
         },
@@ -249,6 +296,21 @@
       }
     ],
     "title": "Bandit Results",
+    "transformations": [
+      {
+        "disabled": true,
+        "id": "groupToNestedTable",
+        "options": {
+          "fields": {
+            "File": {
+              "aggregations": [],
+              "operation": "groupby"
+            }
+          },
+          "showSubframeHeaders": true
+        }
+      }
+    ],
     "type": "table"
   }
 }

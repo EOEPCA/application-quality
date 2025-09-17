@@ -14,25 +14,26 @@
     "fieldConfig": {
       "defaults": {
         "color": {
-          "mode": "thresholds"
+          "fixedColor": "transparent",
+          "mode": "fixed"
         },
         "custom": {
           "align": "auto",
           "cellOptions": {
-            "type": "auto",
-            "wrapText": false
+            "type": "color-background"
           },
           "filterable": false,
           "inspect": false,
           "minWidth": 80
         },
+        "fieldMinMax": false,
         "mappings": [],
-        "noValue": "This report is empty",
+        "noValue": "-",
         "thresholds": {
           "mode": "absolute",
           "steps": [
             {
-              "color": "green",
+              "color": "transparent",
               "value": null
             }
           ]
@@ -54,6 +55,93 @@
               "value": true
             }
           ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Low Severity"
+          },
+          "properties": [
+            {
+              "id": "thresholds",
+              "value": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "transparent",
+                    "value": null
+                  },
+                  {
+                    "color": "#EAB839",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            {
+              "id": "custom.cellOptions",
+              "value": {
+                "applyToRow": false,
+                "mode": "gradient",
+                "type": "color-background",
+                "wrapText": false
+              }
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Medium Severity"
+          },
+          "properties": [
+            {
+              "id": "thresholds",
+              "value": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "transparent",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            {
+              "id": "color"
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "High Severity"
+          },
+          "properties": [
+            {
+              "id": "thresholds",
+              "value": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "transparent",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            {
+              "id": "color"
+            }
+          ]
         }
       ]
     },
@@ -69,7 +157,12 @@
         "show": true
       },
       "showHeader": true,
-      "sortBy": []
+      "sortBy": [
+        {
+          "desc": true,
+          "displayName": "File"
+        }
+      ]
     },
     "pluginVersion": "12.0.1",
     "targets": [

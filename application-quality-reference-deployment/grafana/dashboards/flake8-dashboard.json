@@ -40,7 +40,7 @@
       },
       {
         "gridPos": {
-          "h": 15,
+          "h": 11,
           "w": 24,
           "x": 0,
           "y": 5
@@ -60,10 +60,6 @@
     "templating": {
       "list": [
         {
-          "current": {
-            "text": "107",
-            "value": "107"
-          },
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "application-quality-db"
@@ -79,10 +75,6 @@
           "type": "query"
         },
         {
-          "current": {
-            "text": "41",
-            "value": "41"
-          },
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "application-quality-db"
@@ -98,10 +90,6 @@
           "type": "query"
         },
         {
-          "current": {
-            "text": "6",
-            "value": "6"
-          },
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "application-quality-db"
@@ -116,10 +104,6 @@
           "type": "query"
         },
         {
-          "current": {
-            "text": "Python pipeline",
-            "value": "Python pipeline"
-          },
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "application-quality-db"

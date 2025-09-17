@@ -37,7 +37,7 @@
       },
       {
         "gridPos": {
-          "h": 15,
+          "h": 14,
           "w": 24,
           "x": 0,
           "y": 5
@@ -62,8 +62,8 @@
             "uid": "application-quality-db"
           },
           "definition": "SELECT id FROM reports_admin WHERE name = 'pylint'",
-          "hide": 2,
           "description": "",
+          "hide": 2,
           "label": "Report ID",
           "name": "report_id",
           "options": [],

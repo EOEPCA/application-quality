@@ -1,7 +1,7 @@
 {
   "folderUid": "application-quality-service-reports",
-  "uid": "pylint-report",
-  "name": "Pylint Report",
+  "uid": "notebook-bp-validator-report",
+  "name": "Notebook BP Validator Report",
   "kind": 1,
   "type": "table",
   "description": "",
@@ -31,10 +31,6 @@
             {
               "color": "green",
               "value": null
-            },
-            {
-              "color": "red",
-              "value": 80
             }
           ]
         }
@@ -43,80 +39,31 @@
         {
           "matcher": {
             "id": "byName",
-            "options": "Code"
+            "options": "Valid"
           },
           "properties": [
             {
               "id": "custom.width",
-              "value": 100
+              "value": 140
             },
             {
               "id": "custom.filterable",
               "value": true
-            },
-            {
-              "id": "links",
-              "value": [
-                {
-                  "targetBlank": true,
-                  "title": "Open documentation for ${__data.fields.Code}",
-                  "url": "https://pylint.readthedocs.io/en/stable/user_guide/messages/${__data.fields.type}/${__data.fields.symbol}.html"
-                }
-              ]
             }
           ]
         },
         {
           "matcher": {
             "id": "byName",
-            "options": "Location"
+            "options": "Schema"
           },
           "properties": [
             {
               "id": "custom.width",
               "value": 120
-            }
-          ]
-        },
-        {
-          "matcher": {
-            "id": "byName",
-            "options": "Object"
-          },
-          "properties": [
-            {
-              "id": "custom.width",
-              "value": 200
-            },
-            {
-              "id": "noValue"
             },
             {
               "id": "custom.filterable",
-              "value": true
-            }
-          ]
-        },
-        {
-          "matcher": {
-            "id": "byName",
-            "options": "type"
-          },
-          "properties": [
-            {
-              "id": "custom.hidden",
-              "value": true
-            }
-          ]
-        },
-        {
-          "matcher": {
-            "id": "byName",
-            "options": "type"
-          },
-          "properties": [
-            {
-              "id": "custom.hidden",
               "value": true
             }
           ]
@@ -130,6 +77,75 @@
             {
               "id": "custom.filterable",
               "value": true
+            },
+            {
+              "id": "custom.width",
+              "value": 557
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Validation Errors"
+          },
+          "properties": [
+            {
+              "id": "custom.filterable",
+              "value": false
+            },
+            {
+              "id": "noValue"
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Missing Optional Metadata"
+          },
+          "properties": [
+            {
+              "id": "noValue"
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Missing Mandatory Metadata"
+          },
+          "properties": [
+            {
+              "id": "noValue"
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Path"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 165
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Message"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 783
+            },
+            {
+              "id": "custom.inspect",
+              "value": true
             }
           ]
         }
@@ -139,7 +155,6 @@
       "cellHeight": "sm",
       "footer": {
         "countRows": false,
-        "enablePagination": true,
         "fields": "",
         "reducer": [
           "sum"
@@ -147,12 +162,7 @@
         "show": false
       },
       "showHeader": true,
-      "sortBy": [
-        {
-          "desc": true,
-          "displayName": "Code"
-        }
-      ]
+      "sortBy": []
     },
     "pluginVersion": "12.0.1",
     "targets": [
@@ -163,8 +173,9 @@
         },
         "editorMode": "code",
         "format": "table",
+        "hide": false,
         "rawQuery": true,
-        "rawSql": "SELECT elem ->> 'path' AS \"Path to File\", elem ->> 'obj' AS \"Object\", elem ->> 'message' AS \"Message\", elem ->> 'type' AS type, elem ->> 'symbol' AS symbol, elem ->> 'message-id' AS \"Code\", 'L' || (elem ->> 'line') || 'C' || (elem ->> 'column') || CASE WHEN elem ->> 'endLine' IS NOT NULL AND elem ->> 'endColumn' IS NOT NULL THEN '-L' || (elem ->> 'endLine') || 'C' || (elem ->> 'endColumn') ELSE '' END AS \"Location\" FROM (SELECT jsonb_array_elements(output :: jsonb) AS elem FROM reports_admin WHERE id = ${report_id}) AS sub;",
+        "rawSql": "SELECT\n  (elem :: jsonb) ->> 'filename' AS \"Path to File\",\n  (elem :: jsonb) ->> 'valid' AS \"Valid\",\n  (elem :: jsonb) ->> 'schema' AS \"Schema\",\n  jsonb_array_elements((elem :: jsonb) -> 'schema_validation_errors') AS \"Schema Validation Errors\"\nFROM\n  (\n  SELECT\n    jsonb_array_elements(output :: jsonb) AS elem\n  FROM\n    reports_admin\n  WHERE\n    id = ${report_id}\n  ) AS sub\n  ",
         "refId": "A",
         "sql": {
           "columns": [
@@ -185,7 +196,34 @@
         }
       }
     ],
-    "title": "Pylint Report",
+    "title": "Notebook BP Validator Report",
+    "transformations": [
+      {
+        "id": "extractFields",
+        "options": {
+          "delimiter": ",",
+          "keepTime": false,
+          "replace": false,
+          "source": "Schema Validation Errors"
+        }
+      },
+      {
+        "id": "organize",
+        "options": {
+          "excludeByName": {
+            "Schema Validation Errors": true
+          },
+          "includeByName": {},
+          "indexByName": {},
+          "renameByName": {
+            "Schema Validation Errors": "",
+            "message": "Message",
+            "path": "Path",
+            "validator": "Type"
+          }
+        }
+      }
+    ],
     "type": "table"
   }
 }

@@ -5,7 +5,7 @@
     "editable": true,
     "fiscalYearStartMonth": 0,
     "graphTooltip": 0,
-    "id": 8,
+    "id": 10,
     "links": [
       {
         "asDropdown": false,
@@ -55,7 +55,7 @@
       },
       {
         "gridPos": {
-          "h": 10,
+          "h": 9,
           "w": 24,
           "x": 0,
           "y": 15
@@ -76,10 +76,6 @@
       "list": [
         {
           "allowCustomValue": false,
-          "current": {
-            "text": "6",
-            "value": "6"
-          },
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "application-quality-db"
@@ -116,10 +112,6 @@
         },
         {
           "allowCustomValue": false,
-          "current": {
-            "text": "41",
-            "value": "41"
-          },
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "application-quality-db"
@@ -136,10 +128,6 @@
         },
         {
           "allowCustomValue": false,
-          "current": {
-            "text": "106",
-            "value": "106"
-          },
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "application-quality-db"
