@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 def get_vcluster_config(ws_name: str) -> tuple([dict, str]):
     logger.info("Fetching kubeconfig for workspace %s", ws_name)
-    ws_info = requests.get(f"{WORKSPACE_API_SERVICE_URL}/workspaces/{ws_name}")
+    ws_info = requests.get(f"{WORKSPACE_API_SERVICE_URL}/workspaces/{ws_name}", timeout=10)
     logger.debug("HTTP status code: %s", ws_info.status_code)
     if ws_info.status_code != 200:
         logger.error("Error: HTTP status code is %s", ws_info.status_code)
@@ -49,6 +49,6 @@ def get_vcluster_config_file(ws_name: str) -> str:
     logger.debug("Workspace vCluster status: %s", vcluster_status)
     logger.debug("Workspace vCluster config: %s ...", vcluster_config[0:100])
     kubeconfig_file = "/tmp/kubeconfig-" + ws_name
-    with open(kubeconfig_file, "w") as f:
+    with open(kubeconfig_file, "w", encoding="utf-8") as f:
         f.write(vcluster_config)
     return kubeconfig_file

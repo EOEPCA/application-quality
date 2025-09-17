@@ -13,7 +13,7 @@ class CustomOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         if "email" not in claims:
             username = claims.get("preferred_username", claims["sub"])
             claims["email"] = f"{username}@example.com"
-        logger.info(f"Claims to verify: {claims}")
+        logger.info("Claims to verify: %s", claims)
         return super().verify_claims(claims)
 
     def create_user(self, claims):
@@ -21,7 +21,7 @@ class CustomOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         user.username = claims.get("preferred_username", claims["sub"])
         user.first_name = claims.get("given_name", user.username)
         user.last_name = claims.get("family_name", "")
-        logger.info(f"Creating user with username '{user.username}'")
+        logger.info("Creating user with username '%s'", user.username)
         user.save()
         return user
 
@@ -29,7 +29,7 @@ class CustomOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         user = super().update_user(user, claims)
         user.first_name = claims.get("given_name", user.username)
         user.last_name = claims.get("family_name", "")
-        logger.info(f"Updating user with username '{user.username}'")
+        logger.info("Updating user with username '%s'", user.username)
         user.save(update_fields=["first_name", "last_name", "email"])
         return user
 

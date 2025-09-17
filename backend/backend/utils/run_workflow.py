@@ -1,11 +1,11 @@
-import io
 import logging
 import os
 
-from backend.models import PipelineRun
-from backend.utils.workspaces import get_vcluster_config_file
 from json.decoder import JSONDecodeError
 from kubernetes import config
+
+from backend.models import PipelineRun
+from backend.utils.workspaces import get_vcluster_config_file
 from pycalrissian.context import CalrissianContext
 from pycalrissian.execution import CalrissianExecution
 from pycalrissian.job import CalrissianJob
@@ -113,7 +113,7 @@ def run_workflow(
             if WORKSPACE_VCLUSTER_REQUIRED:
                 logger.error("Workspace vCluster is required. Aborting the execution")
                 raise
-    
+
     if SHARED_VCLUSTER_ENABLED:
         try:
             cluster_config_file = get_vcluster_config_file("application-quality-vcluster")
@@ -129,9 +129,9 @@ def run_workflow(
     # print(f"Kubernetes API Server: {current_context.host}")
     # print(f"Using Authentication: {current_context.verify_ssl}")
 
-    """
-    Create the kubernetes namespace on the cluster
-    """
+    #
+    # Create the kubernetes namespace on the cluster
+    #
     namespace_name = f"applicationqualitypipeline-{run_id}"
     session = CalrissianContext(
         namespace=namespace_name,
@@ -164,9 +164,9 @@ def run_workflow(
     logger.debug("Run %s updated with server url", pipeline_run.id)
     logger.debug("Pipeline parameters: %s", params)
 
-    """
-    Create the Calrissian job
-    """
+    #
+    # Create the Calrissian job
+    #
     os.environ["CALRISSIAN_IMAGE"] = AQBB_CALRISSIANIMAGE  # This will maybe turn out superfluous
 
     job = CalrissianJob(
@@ -196,9 +196,9 @@ def run_workflow(
     pipeline_run.save(update_fields=["status"])
     logger.debug("Run %s status updated: running", pipeline_run.id)
 
-    """
-    Monitoring
-    """
+    #
+    # Monitoring
+    #
     execution.monitor(interval=20)
     try:
         usage = execution.get_usage_report()
@@ -221,9 +221,9 @@ def run_workflow(
     logger.info("succeeded %s", execution.is_succeeded())
     # tool_logs = execution.get_tool_logs()  # Can be useful to avoid using save_tool
 
-    """
-    Delete the Kubernetes namespace
-    """
+    #
+    # Delete the Kubernetes namespace
+    #
     if execution.is_succeeded():
         session.dispose()
     else:
