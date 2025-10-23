@@ -166,8 +166,8 @@ def run_workflow(
 
     #
     # Create the Calrissian job
-    #
-    os.environ["CALRISSIAN_IMAGE"] = AQBB_CALRISSIANIMAGE  # This will maybe turn out superfluous
+    # https://terradue.github.io/pycalrissian/gettingstarted/#create-the-calrissianjob
+    os.environ["CALRISSIAN_IMAGE"] = AQBB_CALRISSIANIMAGE
 
     job = CalrissianJob(
         cwl=cwl,
