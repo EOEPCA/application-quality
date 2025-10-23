@@ -37,7 +37,7 @@
               :label="param.label"
               :hint="param.doc"
               :placeholder="param.default"
-              :rules="[(v) => !!v || 'The value is required']"
+              :rules="[(v) => validateTextInput(param_id, param.type, v)]"
               persistent-hint
             />
             <v-checkbox
@@ -129,6 +129,31 @@ export default {
         this.$emit('update:toolParams', this.localToolId, this.localToolParams);
       },
       deep: true,
+    },
+  },
+
+  methods: {
+    validateTextInput(param_id, param_type, param_value) {
+      // console.log('Validating text input:', param_id, param_type, param_value);
+      if (!param_value) {
+        return 'The value is required';
+      }
+      if (param_id.endsWith('_url')) {
+        let regEx = /\b(https?:\/\/\S*\b)/g;
+        let match = param_value.match(regEx);
+        // 'match' contains the URLs (string[]) found in the value or null if none found
+        if (!match) {
+          return 'The value is not a valid URL';
+        }
+      }
+      // Value fixed on-the-fly in PipelineExecutionPanel.submitExecution(...)
+      // if (param_id == 'repo_url') {
+      //   // Prevent URLs ending with '/' or '.git'
+      //   if (param_value.endsWith('/') || param_value.endsWith('.git')) {
+      //     return 'Please remove the ending slash or .git extension';
+      //   }
+      // };
+      return true;
     },
   },
 };

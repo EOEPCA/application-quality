@@ -5,7 +5,6 @@ import yaml
 from . import serializers
 from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag
 from backend.tasks import run_workflow_task
-from backend.utils.opensearch import index_pipeline_job_report
 
 from django.utils import timezone
 from django.db.utils import IntegrityError
@@ -14,6 +13,7 @@ from jinja2 import Template
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 
 logger = logging.getLogger(__name__)
@@ -27,12 +27,26 @@ pipeline_cwl_template_path = os.path.join(os.path.dirname(__file__), "pipeline_t
 pipeline_cwl_template = ""
 
 try:
-    logger.info("Loading %s", pipeline_cwl_template_path)
+    logger.info(f"Loading {pipeline_cwl_template_path}")
     with open(pipeline_cwl_template_path, "r") as file:
         pipeline_cwl_template = file.read()
 except Exception as ex:
     logger.error("Error loading %s: %s", pipeline_cwl_template_path, str(ex))
     pipeline_cwl_template = f"Failed to load pipeline CWL template: {ex}"
+
+
+class SettingsView(APIView):
+    def get(self, request):
+        settings_file = os.path.abspath("settings.yaml")
+        try:
+            logger.info(f"Loading {settings_file}")
+            with open(settings_file, "r") as f:
+                settings = yaml.safe_load(f)
+        except FileNotFoundError:
+            logger.info(f"Not found: {settings_file}")
+            settings = None
+        return Response(settings)
+
 
 class IsOwnerOrAdmin(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
@@ -227,7 +241,6 @@ class JobReportViewSet(
             created_at=timezone.now()
         )
 
-        index_pipeline_job_report(job_report)
         logger.info(f"Job report created for tool '{tool_name}' in run {run_id}")
 
         serializer = self.get_serializer(job_report)

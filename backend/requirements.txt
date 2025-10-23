@@ -11,5 +11,4 @@ Jinja2
 kubernetes==28.1.0
 loguru
 mozilla-django-oidc
-opensearch-py
 psycopg2

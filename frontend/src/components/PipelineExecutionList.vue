@@ -94,23 +94,34 @@
           </td>
           <td class="text-right nowrap">
             <v-btn
-              icon="mdi-information"
               color="primary"
-              class="mr-2"
               variant="text"
               v-tooltip:bottom-end="'Execution information'"
               @click="viewPipelineExecutionDetails(item)"
-            />
+            >
+              <v-icon size="26px"> mdi-information </v-icon>
+            </v-btn>
             <v-btn
-              icon="mdi-file-chart"
-              variant="text"
               color="primary"
+              variant="text"
               :disabled="item.job_reports_count == 0"
               v-tooltip:bottom-end="
                 'View execution reports (' + item.job_reports_count + ')'
               "
               @click="viewPipelineExecutionReports(item)"
-            />
+            >
+              <v-icon size="28px"> mdi-note-text-outline </v-icon>
+            </v-btn>
+            <v-btn
+              v-if="settings.isGrafanaEnabled()"
+              color="secondary"
+              variant="text"
+              :disabled="item.job_reports_count == 0"
+              v-tooltip:bottom-end="'View execution dashboard (new page)'"
+              @click="viewPipelineExecutionDashboard(item)"
+            >
+              <v-icon size="28px"> mdi-chart-box-outline </v-icon>
+            </v-btn>
           </td>
         </tr>
       </template>
@@ -173,6 +184,7 @@
 </template>
 
 <script>
+import { useSettingsStore } from '@/stores/settings';
 import { useAuthStore } from '@/stores/auth';
 import { useToolStore } from '@/stores/tools';
 import { usePipelineStore } from '@/stores/pipelines';
@@ -224,7 +236,7 @@ export default {
           sortable: true,
         },
         {
-          title: 'Actions',
+          title: '',
           key: 'actions',
           sortable: false,
           align: 'center',
@@ -241,10 +253,11 @@ export default {
   },
 
   setup() {
+    const settings = useSettingsStore();
     const store = usePipelineStore();
     const toolStore = useToolStore();
     const authStore = useAuthStore();
-    return { store, toolStore, authStore };
+    return { settings, store, toolStore, authStore };
   },
 
   computed: {
@@ -347,6 +360,15 @@ export default {
       this.$router.push('/reports');
     },
 
+    viewPipelineExecutionDashboard(execution) {
+      console.log('Selected execution:', execution);
+      const url = this.settings.getGrafanaPipelineExecutionURL(
+        execution.pipeline,
+        execution.id,
+      );
+      window.open(url, '_blank');
+    },
+
     formatDate(date) {
       return formatDate(date);
     },
@@ -408,5 +430,10 @@ export default {
 
 .nowrap {
   white-space: nowrap;
+}
+
+.v-btn {
+  padding: 5px;
+  min-width: 0px;
 }
 </style>

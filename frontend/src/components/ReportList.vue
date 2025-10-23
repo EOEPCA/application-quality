@@ -112,15 +112,23 @@
           <td>{{ formatDate(item.created_at) }}</td>
           <td class="text-right nowrap">
             <v-btn
-              icon="mdi-information"
-              __size="small"
               color="primary"
-              class="mr-2"
               variant="text"
               v-tooltip:bottom-end="'Report content'"
-              :__title="'Information'"
               @click="viewReport(item)"
-            />
+            >
+              <v-icon size="26px"> mdi-information </v-icon>
+            </v-btn>
+            <v-btn
+              v-if="settings.isGrafanaEnabled()"
+              color="secondary"
+              variant="text"
+              :disabled="item.job_reports_count == 0"
+              v-tooltip:bottom-end="'View report in dashboard (new page)'"
+              @click="viewPipelineExecutionReportDashboard(item)"
+            >
+              <v-icon size="28px"> mdi-chart-box-outline </v-icon>
+            </v-btn>
           </td>
         </tr>
       </template>
@@ -167,6 +175,7 @@
 </template>
 
 <script>
+import { useSettingsStore } from '@/stores/settings';
 import { usePipelineStore } from '@/stores/pipelines';
 import { formatDate } from '@/assets/tools';
 
@@ -224,8 +233,9 @@ export default {
   },
 
   setup() {
+    const settings = useSettingsStore();
     const store = usePipelineStore();
-    return { store };
+    return { settings, store };
   },
 
   computed: {
@@ -298,6 +308,17 @@ export default {
       this.selectedReport = report;
       this.showDetails = true;
     },
+
+    viewPipelineExecutionReportDashboard(report) {
+      console.debug('Selected report:', report);
+      const url = this.settings.getGrafanaPipelineExecutionReportURL(
+        this.store.selectedPipelineId,
+        this.store.selectedExecutionId,
+        report.name,
+        report.id,
+      );
+      window.open(url, '_blank');
+    },
   },
 };
 </script>
@@ -313,6 +334,11 @@ export default {
 
 .v-table {
   margin-top: 1rem;
+}
+
+.v-btn {
+  padding: 5px;
+  min-width: 0px;
 }
 
 .nowrap {
