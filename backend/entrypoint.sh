@@ -35,9 +35,12 @@ else
   echo "Admin user already exists"
 fi
 
+# Generate a kubeconfig for in-cluster access
+sh /app/scripts/setup_incluster_kubeconfig.sh
+
 if [ "$SHARED_VCLUSTER_ENABLED" = "true" ]; then
   echo "Setting up a shared vcluster..."
-  sh /app/scripts/shared_vcluster.sh
+  sh /app/scripts/setup_shared_vcluster.sh
 else
   echo "Not using a shared vcluster..."
 fi
