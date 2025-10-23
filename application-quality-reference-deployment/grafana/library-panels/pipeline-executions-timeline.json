@@ -1,0 +1,810 @@
+{
+  "folderUid": "application-quality-service",
+  "uid": "pipeline-executions-timeline",
+  "name": "Pipeline Executions Timeline",
+  "kind": 1,
+  "type": "timeseries",
+  "description": "",
+  "model": {
+    "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "application-quality-db"
+    },
+    "description": "",
+    "fieldConfig": {
+      "defaults": {
+        "color": {
+          "mode": "palette-classic-by-name",
+          "seriesBy": "last"
+        },
+        "custom": {
+          "axisBorderShow": false,
+          "axisCenteredZero": false,
+          "axisColorMode": "text",
+          "axisLabel": "",
+          "axisPlacement": "auto",
+          "barAlignment": 0,
+          "barWidthFactor": 0.6,
+          "drawStyle": "bars",
+          "fillOpacity": 25,
+          "gradientMode": "none",
+          "hideFrom": {
+            "legend": false,
+            "tooltip": false,
+            "viz": false
+          },
+          "insertNulls": false,
+          "lineInterpolation": "linear",
+          "lineWidth": 1,
+          "pointSize": 5,
+          "scaleDistribution": {
+            "type": "linear"
+          },
+          "showPoints": "auto",
+          "spanNulls": false,
+          "stacking": {
+            "group": "A",
+            "mode": "normal"
+          },
+          "thresholdsStyle": {
+            "mode": "off"
+          }
+        },
+        "decimals": 0,
+        "fieldMinMax": false,
+        "mappings": [
+          {
+            "options": {
+              "Succeeded": {
+                "color": "dark-green",
+                "index": 0,
+                "text": "SUCCEEDED"
+              }
+            },
+            "type": "value"
+          }
+        ],
+        "noValue": "No pipeline executions found in the selected date range",
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {
+              "color": "green",
+              "value": null
+            }
+          ]
+        }
+      },
+      "overrides": [
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Starting"
+          },
+          "properties": [
+            {
+              "id": "color",
+              "value": {
+                "fixedColor": "blue",
+                "mode": "fixed"
+              }
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Running"
+          },
+          "properties": [
+            {
+              "id": "color",
+              "value": {
+                "fixedColor": "yellow",
+                "mode": "fixed"
+              }
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Succeeded"
+          },
+          "properties": [
+            {
+              "id": "color",
+              "value": {
+                "fixedColor": "green",
+                "mode": "fixed"
+              }
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Failed"
+          },
+          "properties": [
+            {
+              "id": "color",
+              "value": {
+                "fixedColor": "#F2495C",
+                "mode": "fixed"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "options": {
+      "legend": {
+        "calcs": [],
+        "displayMode": "list",
+        "placement": "right",
+        "showLegend": true
+      },
+      "tooltip": {
+        "hideZeros": false,
+        "mode": "single",
+        "sort": "none"
+      }
+    },
+    "pluginVersion": "12.0.0",
+    "targets": [
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "application-quality-db"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "hide": false,
+        "rawQuery": true,
+        "rawSql": "SELECT start_time::date AS \"Date\", COUNT(*) AS \"Starting\"\nFROM executions_admin\nWHERE (status = 'starting' AND $__timeFilter(start_time))\nGROUP BY start_time::date\nORDER BY start_time::date ASC",
+        "refId": "Starting runs",
+        "sql": {
+          "columns": [
+            {
+              "alias": "\"Pipeline ID\"",
+              "parameters": [
+                {
+                  "name": "pipeline_id",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            },
+            {
+              "alias": "\"Starting Runs\"",
+              "name": "COUNT",
+              "parameters": [
+                {
+                  "name": "start_time",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            }
+          ],
+          "groupBy": [
+            {
+              "property": {
+                "name": "pipeline_id",
+                "type": "string"
+              },
+              "type": "groupBy"
+            }
+          ],
+          "limit": 50,
+          "orderBy": {
+            "property": {
+              "name": [
+                "pipeline_id"
+              ],
+              "type": "string"
+            },
+            "type": "property"
+          },
+          "orderByDirection": "ASC",
+          "whereJsonTree": {
+            "children1": [
+              {
+                "id": "8aaa8999-cdef-4012-b456-719704cfdf08",
+                "properties": {
+                  "field": "status",
+                  "fieldSrc": "field",
+                  "operator": "equal",
+                  "value": [
+                    "starting"
+                  ],
+                  "valueError": [
+                    null
+                  ],
+                  "valueSrc": [
+                    "value"
+                  ],
+                  "valueType": [
+                    "text"
+                  ]
+                },
+                "type": "rule"
+              },
+              {
+                "id": "9bb9aaab-4567-489a-bcde-f19704d92340",
+                "properties": {
+                  "field": "start_time",
+                  "fieldSrc": "field",
+                  "operator": "macros",
+                  "value": [
+                    "timeFilter"
+                  ],
+                  "valueError": [
+                    null,
+                    null
+                  ],
+                  "valueSrc": [
+                    "value"
+                  ],
+                  "valueType": [
+                    "datetime"
+                  ]
+                },
+                "type": "rule"
+              }
+            ],
+            "id": "8a999a98-0123-4456-b89a-b19704c7ab1b",
+            "type": "group"
+          },
+          "whereString": "(status = 'starting' AND $__timeFilter(start_time))"
+        },
+        "table": "backend_pipelinerun"
+      },
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "application-quality-db"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "hide": false,
+        "rawQuery": true,
+        "rawSql": "SELECT start_time::date AS \"Date\", COUNT(*) AS \"Running\" FROM executions_admin WHERE (status = 'running' AND $__timeFilter(start_time)) GROUP BY start_time::date ORDER BY start_time::date ASC",
+        "refId": "Running runs",
+        "sql": {
+          "columns": [
+            {
+              "alias": "\"Pipeline ID\"",
+              "parameters": [
+                {
+                  "name": "pipeline_id",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            },
+            {
+              "alias": "\"Active Runs\"",
+              "name": "COUNT",
+              "parameters": [
+                {
+                  "name": "start_time",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            }
+          ],
+          "groupBy": [
+            {
+              "property": {
+                "name": "pipeline_id",
+                "type": "string"
+              },
+              "type": "groupBy"
+            }
+          ],
+          "limit": 50,
+          "whereJsonTree": {
+            "children1": [
+              {
+                "id": "8aaa8999-cdef-4012-b456-719704cfdf08",
+                "properties": {
+                  "field": "status",
+                  "fieldSrc": "field",
+                  "operator": "equal",
+                  "value": [
+                    "active"
+                  ],
+                  "valueError": [
+                    null
+                  ],
+                  "valueSrc": [
+                    "value"
+                  ],
+                  "valueType": [
+                    "text"
+                  ]
+                },
+                "type": "rule"
+              },
+              {
+                "id": "98a88b88-89ab-4cde-b012-319704dd9c20",
+                "properties": {
+                  "field": "start_time",
+                  "fieldSrc": "field",
+                  "operator": "macros",
+                  "value": [
+                    "timeFilter"
+                  ],
+                  "valueError": [
+                    null
+                  ],
+                  "valueSrc": [
+                    "value"
+                  ],
+                  "valueType": [
+                    "datetime"
+                  ]
+                },
+                "type": "rule"
+              }
+            ],
+            "id": "8a999a98-0123-4456-b89a-b19704c7ab1b",
+            "type": "group"
+          },
+          "whereString": "(status = 'active' AND $__timeFilter(start_time))"
+        },
+        "table": "backend_pipelinerun"
+      },
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "application-quality-db"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "hide": false,
+        "rawQuery": true,
+        "rawSql": "SELECT start_time::date AS \"Date\", COUNT(*) AS \"Succeeded\"\nFROM executions_admin\nWHERE (status = 'succeeded' AND $__timeFilter(start_time))\nGROUP BY start_time::date\nORDER BY start_time::date ASC",
+        "refId": "Successful runs",
+        "sql": {
+          "columns": [
+            {
+              "alias": "\"Pipeline ID\"",
+              "parameters": [
+                {
+                  "name": "pipeline_id",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            },
+            {
+              "alias": "\"Successful Runs\"",
+              "name": "COUNT",
+              "parameters": [
+                {
+                  "name": "start_time",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            }
+          ],
+          "groupBy": [
+            {
+              "property": {
+                "name": "pipeline_id",
+                "type": "string"
+              },
+              "type": "groupBy"
+            }
+          ],
+          "limit": 50,
+          "whereJsonTree": {
+            "children1": [
+              {
+                "id": "8aaa8999-cdef-4012-b456-719704cfdf08",
+                "properties": {
+                  "field": "status",
+                  "fieldSrc": "field",
+                  "operator": "equal",
+                  "value": [
+                    "succeeded"
+                  ],
+                  "valueError": [
+                    null
+                  ],
+                  "valueSrc": [
+                    "value"
+                  ],
+                  "valueType": [
+                    "text"
+                  ]
+                },
+                "type": "rule"
+              },
+              {
+                "id": "989baa88-89ab-4cde-b012-319704de0ce9",
+                "properties": {
+                  "field": "start_time",
+                  "fieldSrc": "field",
+                  "operator": "macros",
+                  "value": [
+                    "timeFilter"
+                  ],
+                  "valueError": [
+                    null
+                  ],
+                  "valueSrc": [
+                    "value"
+                  ],
+                  "valueType": [
+                    "datetime"
+                  ]
+                },
+                "type": "rule"
+              }
+            ],
+            "id": "8a999a98-0123-4456-b89a-b19704c7ab1b",
+            "type": "group"
+          },
+          "whereString": "(status = 'succeeded' AND $__timeFilter(start_time))"
+        },
+        "table": "backend_pipelinerun"
+      },
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "application-quality-db"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "hide": false,
+        "rawQuery": true,
+        "rawSql": "SELECT start_time::date AS \"Date\", COUNT(*) AS \"Failed\"\nFROM executions_admin\nWHERE (status = 'failed' AND $__timeFilter(start_time))\nGROUP BY start_time::date\nORDER BY start_time::date ASC",
+        "refId": "Failed runs",
+        "sql": {
+          "columns": [
+            {
+              "alias": "\"Pipeline ID\"",
+              "parameters": [
+                {
+                  "name": "pipeline_id",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            },
+            {
+              "alias": "\"Starting Runs\"",
+              "name": "COUNT",
+              "parameters": [
+                {
+                  "name": "start_time",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            }
+          ],
+          "groupBy": [
+            {
+              "property": {
+                "name": "pipeline_id",
+                "type": "string"
+              },
+              "type": "groupBy"
+            }
+          ],
+          "limit": 50,
+          "orderBy": {
+            "property": {
+              "name": [
+                "pipeline_id"
+              ],
+              "type": "string"
+            },
+            "type": "property"
+          },
+          "orderByDirection": "ASC",
+          "whereJsonTree": {
+            "children1": [
+              {
+                "id": "8aaa8999-cdef-4012-b456-719704cfdf08",
+                "properties": {
+                  "field": "status",
+                  "fieldSrc": "field",
+                  "operator": "equal",
+                  "value": [
+                    "starting"
+                  ],
+                  "valueError": [
+                    null
+                  ],
+                  "valueSrc": [
+                    "value"
+                  ],
+                  "valueType": [
+                    "text"
+                  ]
+                },
+                "type": "rule"
+              },
+              {
+                "id": "9bb9aaab-4567-489a-bcde-f19704d92340",
+                "properties": {
+                  "field": "start_time",
+                  "fieldSrc": "field",
+                  "operator": "macros",
+                  "value": [
+                    "timeFilter"
+                  ],
+                  "valueError": [
+                    null,
+                    null
+                  ],
+                  "valueSrc": [
+                    "value"
+                  ],
+                  "valueType": [
+                    "datetime"
+                  ]
+                },
+                "type": "rule"
+              }
+            ],
+            "id": "8a999a98-0123-4456-b89a-b19704c7ab1b",
+            "type": "group"
+          },
+          "whereString": "(status = 'starting' AND $__timeFilter(start_time))"
+        },
+        "table": "backend_pipelinerun"
+      },
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "application-quality-db"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "hide": true,
+        "rawQuery": true,
+        "rawSql": "SELECT start_time::date AS \"Date\", COUNT(*) AS \"Total\"\nFROM executions_admin\nWHERE $__timeFilter(start_time)\nGROUP BY start_time::date\nORDER BY start_time::date ASC",
+        "refId": "Total runs",
+        "sql": {
+          "columns": [
+            {
+              "alias": "\"Pipeline ID\"",
+              "parameters": [
+                {
+                  "name": "pipeline_id",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            },
+            {
+              "alias": "\"Starting Runs\"",
+              "name": "COUNT",
+              "parameters": [
+                {
+                  "name": "start_time",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            }
+          ],
+          "groupBy": [
+            {
+              "property": {
+                "name": "pipeline_id",
+                "type": "string"
+              },
+              "type": "groupBy"
+            }
+          ],
+          "limit": 50,
+          "orderBy": {
+            "property": {
+              "name": [
+                "pipeline_id"
+              ],
+              "type": "string"
+            },
+            "type": "property"
+          },
+          "orderByDirection": "ASC",
+          "whereJsonTree": {
+            "children1": [
+              {
+                "id": "8aaa8999-cdef-4012-b456-719704cfdf08",
+                "properties": {
+                  "field": "status",
+                  "fieldSrc": "field",
+                  "operator": "equal",
+                  "value": [
+                    "starting"
+                  ],
+                  "valueError": [
+                    null
+                  ],
+                  "valueSrc": [
+                    "value"
+                  ],
+                  "valueType": [
+                    "text"
+                  ]
+                },
+                "type": "rule"
+              },
+              {
+                "id": "9bb9aaab-4567-489a-bcde-f19704d92340",
+                "properties": {
+                  "field": "start_time",
+                  "fieldSrc": "field",
+                  "operator": "macros",
+                  "value": [
+                    "timeFilter"
+                  ],
+                  "valueError": [
+                    null,
+                    null
+                  ],
+                  "valueSrc": [
+                    "value"
+                  ],
+                  "valueType": [
+                    "datetime"
+                  ]
+                },
+                "type": "rule"
+              }
+            ],
+            "id": "8a999a98-0123-4456-b89a-b19704c7ab1b",
+            "type": "group"
+          },
+          "whereString": "(status = 'starting' AND $__timeFilter(start_time))"
+        },
+        "table": "backend_pipelinerun"
+      },
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "application-quality-db"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "hide": true,
+        "rawQuery": true,
+        "rawSql": "SELECT\n  start_time :: date AS \"Date\",\n  SUM((usage_report->>'total_tasks')::int) AS \"Total tasks\",\n  SUM((usage_report->>'total_cpu_hours')::float) AS \"Total CPU [h]\",\n  SUM((usage_report->>'elapsed_hours')::float) AS \"Total elapsed [h]\",\n  SUM((usage_report->>'total_disk_megabytes')::float) AS \"Total disk [MB]\",\n  SUM((usage_report->>'total_ram_megabyte_hours')::float) AS \"Total RAM [MB/h]\"\nFROM\n  executions_admin\nWHERE\n  $__timeFilter(start_time)\nGROUP BY\n  start_time :: date\nORDER BY\n  start_time :: date ASC",
+        "refId": "Total reports",
+        "sql": {
+          "columns": [
+            {
+              "alias": "\"Pipeline ID\"",
+              "parameters": [
+                {
+                  "name": "pipeline_id",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            },
+            {
+              "alias": "\"Starting Runs\"",
+              "name": "COUNT",
+              "parameters": [
+                {
+                  "name": "start_time",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            }
+          ],
+          "groupBy": [
+            {
+              "property": {
+                "name": "pipeline_id",
+                "type": "string"
+              },
+              "type": "groupBy"
+            }
+          ],
+          "limit": 50,
+          "orderBy": {
+            "property": {
+              "name": [
+                "pipeline_id"
+              ],
+              "type": "string"
+            },
+            "type": "property"
+          },
+          "orderByDirection": "ASC",
+          "whereJsonTree": {
+            "children1": [
+              {
+                "id": "8aaa8999-cdef-4012-b456-719704cfdf08",
+                "properties": {
+                  "field": "status",
+                  "fieldSrc": "field",
+                  "operator": "equal",
+                  "value": [
+                    "starting"
+                  ],
+                  "valueError": [
+                    null
+                  ],
+                  "valueSrc": [
+                    "value"
+                  ],
+                  "valueType": [
+                    "text"
+                  ]
+                },
+                "type": "rule"
+              },
+              {
+                "id": "9bb9aaab-4567-489a-bcde-f19704d92340",
+                "properties": {
+                  "field": "start_time",
+                  "fieldSrc": "field",
+                  "operator": "macros",
+                  "value": [
+                    "timeFilter"
+                  ],
+                  "valueError": [
+                    null,
+                    null
+                  ],
+                  "valueSrc": [
+                    "value"
+                  ],
+                  "valueType": [
+                    "datetime"
+                  ]
+                },
+                "type": "rule"
+              }
+            ],
+            "id": "8a999a98-0123-4456-b89a-b19704c7ab1b",
+            "type": "group"
+          },
+          "whereString": "(status = 'starting' AND $__timeFilter(start_time))"
+        },
+        "table": "backend_pipelinerun"
+      }
+    ],
+    "title": "Pipeline Executions Timeline",
+    "transformations": [
+      {
+        "id": "joinByField",
+        "options": {
+          "byField": "Date",
+          "mode": "outer"
+        }
+      },
+      {
+        "disabled": true,
+        "id": "convertFieldType",
+        "options": {
+          "conversions": [
+            {
+              "dateFormat": "YYYY-MM-DD",
+              "destinationType": "string",
+              "targetField": "Date",
+              "timezone": "browser"
+            }
+          ],
+          "fields": {}
+        }
+      }
+    ],
+    "type": "timeseries"
+  }
+}
