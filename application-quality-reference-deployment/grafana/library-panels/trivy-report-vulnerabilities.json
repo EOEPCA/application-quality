@@ -1,7 +1,7 @@
 {
   "folderUid": "application-quality-service-reports",
-  "uid": "pylint-report",
-  "name": "Pylint Report",
+  "uid": "trivy-report-vulnerabilities",
+  "name": "Trivy Report Vulnerabilities",
   "kind": 1,
   "type": "table",
   "description": "",
@@ -14,27 +14,28 @@
     "fieldConfig": {
       "defaults": {
         "color": {
-          "mode": "thresholds"
+          "fixedColor": "transparent",
+          "mode": "fixed"
         },
         "custom": {
           "align": "auto",
           "cellOptions": {
-            "type": "auto"
+            "type": "color-background",
+            "wrapText": true
           },
-          "inspect": false
+          "filterable": false,
+          "inspect": false,
+          "minWidth": 80
         },
+        "fieldMinMax": false,
         "mappings": [],
-        "noValue": "This report is empty",
+        "noValue": "-",
         "thresholds": {
           "mode": "absolute",
           "steps": [
             {
-              "color": "green",
+              "color": "transparent",
               "value": null
-            },
-            {
-              "color": "red",
-              "value": 80
             }
           ]
         }
@@ -43,64 +44,77 @@
         {
           "matcher": {
             "id": "byName",
-            "options": "Code"
+            "options": "Severity"
           },
           "properties": [
-            {
-              "id": "custom.width",
-              "value": 100
-            },
             {
               "id": "custom.filterable",
               "value": true
             },
+            {
+              "id": "custom.width",
+              "value": 127
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Package"
+          },
+          "properties": [
+            {
+              "id": "custom.filterable",
+              "value": true
+            },
+            {
+              "id": "custom.width",
+              "value": 145
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Status"
+          },
+          "properties": [
+            {
+              "id": "custom.filterable",
+              "value": true
+            },
+            {
+              "id": "custom.width",
+              "value": 121
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Vulnerability ID"
+          },
+          "properties": [
             {
               "id": "links",
               "value": [
                 {
                   "targetBlank": true,
-                  "title": "Open documentation for ${__data.fields.Code}",
-                  "url": "https://pylint.readthedocs.io/en/stable/user_guide/messages/${__data.fields.type}/${__data.fields.symbol}.html"
+                  "title": "Show details",
+                  "url": "${__data.fields.Link}"
                 }
               ]
-            }
-          ]
-        },
-        {
-          "matcher": {
-            "id": "byName",
-            "options": "Location"
-          },
-          "properties": [
-            {
-              "id": "custom.width",
-              "value": 120
-            }
-          ]
-        },
-        {
-          "matcher": {
-            "id": "byName",
-            "options": "Object"
-          },
-          "properties": [
-            {
-              "id": "custom.width",
-              "value": 200
             },
             {
-              "id": "noValue"
-            },
-            {
-              "id": "custom.filterable",
-              "value": true
+              "id": "custom.width",
+              "value": 163
             }
           ]
         },
         {
           "matcher": {
             "id": "byName",
-            "options": "type"
+            "options": "Link"
           },
           "properties": [
             {
@@ -112,24 +126,24 @@
         {
           "matcher": {
             "id": "byName",
-            "options": "type"
+            "options": "Installed Version"
           },
           "properties": [
             {
-              "id": "custom.hidden",
-              "value": true
+              "id": "custom.width",
+              "value": 176
             }
           ]
         },
         {
           "matcher": {
             "id": "byName",
-            "options": "Path to File"
+            "options": "Fixed Version"
           },
           "properties": [
             {
-              "id": "custom.filterable",
-              "value": true
+              "id": "custom.width",
+              "value": 185
             }
           ]
         }
@@ -149,8 +163,8 @@
       "showHeader": true,
       "sortBy": [
         {
-          "desc": true,
-          "displayName": "Code"
+          "desc": false,
+          "displayName": "Severity"
         }
       ]
     },
@@ -163,8 +177,9 @@
         },
         "editorMode": "code",
         "format": "table",
+        "hide": false,
         "rawQuery": true,
-        "rawSql": "SELECT elem ->> 'path' AS \"Path to File\", elem ->> 'obj' AS \"Object\", elem ->> 'message' AS \"Message\", elem ->> 'type' AS type, elem ->> 'symbol' AS symbol, elem ->> 'message-id' AS \"Code\", 'L' || (elem ->> 'line') || 'C' || (elem ->> 'column') || CASE WHEN elem ->> 'endLine' IS NOT NULL AND elem ->> 'endColumn' IS NOT NULL THEN '-L' || (elem ->> 'endLine') || 'C' || (elem ->> 'endColumn') ELSE '' END AS \"Location\" FROM (SELECT jsonb_array_elements(output :: jsonb) AS elem FROM reports_admin WHERE id = ${report_id}) AS sub;",
+        "rawSql": "SELECT\n  -- vulnerabilities ->> 'PkgID' AS \"Package\",\n  vulnerabilities ->> 'PkgName' AS \"Package\",\n  vulnerabilities ->> 'Severity' AS \"Severity\",\n  vulnerabilities ->> 'Status' AS \"Status\",\n  vulnerabilities ->> 'InstalledVersion' AS \"Installed Version\",\n  vulnerabilities ->> 'FixedVersion' AS \"Fixed Version\",\n  vulnerabilities ->> 'VulnerabilityID' AS \"Vulnerability ID\",\n  vulnerabilities ->> 'PrimaryURL' AS \"Link\",\n  vulnerabilities ->> 'Title' AS \"Description\"\n  -- vulnerabilities ->> 'Description' AS \"Description\"\nFROM\n  (\n    SELECT\n      jsonb_array_elements(output :: jsonb -> 'Results' -> 0 -> 'Vulnerabilities') AS vulnerabilities\n    FROM\n      reports_admin\n    WHERE\n      id = ${report_id}\n  ) AS sub;",
         "refId": "A",
         "sql": {
           "columns": [
@@ -185,7 +200,7 @@
         }
       }
     ],
-    "title": "Pylint Report",
+    "title": "Vulnerabilities",
     "type": "table"
   }
 }

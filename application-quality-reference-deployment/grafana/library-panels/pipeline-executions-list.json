@@ -75,6 +75,30 @@
               "id": "noValue"
             }
           ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Pipeline name"
+          },
+          "properties": [
+            {
+              "id": "custom.filterable",
+              "value": true
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Status"
+          },
+          "properties": [
+            {
+              "id": "custom.filterable",
+              "value": true
+            }
+          ]
         }
       ]
     },
@@ -235,6 +259,13 @@
               "field": "Start time"
             }
           ]
+        }
+      },
+      {
+        "id": "formatString",
+        "options": {
+          "outputFormat": "Sentence Case",
+          "stringField": "Status"
         }
       }
     ],

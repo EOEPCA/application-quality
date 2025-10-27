@@ -3,6 +3,9 @@
   "overwrite": false,
   "dashboard": {
     "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 8,
     "links": [
       {
         "asDropdown": false,
@@ -37,17 +40,17 @@
       },
       {
         "gridPos": {
-          "h": 15,
+          "h": 11,
           "w": 24,
           "x": 0,
-          "y": 6
+          "y": 5
         },
-        "id": 1,
+        "id": 3,
         "libraryPanel": {
-          "name": "Ruff Report",
-          "uid": "ruff-report"
+          "name": "Flake8 Report",
+          "uid": "flake8-report"
         },
-        "title": "Ruff Report",
+        "title": "Flake8 Report",
         "type": "library-panel-ref"
       }
     ],
@@ -61,16 +64,14 @@
             "type": "grafana-postgresql-datasource",
             "uid": "application-quality-db"
           },
-          "definition": "SELECT id FROM reports_admin WHERE name = 'ruff'",
-          "description": "",
+          "definition": "SELECT id FROM reports_admin WHERE name = 'flake8'",
           "hide": 2,
           "label": "Report ID",
           "name": "report_id",
           "options": [],
-          "query": "SELECT id FROM reports_admin WHERE name = 'ruff'",
+          "query": "SELECT id FROM reports_admin WHERE name = 'flake8'",
           "refresh": 1,
           "regex": "",
-          "sort": 4,
           "type": "query"
         },
         {
@@ -84,21 +85,6 @@
           "name": "execution_id",
           "options": [],
           "query": "SELECT run_id FROM reports_admin WHERE id = $report_id",
-          "refresh": 1,
-          "regex": "",
-          "sort": 4,
-          "type": "query"
-        },
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "application-quality-db"
-          },
-          "definition": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
-          "hide": 2,
-          "name": "pipeline_name",
-          "options": [],
-          "query": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
           "refresh": 1,
           "regex": "",
           "type": "query"
@@ -116,6 +102,20 @@
           "refresh": 1,
           "regex": "",
           "type": "query"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "application-quality-db"
+          },
+          "definition": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
+          "hide": 2,
+          "name": "pipeline_name",
+          "options": [],
+          "query": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
+          "refresh": 1,
+          "regex": "",
+          "type": "query"
         }
       ]
     },
@@ -123,7 +123,7 @@
       "hidden": true
     },
     "timezone": "browser",
-    "title": "Ruff Report",
-    "uid": "default-ruff-report"
+    "title": "Flake8 Report",
+    "uid": "default-flake8-report"
   }
 }

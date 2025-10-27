@@ -3,6 +3,9 @@
   "overwrite": false,
   "dashboard": {
     "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 15,
     "links": [
       {
         "asDropdown": false,
@@ -22,12 +25,12 @@
     "panels": [
       {
         "gridPos": {
-          "h": 5,
-          "w": 24,
+          "h": 12,
+          "w": 7,
           "x": 0,
           "y": 0
         },
-        "id": 2,
+        "id": 1,
         "libraryPanel": {
           "name": "Pipeline Execution Report Header",
           "uid": "pipeline-execution-report-header"
@@ -37,17 +40,47 @@
       },
       {
         "gridPos": {
+          "h": 12,
+          "w": 12,
+          "x": 7,
+          "y": 0
+        },
+        "id": 4,
+        "libraryPanel": {
+          "name": "Trivy Report Metadata",
+          "uid": "trivy-report-metadata"
+        },
+        "title": "Metadata",
+        "type": "library-panel-ref"
+      },
+      {
+        "gridPos": {
+          "h": 12,
+          "w": 5,
+          "x": 19,
+          "y": 0
+        },
+        "id": 5,
+        "libraryPanel": {
+          "name": "Trivy Report Statistics",
+          "uid": "trivy-report-statistics"
+        },
+        "title": "Statistics",
+        "type": "library-panel-ref"
+      },
+      {
+        "gridPos": {
           "h": 15,
           "w": 24,
           "x": 0,
-          "y": 6
+          "y": 12
         },
-        "id": 1,
+        "id": 3,
         "libraryPanel": {
-          "name": "Ruff Report",
-          "uid": "ruff-report"
+          "name": "Trivy Report Vulnerabilities",
+          "uid": "trivy-report-vulnerabilities"
         },
-        "title": "Ruff Report",
+        "title": "Vulnerabilities",
         "type": "library-panel-ref"
       }
     ],
@@ -57,23 +90,39 @@
     "templating": {
       "list": [
         {
+          "allowCustomValue": false,
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "application-quality-db"
           },
-          "definition": "SELECT id FROM reports_admin WHERE name = 'ruff'",
-          "description": "",
+          "definition": "SELECT pipeline_id FROM executions_admin WHERE id = $execution_id",
           "hide": 2,
-          "label": "Report ID",
-          "name": "report_id",
+          "label": "Pipeline ID",
+          "name": "pipeline_id",
           "options": [],
-          "query": "SELECT id FROM reports_admin WHERE name = 'ruff'",
+          "query": "SELECT pipeline_id FROM executions_admin WHERE id = $execution_id",
           "refresh": 1,
           "regex": "",
-          "sort": 4,
           "type": "query"
         },
         {
+          "allowCustomValue": false,
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "application-quality-db"
+          },
+          "definition": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
+          "hide": 2,
+          "label": "Pipeline Name",
+          "name": "pipeline_name",
+          "options": [],
+          "query": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
+          "refresh": 1,
+          "regex": "",
+          "type": "query"
+        },
+        {
+          "allowCustomValue": false,
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "application-quality-db"
@@ -86,33 +135,20 @@
           "query": "SELECT run_id FROM reports_admin WHERE id = $report_id",
           "refresh": 1,
           "regex": "",
-          "sort": 4,
           "type": "query"
         },
         {
+          "allowCustomValue": false,
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "application-quality-db"
           },
-          "definition": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
+          "definition": "SELECT id FROM reports_admin WHERE name = 'trivy'",
           "hide": 2,
-          "name": "pipeline_name",
+          "label": "Report ID",
+          "name": "report_id",
           "options": [],
-          "query": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
-          "refresh": 1,
-          "regex": "",
-          "type": "query"
-        },
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "application-quality-db"
-          },
-          "definition": "SELECT pipeline_id FROM executions_admin WHERE id = $execution_id",
-          "hide": 2,
-          "name": "pipeline_id",
-          "options": [],
-          "query": "SELECT pipeline_id FROM executions_admin WHERE id = $execution_id",
+          "query": "SELECT id FROM reports_admin WHERE name = 'trivy'",
           "refresh": 1,
           "regex": "",
           "type": "query"
@@ -123,7 +159,7 @@
       "hidden": true
     },
     "timezone": "browser",
-    "title": "Ruff Report",
-    "uid": "default-ruff-report"
+    "title": "Trivy Report",
+    "uid": "default-trivy-report"
   }
 }

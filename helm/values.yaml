@@ -48,12 +48,19 @@ persistence:
 
 vclusters:
   enabled: false
+  required: false
   # Templated
   name: "{{ .Release.Namespace }}-vcluster"
   # Templated
   namespace: "{{ .Release.Namespace }}-vcluster"
   # Local "namespace/service" to the backend service inside the vcluster:
   #service: default/backend-service
+
+workspace:
+  apiServiceUrl: ""
+  vcluster:
+    enabled: false
+    required: false
 
 calrissian:
   image: "terradue/calrissian:0.14.0"
