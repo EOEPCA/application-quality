@@ -95,12 +95,12 @@ vclusters:
   required: false
 ```
 
-The decision logic is depicted in the flowchart:
+The decision logic is depicted in this flowchart:
 
 ```mermaid
 flowchart TD
-    A@{ shape: "stadium", label: "Analysis Pipeline
-    Execution Request" }
+    A(Analysis Pipeline
+    Execution Request)
     style A fill:#FFFF00
     A --> WvC
     subgraph WvC [Workspace vCluster]
@@ -140,8 +140,8 @@ flowchart TD
     C4 --> Y
     D4 --> Y
     E1 --> Y
-    Y@{ shape: "stadium", label: "Execution Started" }
-    Z@{ shape: "stadium", label: "Execution Failed" }
+    Y(Execution Started)
+    Z(Execution Failed)
     style Y fill:#00FF00
     style Z fill:#FF4444
 ```
