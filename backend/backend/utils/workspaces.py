@@ -72,5 +72,7 @@ def get_vcluster_config_file(ws_name: str, vc_name: str = "default-vc") -> str:
         raise ValueError("Error: could not obtain vcluster: %s", e.stderr.strip())
     logger.debug("Stdout: %s", result.stdout)
     logger.debug("Stderr: %s", result.stderr)
+    if os.path.getsize(config_file) == 0:
+        raise ValueError("Error: could not obtain vcluster: %s", result.stderr)
     # Return the name of the file that contains the kubeconfig
     return config_file

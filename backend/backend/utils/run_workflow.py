@@ -110,28 +110,26 @@ def run_workflow(
             logger.debug("Workspace vCluster kubeconfig file: %s", cluster_config_file)
         except Exception as e:
             logger.error("Failed to obtain the Workspace vCluster config: %s", e)
+            cluster_config_file = None
             if WORKSPACE_VCLUSTER_REQUIRED:
                 logger.error("Workspace vCluster is required. Aborting the execution")
                 raise
 
-    if SHARED_VCLUSTER_ENABLED:
+    if cluster_config_file is None and SHARED_VCLUSTER_ENABLED:
         try:
             cluster_config_file = get_vcluster_config_file("application-quality-vcluster")
             callback_url = PUBLIC_URL
             logger.debug("Shared vCluster kubeconfig file: %s", cluster_config_file)
         except Exception as e:
             logger.error("Failed to obtain the Shared vCluster config: %s", e)
+            cluster_config_file = None
             if SHARED_VCLUSTER_REQUIRED:
                 logger.error("Shared vCluster is required. Aborting the execution")
                 raise
 
-    # current_context = client.Configuration.get_default_copy()
-    # print(f"Kubernetes API Server: {current_context.host}")
-    # print(f"Using Authentication: {current_context.verify_ssl}")
+    # If cluster_config_file is None here, the ultimate option (if vclusters are not required)
+    # is running the pipeline in the host cluster
 
-    #
-    # Create the kubernetes namespace on the cluster
-    #
     namespace_name = f"applicationqualitypipeline-{run_id}"
     session = CalrissianContext(
         namespace=namespace_name,
@@ -143,6 +141,7 @@ def run_workflow(
 
     session.initialise()
 
+    # TODO: Remove Sonarqube parameters
     sonarqube_project = f"{username}-{pipeline_run.pipeline.pk}-{str(run_id)}"
     params = {
         "pipeline_id": str(pipeline_run.pipeline.pk),
@@ -173,6 +172,7 @@ def run_workflow(
         cwl=cwl,
         params=params,
         runtime_context=session,
+        # TODO: Remove Sonarqube parameters
         pod_env_vars={
             "SONARQUBE_SERVER": SONARQUBE_SERVER,
             "SONARQUBE_TOKEN": SONARQUBE_TOKEN,
