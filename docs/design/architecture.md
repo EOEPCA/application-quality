@@ -57,25 +57,94 @@ The current release of the Application Quality Building Block (2025 Q1, 2.0.0-rc
 
 ![Static Analysis Pipeline Execution](../img/static-analysis-pipeline-execution.png)
 
-## Sandboxed Environments
+## Sandboxed Execution Environments
 
-Analysis pipelines may be executed in sandboxed environments, implemented using the [vCluster](https://www.vcluster.com/) technology. This is a decision to be taken at deployment time.
+Analysis pipelines may be executed in sandboxed environments, provisioned with the [vCluster](https://www.vcluster.com/) technology.
 
-In the current (2025 Q2, 2.0.0-rc2) implementation, the use of a vCluster is enabled using the following Helm chart values:
+The following options are available, in decreasing order of priority:
+
+1. Execution in a **Workspace vCluster**, provisioned by the [Workspace Building Block](https://eoepca.readthedocs.io/projects/workspace).
+1. Execution in a **Shared vCluster** provisioned by the Application Quality service itself.
+1. Execution in the **local hosting cluster** (thus not providing a sandboxed environment).
+
+The backend service attemps to execute the analysis pipelines in the appropriate environment, depending on the configuration. Once it has obtained a cluster configuration (local or virtual), it instructs the CWL pipeline helper library (PyCalrissian) to instanciate and run Calrissian (and thus the `cwl-runner`) in the corresponding environment.
+
+To enable the use of **Workspace vClusters**, use the following Helm chart values:
+
+```yaml
+workspace:
+  # Internal cluster address for communicating with the Workspace API.
+  apiServiceUrl: "http://workspace-api.workspace.svc.cluster.local:8080"
+  vcluster:
+    # Whether Workspace vClusters should be used.
+    enabled: true
+    # Whether pipelines are required to be run in Workspace vClusters.
+    # If required, no other options (Shared vCluster, local cluster)
+    # are attempted.
+    required: false
+```
+
+To enable the use of a **Shared vCluster**, use the following Helm chart values:
 
 ```yaml
 vclusters:
-  enabled: true
-  # Templated value
-  name: "{{ .Release.Namespace }}-vcluster"
-  # Templated value
-  namespace: "{{ .Release.Namespace }}-vcluster"
+  # Whether a Shared vCluster should be used.
+  enabled: false
+  # Whether pipelines are required to be run in a Shared vClusters.
+  # If required, the local cluster option is not attempted.
+  required: false
 ```
 
-When this option is enabled, the Application Quality backend service automatically creates and connects to a vCluster with the given name and namespace upon startup. If a vCluster with the given name already exists, it is re-used.
+The decision logic is depicted in the flowchart:
 
-A "bridge" is created between the vCluster and the backend service to allow pipeline steps to communicate with it, for example for storing the analysis reports.
-
-When the execution of an analysis pipeline is requested, the backend service instructs the CWL pipeline helper library (PyCalrissian) to instanciate and run Calrissian (and thus the `cwl-runner`), in the vCluster namespace.
-
-The current implementation thus uses a single vCluster for executing all the analysis pipelines, regardless of who has requested their execution and how. A possible evolution will be to communicate with the [Workspace BB](https://eoepca.readthedocs.io/projects/workspace) to obtain user-private workspaces at pipeline execution time.
+```mermaid
+flowchart TD
+    A@{ shape: "stadium", label: "Analysis Pipeline
+    Execution Request" }
+    style A fill:#FFFF00
+    A --> WvC
+    subgraph WvC [Workspace vCluster]
+        C1{Workspace
+        vCluster
+        enabled?}
+        C1 -->|Yes| C2[Get Workspace
+        vCluster Config]
+        C2 --> C3{Successful?}
+        C3 -->|Yes| C4[Execute
+        pipeline in
+        Workspace vCluster]
+        C3 -->|No| C5{Workspace
+        vCluster required?}
+    end
+    C1 -->|No| SvC
+    C5 -->|No| SvC
+    C5 -->|Yes| Z
+    subgraph SvC [Shared vCluster]
+        D1{Shared
+        vCluster
+        enabled?}
+        D1 -->|Yes| D2[Get Shared
+        vCluster Config]
+        D2 --> D3{Successful?}
+        D3 -->|Yes| D4[Execute
+        pipeline in
+        Shared vCluster]
+        D3 -->|No| D5{Workspace
+        vCluster required?}
+    end
+    D1 -->|No| Loc
+    D5 -->|Yes| Z
+    D5 -->|No| Loc
+    subgraph Loc [Local Cluster]
+        E1[Execute
+        pipeline in
+        Local Cluster]
+    end
+    C4 --> Y
+    D4 --> Y
+    E1 --> Y
+    Y@{ shape: "stadium", label: "Execution Succeeded" }
+    Z@{ shape: "stadium", label: "Execution Failed" }
+    style Y fill:#00FF00
+    style Z fill:#FF4444
+```
