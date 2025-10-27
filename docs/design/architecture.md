@@ -108,10 +108,9 @@ flowchart TD
         vCluster
         enabled?}
         C1 -->|Yes| C2[Get Workspace
-        vCluster Config]
+        vCluster config]
         C2 --> C3{Successful?}
-        C3 -->|Yes| C4[Execute
-        pipeline in
+        C3 -->|Yes| C4[Execute in
         Workspace vCluster]
         C3 -->|No| C5{Workspace
         vCluster required?}
@@ -124,26 +123,24 @@ flowchart TD
         vCluster
         enabled?}
         D1 -->|Yes| D2[Get Shared
-        vCluster Config]
+        vCluster config]
         D2 --> D3{Successful?}
-        D3 -->|Yes| D4[Execute
-        pipeline in
+        D3 -->|Yes| D4[Execute in
         Shared vCluster]
-        D3 -->|No| D5{Workspace
+        D3 -->|No| D5{Shared
         vCluster required?}
     end
     D1 -->|No| Loc
     D5 -->|Yes| Z
     D5 -->|No| Loc
     subgraph Loc [Local Cluster]
-        E1[Execute
-        pipeline in
+        E1[Execute in
         Local Cluster]
     end
     C4 --> Y
     D4 --> Y
     E1 --> Y
-    Y@{ shape: "stadium", label: "Execution Succeeded" }
+    Y@{ shape: "stadium", label: "Execution Started" }
     Z@{ shape: "stadium", label: "Execution Failed" }
     style Y fill:#00FF00
     style Z fill:#FF4444
