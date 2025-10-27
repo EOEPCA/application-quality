@@ -2,10 +2,6 @@ import logging
 import os
 import yaml
 
-from . import serializers
-from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag
-from backend.tasks import run_workflow_task
-
 from django.utils import timezone
 from django.db.utils import IntegrityError
 from jinja2 import Template
@@ -14,6 +10,10 @@ from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag
+from backend.tasks import run_workflow_task
+from . import serializers
 
 
 logger = logging.getLogger(__name__)
@@ -24,11 +24,10 @@ else:
     logger.info("OIDC is DISABLED")
 
 pipeline_cwl_template_path = os.path.join(os.path.dirname(__file__), "pipeline_template.cwl.jinja")
-pipeline_cwl_template = ""
 
 try:
-    logger.info(f"Loading {pipeline_cwl_template_path}")
-    with open(pipeline_cwl_template_path, "r") as file:
+    logger.info("Loading %s", pipeline_cwl_template_path)
+    with open(pipeline_cwl_template_path, "r", encoding="utf-8") as file:
         pipeline_cwl_template = file.read()
 except Exception as ex:
     logger.error("Error loading %s: %s", pipeline_cwl_template_path, str(ex))
@@ -39,11 +38,11 @@ class SettingsView(APIView):
     def get(self, request):
         settings_file = os.path.abspath("settings.yaml")
         try:
-            logger.info(f"Loading {settings_file}")
-            with open(settings_file, "r") as f:
+            logger.info("Loading %s", settings_file)
+            with open(settings_file, "r", encoding="utf-8") as f:
                 settings = yaml.safe_load(f)
         except FileNotFoundError:
-            logger.info(f"Not found: {settings_file}")
+            logger.info("Not found: %s", settings_file)
             settings = None
         return Response(settings)
 
@@ -75,12 +74,12 @@ class PipelineViewSet(viewsets.ModelViewSet):
                 {
                     "detail": "A pipeline with this name, version, and owner already exists."
                 }
-            )
+            ) from ie
 
     def get_permissions(self):
         if self.action in ["create", "list", "retrieve"]:
             return [permissions.IsAuthenticated()]
-        elif self.action in ["update", "partial_update", "destroy"]:
+        if self.action in ["update", "partial_update", "destroy"]:
             return [permissions.IsAuthenticated(), IsOwnerOrAdmin()]
         return super().get_permissions()
 
@@ -91,26 +90,26 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        logger.info(f"User {user} is requesting pipeline runs (admin={user.is_staff})")
-        id = self.kwargs["pipeline_id"]
+        logger.info("User %s is requesting pipeline runs (admin=%s)", user, user.is_staff)
+        p_id = self.kwargs["pipeline_id"]
         if user.is_staff:
-            if id == "_":
+            if p_id == "_":
                 return PipelineRun.objects
-            return PipelineRun.objects.filter(pipeline_id=id)
-        if id == "_":
+            return PipelineRun.objects.filter(pipeline_id=p_id)
+        if p_id == "_":
             return PipelineRun.objects.filter(started_by=self.request.user)
-        return PipelineRun.objects.filter(pipeline_id=id, started_by=self.request.user)
+        return PipelineRun.objects.filter(pipeline_id=p_id, started_by=self.request.user)
 
     def create(self, request, *args, **kwargs):
         user = self.request.user
-        logger.info(f"User {user} is creating a pipeline run (admin={user.is_staff})")
+        logger.info("User %s is creating a pipeline run (admin=%s)", user, user.is_staff)
         pipeline_id = self.kwargs["pipeline_id"]
-        logger.info(f"Creating a new run for pipeline {pipeline_id}")
+        logger.info("Creating a new run for pipeline %s", pipeline_id)
 
         try:
             pipeline = Pipeline.objects.get(id=pipeline_id)
         except Pipeline.DoesNotExist:
-            logger.warning(f"Couldn't create a new run: Pipeline {pipeline_id} not found")
+            logger.warning("Couldn't create a new run: Pipeline %s not found", pipeline_id)
             return Response(
                 {"error": "Pipeline not found."},
                 status=status.HTTP_404_NOT_FOUND
@@ -123,12 +122,12 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             status="starting",
             started_by=request.user,
         )
-        logger.info(f"Pipeline run created with id {pipeline_run.id}")
+        logger.info("Pipeline run created with id %s", pipeline_run.id)
 
         yaml_cwl = self._render_cwl(pipeline)
         cwl = yaml.safe_load(yaml_cwl)
 
-        logger.info(f"Running workflow with id {pipeline_run.id}")
+        logger.info("Running workflow with id %s", pipeline_run.id)
         payload = request.data  # dict
         run_workflow_task.delay(
             run_id=pipeline_run.id,
@@ -143,7 +142,7 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             "run_id": str(pipeline_run.id),
         }
         pipeline_run.save()
-        logger.debug(f"Run {pipeline_run.id} updated with CWL and inputs")
+        logger.debug("Run %s updated with CWL and inputs", pipeline_run.id)
 
         serializer = self.get_serializer(pipeline_run)
         return Response(
@@ -168,11 +167,11 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         return merged_params
 
     def _render_cwl(self, pipeline):
-        logger.debug(f"Rendering CWL for pipeline '{pipeline.id}'")
+        logger.debug("Rendering CWL for pipeline '%s'", pipeline.id)
         rendered_subworkflows = []
 
         for subworkflow in pipeline.tools.all():
-            logger.debug(f"Rendering subworkflow '{subworkflow}'")
+            logger.debug("Rendering subworkflow '%s'", subworkflow)
             subtemplate = Template(subworkflow.definition)
             subcontext = {"tools": list(subworkflow.tools.all())}
             subtool = {
@@ -186,7 +185,7 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         template = Template(pipeline.template)
         context = {"subworkflows": rendered_subworkflows}
         result = template.render(context)
-        logger.debug(f"CWL rendered for pipeline '{pipeline.id}'")
+        logger.debug("CWL rendered for pipeline '%s'", pipeline.id)
         return result
 
 
@@ -212,7 +211,7 @@ class JobReportViewSet(
     def create(self, request, *args, **kwargs):
         pipeline_id = self.kwargs["pipeline_id"]
         run_id = self.kwargs["run_id"]
-        logger.info(f"Creating a new job report for pipeline {pipeline_id}, run_id {run_id}")
+        logger.info("Creating a new job report for pipeline %s, run_id %s", pipeline_id, run_id)
 
         tool_name = request.query_params.get("name")
         if not tool_name:
@@ -221,14 +220,22 @@ class JobReportViewSet(
         try:
             run = PipelineRun.objects.get(pipeline__id=pipeline_id, id=run_id)
         except PipelineRun.DoesNotExist:
-            logger.warning(f"Couln't create a job report: Run {run_id} for pipeline {pipeline_id} not found")
+            logger.warning(
+                "Couln't create a job report: Run %s for pipeline %s not found",
+                run_id,
+                pipeline_id
+            )
             return Response(
                 {"error": "Pipeline run not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
         if JobReport.objects.filter(run=run, name=tool_name).exists():
-            logger.warning(f"Couln't create a job report: A job report for '{tool_name}' already exists in run {run_id}")
+            logger.warning(
+                "Couln't create a job report: A job report for '%s' already exists in run %s",
+                tool_name,
+                run_id
+            )
             return Response(
                 {"error": f"A job report for '{tool_name}' already exists for this run."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -241,7 +248,7 @@ class JobReportViewSet(
             created_at=timezone.now()
         )
 
-        logger.info(f"Job report created for tool '{tool_name}' in run {run_id}")
+        logger.info("Job report created for tool '%s' in run %s", tool_name, run_id)
 
         serializer = self.get_serializer(job_report)
         return Response(

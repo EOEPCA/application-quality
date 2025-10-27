@@ -1,5 +1,5 @@
-from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag
 from rest_framework import serializers
+from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag
 
 
 class PipelineSerializer(serializers.ModelSerializer):
