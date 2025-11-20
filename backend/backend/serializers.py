@@ -49,7 +49,7 @@ class PipelineRunSerializer(serializers.ModelSerializer):
 class JobReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobReport
-        fields = ["id", "name", "output", "run"]
+        fields = ["id", "name", "instance", "output", "run"]
         read_only_fields = ["run"]
 
 

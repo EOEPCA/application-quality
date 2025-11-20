@@ -50,9 +50,10 @@ class JobReport(models.Model):
     name            = models.SlugField(max_length=50)
     output          = models.JSONField()
     created_at      = models.DateTimeField(null=True)
+    instance        = models.CharField(max_length=200, default="")
 
     def __str__(self):
-        return f"Run {self.run.id} ({self.run.pipeline.name}): {self.name} job"
+        return f"Run {self.run.id} ({self.run.pipeline.name}): {self.name} {'/' if self.instance else ''} {self.instance}"
 
 
 class Tag(models.Model):

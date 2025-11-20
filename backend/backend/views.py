@@ -205,6 +205,9 @@ class JobReportViewSet(
         tool_name = self.request.query_params.get("name")
         if tool_name:
             queryset = queryset.filter(name=tool_name)
+        instance = self.request.query_params.get("instance")
+        if instance:
+            queryset = queryset.filter(instance=instance)
 
         return queryset
 
@@ -216,6 +219,9 @@ class JobReportViewSet(
         tool_name = request.query_params.get("name")
         if not tool_name:
             raise ValidationError("Tool 'name' is required as a query parameter.")
+        
+        # The (optional) instance parameter allows to distinguish reports from scattered steps
+        instance = request.query_params.get("instance", "")
 
         try:
             run = PipelineRun.objects.get(pipeline__id=pipeline_id, id=run_id)
@@ -230,25 +236,27 @@ class JobReportViewSet(
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        if JobReport.objects.filter(run=run, name=tool_name).exists():
+        if JobReport.objects.filter(run=run, name=tool_name, instance=instance).exists():
             logger.warning(
-                "Couln't create a job report: A job report for '%s' already exists in run %s",
+                "Could not create a job report: A job report for '%s'/'%s' already exists in run %s",
                 tool_name,
+                instance,
                 run_id
             )
             return Response(
-                {"error": f"A job report for '{tool_name}' already exists for this run."},
+                {"error": f"A job report for '{tool_name}/{instance}' already exists for this run."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         job_report = JobReport.objects.create(
             name=tool_name,
+            instance=instance,
             run=run,
             output=request.data,
             created_at=timezone.now()
         )
 
-        logger.info("Job report created for tool '%s' in run %s", tool_name, run_id)
+        logger.info("Job report created for tool '%s'/'%s' in run %s", tool_name, instance, run_id)
 
         serializer = self.get_serializer(job_report)
         return Response(
