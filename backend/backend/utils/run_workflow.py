@@ -130,17 +130,6 @@ def run_workflow(
     # If cluster_config_file is None here, the ultimate option (if vclusters are not required)
     # is running the pipeline in the host cluster
 
-    namespace_name = f"applicationqualitypipeline-{run_id}"
-    session = CalrissianContext(
-        namespace=namespace_name,
-        kubeconfig_file=cluster_config_file,
-        storage_class=AQBB_STORAGECLASS,
-        volume_size=AQBB_VOLUMESIZE,
-        image_pull_secrets=AQBB_SECRET,
-    )
-
-    session.initialise()
-
     # TODO: Remove Sonarqube parameters
     sonarqube_project = f"{username}-{pipeline_run.pipeline.pk}-{str(run_id)}"
     params = {
@@ -162,6 +151,17 @@ def run_workflow(
     pipeline_run.save(update_fields=['inputs'])  # Overwrite previous value because of server_url
     logger.debug("Run %s updated with server url", pipeline_run.id)
     logger.debug("Pipeline parameters: %s", params)
+
+    namespace_name = f"applicationqualitypipeline-{run_id}"
+    session = CalrissianContext(
+        namespace=namespace_name,
+        kubeconfig_file=cluster_config_file,
+        storage_class=AQBB_STORAGECLASS,
+        volume_size=AQBB_VOLUMESIZE,
+        image_pull_secrets=AQBB_SECRET,
+    )
+
+    session.initialise()
 
     #
     # Create the Calrissian job
