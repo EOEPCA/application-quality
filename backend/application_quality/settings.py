@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "backend",
     "mozilla_django_oidc",
+    "django_svelte_jsoneditor",  # See SVELTE_JSONEDITOR_PROPS, below
 ]
 
 MIDDLEWARE = [
@@ -148,6 +149,25 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+
+# svelte-jsoneditor default properties for all widgets rendered in the app.
+# See: https://django-svelte-jsoneditor.readthedocs.io/en/latest/settings.html
+
+SVELTE_JSONEDITOR_PROPS = {
+    # Just the subset to customize:
+    "mode": "tree",
+    "mainMenuBar": True,
+    "navigationBar": True,
+    "statusBar": True,
+    "askToFormat": True,
+    "readOnly": False,
+    "indentation": 4,
+    "tabSize": 4,
+    "escapeControlCharacters": False,
+    "escapeUnicodeCharacters": False,
+    "flattenColumns": True,
+}
 
 
 # Internationalization

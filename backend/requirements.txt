@@ -4,6 +4,7 @@ Django==5.1.8
 djangorestframework
 django-cors-headers==4.6.0
 djangorestframework-simplejwt
+django-svelte-jsoneditor
 # To serve admin static files in production
 whitenoise==6.8.2
 # gunicorn
