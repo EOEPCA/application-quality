@@ -30,7 +30,7 @@
           "mode": "absolute",
           "steps": [
             {
-              "color": "green",
+              "color": "text",
               "value": null
             }
           ]
@@ -97,6 +97,42 @@
             {
               "id": "custom.filterable",
               "value": true
+            },
+            {
+              "id": "custom.cellOptions",
+              "value": {
+                "type": "color-text"
+              }
+            },
+            {
+              "id": "mappings",
+              "value": [
+                {
+                  "options": {
+                    "Active": {
+                      "color": "purple",
+                      "index": 3
+                    },
+                    "Failed": {
+                      "color": "semi-dark-red",
+                      "index": 2
+                    },
+                    "Running": {
+                      "color": "semi-dark-yellow",
+                      "index": 1
+                    },
+                    "Starting": {
+                      "color": "semi-dark-blue",
+                      "index": 4
+                    },
+                    "Succeeded": {
+                      "color": "semi-dark-green",
+                      "index": 0
+                    }
+                  },
+                  "type": "value"
+                }
+              ]
             }
           ]
         }
