@@ -74,10 +74,11 @@ data:
   {{- if .Values.workspace.vcluster.enabled }}
   WORKSPACE_VCLUSTER_REQUIRED: {{ .Values.workspace.vcluster.required | default false | quote }}
   WORKSPACE_API_SERVICE_URL: {{ .Values.workspace.apiServiceUrl | default "" }}
+  {{- end }}
 
   # Notifications
   NOTIF_ENABLED: {{ .Values.notifications.enabled | default false | quote }}
-  {{- if and .Values.notifications.enabled (eq .Values.notifications.middleware "knative")}}
+  {{- if and .Values.notifications.enabled (eq .Values.notifications.middleware "knative") }}
   NOTIF_MIDDLEWARE: {{ .Values.notifications.middleware }}
   NOTIF_CHANNEL_PREFIX: {{ .Values.notifications.channelPrefix }}
   NOTIF_RESPONSE_SOURCE: {{ .Values.notifications.responseSource }}

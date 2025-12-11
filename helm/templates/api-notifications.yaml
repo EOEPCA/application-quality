@@ -7,7 +7,7 @@ metadata:
   namespace: {{ .Values.notifications.brokerNamespace }}
 spec:
   broker: {{ .Values.notifications.brokerName }}
-  # Filter dialets: https://knative.dev/docs/eventing/triggers/#supported-filter-dialects
+  # Filter dialects: https://knative.dev/docs/eventing/triggers/#supported-filter-dialects
   filters:
     - any:
       - prefix:
@@ -16,11 +16,11 @@ spec:
           type: {{ .Values.notifications.channelPrefix }}.events.
   subscriber:
     ref:
+      # If using a Knative Service, the port is deduced from its definition.
+      # If using a Kubernetes Service, the port must be 80.
       apiVersion: v1
       kind: Service
       name: {{ include "application-quality.fullname" . }}-api
       namespace: {{ .Release.Namespace }}
-      # If using a Knative Service, the port is deduced from its definition.
-      # If using a Kubernetes Service, the port must be 80.
     uri: /api/events/
 {{- end }}
