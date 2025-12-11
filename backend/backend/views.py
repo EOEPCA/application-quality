@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 import yaml
 
 from django.utils import timezone
@@ -13,6 +14,7 @@ from rest_framework.views import APIView
 
 from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag
 from backend.tasks import run_workflow_task
+from backend.utils.cloudevents import handle_cloudevent, encode, decode
 from . import serializers
 
 
@@ -45,6 +47,49 @@ class SettingsView(APIView):
             logger.info("Not found: %s", settings_file)
             settings = None
         return Response(settings)
+
+
+RESPONSE_SOURCE = os.getenv("NOTIF_RESPONSE_SOURCE", "/eoepca/application-quality")
+RESPONSE_TYPE_PREFIX = os.getenv(
+    "NOTIF_RESPONSE_TYPE_PREFIX",
+    "org.eoepca.application-quality.response"
+)
+
+
+class EventsView(APIView):
+    def post(self, request, *args, **kwargs):
+        try:
+            logger.info("Event received %s", request)
+            payload, headers = decode(request.body, request.META.items())
+            event_id = headers.get('Ce-Id')
+
+            # Do something here like create a pipeline run
+
+            res_data = {
+                "status": "accepted",
+                "processed_id": event_id,
+                "timestamp": int(time.time()),
+                "message": "Data successfully validated and propagated."
+            }
+            res_attrs = {
+                "id": event_id,  # Same ID as in the request
+                "source": RESPONSE_SOURCE,
+                "type": RESPONSE_TYPE_PREFIX + ".accepted",
+                # "subject": TODO: Include a meaningful subject (e.g. a pipeline run identifier)
+                "specversion": "1.0",
+            }
+
+            res_body, res_headers = encode(res_attrs, res_data)
+            logger.debug("Response Headers: %s", res_headers)
+            logger.debug("Response Body: %s", res_body)
+            return Response(res_body, status=202, headers=res_headers)
+
+        except Exception as e:
+            logger.error("Exception: %s", e)
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class IsOwnerOrAdmin(permissions.BasePermission):
