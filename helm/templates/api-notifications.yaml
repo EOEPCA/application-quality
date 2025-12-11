@@ -1,0 +1,26 @@
+{{- if and .Values.notifications.enabled (eq .Values.notifications.middleware "knative")}}
+apiVersion: eventing.knative.dev/v1
+kind: Trigger
+metadata:
+  name: {{ .Values.notifications.channelPrefix }}.events
+  # The Trigger must be in the same namespace as the Broker
+  namespace: {{ .Values.notifications.brokerNamespace }}
+spec:
+  broker: {{ .Values.notifications.brokerName }}
+  # Filter dialets: https://knative.dev/docs/eventing/triggers/#supported-filter-dialects
+  filters:
+    - any:
+      - prefix:
+          type: {{ .Values.notifications.channelPrefix }}.probes.
+      - prefix:
+          type: {{ .Values.notifications.channelPrefix }}.events.
+  subscriber:
+    ref:
+      apiVersion: v1
+      kind: Service
+      name: {{ include "application-quality.fullname" . }}-api
+      namespace: {{ .Release.Namespace }}
+      # If using a Knative Service, the port is deduced from its definition.
+      # If using a Kubernetes Service, the port must be 80.
+    uri: /api/events/
+{{- end }}

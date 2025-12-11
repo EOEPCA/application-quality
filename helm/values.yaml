@@ -136,3 +136,16 @@ affinity: {}
 
 serviceAccount:
   create: false
+
+notifications:
+  enabled: false
+  middleware: "knative"
+  brokerName: "primary"
+  brokerNamespace: "default"
+  # Also used as type prefix for incoming notifications
+  channelPrefix: "org.eoepca.application-quality"
+  responseSource: "/eoepca/application-quality"
+  responseTypePrefix: "org.eoepca.application-quality.response"
+
+automations:
+  enabled: false

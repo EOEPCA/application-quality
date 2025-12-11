@@ -34,6 +34,7 @@ data:
   AQBB_MAXCORES: {{ .Values.calrissian.maxCores | quote }}
   AQBB_MAXRAM: {{ .Values.calrissian.maxRam | quote }}
 
+  # OpenID Connect
   OIDC_ENABLED: {{ .Values.oidc.enabled | default false | quote }}
   {{- if .Values.oidc.enabled }}
   # From Sealed Secret: OIDC_RP_CLIENT_ID: {{ .Values.oidc.clientId }}
@@ -57,6 +58,7 @@ data:
   SONARQUBE_SERVER: {{ .Values.sonarqube.serverUrl }}
   SONARQUBE_TOKEN: {{ .Values.sonarqube.accessToken }}
   {{- end }}
+
   # vCluster
   SHARED_VCLUSTER_ENABLED: {{ .Values.vclusters.enabled | default false | quote }}
   {{- if .Values.vclusters.enabled }}
@@ -72,4 +74,12 @@ data:
   {{- if .Values.workspace.vcluster.enabled }}
   WORKSPACE_VCLUSTER_REQUIRED: {{ .Values.workspace.vcluster.required | default false | quote }}
   WORKSPACE_API_SERVICE_URL: {{ .Values.workspace.apiServiceUrl | default "" }}
+
+  # Notifications
+  NOTIF_ENABLED: {{ .Values.notifications.enabled | default false | quote }}
+  {{- if and .Values.notifications.enabled (eq .Values.notifications.middleware "knative")}}
+  NOTIF_MIDDLEWARE: {{ .Values.notifications.middleware }}
+  NOTIF_CHANNEL_PREFIX: {{ .Values.notifications.channelPrefix }}
+  NOTIF_RESPONSE_SOURCE: {{ .Values.notifications.responseSource }}
+  NOTIF_RESPONSE_TYPE_PREFIX: {{ .Values.notifications.responseTypePrefix }}
   {{- end }}
