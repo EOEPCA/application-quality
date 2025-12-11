@@ -16,7 +16,7 @@ web:
     pullPolicy: IfNotPresent
     #pullSecrets:
     #  - name: spaceapps-nexus-asb-ro
-  serviceType: NodePort
+  serviceType: ClusterIP
   servicePort: 80
   containerPort: 80
   replicaCount: 1
@@ -30,8 +30,8 @@ api:
     pullPolicy: IfNotPresent
     #pullSecrets:
     #  - name: spaceapps-nexus-asb-ro
-  serviceType: NodePort
-  servicePort: 8000
+  serviceType: ClusterIP
+  servicePort: 80
   containerPort: 8000
   replicaCount: 1
   adminUser: ""
