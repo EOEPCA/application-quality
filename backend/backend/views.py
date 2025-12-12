@@ -5,6 +5,7 @@ import yaml
 
 from django.utils import timezone
 from django.db.utils import IntegrityError
+from django.contrib.auth.models import User
 from jinja2 import Template
 
 from rest_framework import mixins, permissions, status, viewsets
@@ -145,10 +146,9 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             return PipelineRun.objects.filter(started_by=self.request.user)
         return PipelineRun.objects.filter(pipeline_id=p_id, started_by=self.request.user)
 
-    def create(self, request, *args, **kwargs):
-        user = self.request.user
+    @staticmethod
+    def _create(user: User, pipeline_id: str, data: dict) -> PipelineRun:
         logger.info("User %s is creating a pipeline run (admin=%s)", user, user.is_staff)
-        pipeline_id = self.kwargs["pipeline_id"]
         logger.info("Creating a new run for pipeline %s", pipeline_id)
 
         try:
@@ -165,20 +165,19 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             usage_report="",
             start_time=timezone.now(),
             status="starting",
-            started_by=request.user,
+            started_by=user,
         )
         logger.info("Pipeline run created with id %s", pipeline_run.id)
 
-        yaml_cwl = self._render_cwl(pipeline)
+        yaml_cwl = PipelineRunViewSet._render_cwl(pipeline)
         cwl = yaml.safe_load(yaml_cwl)
 
         logger.info("Running workflow with id %s", pipeline_run.id)
-        payload = request.data  # dict
         run_workflow_task.delay(
             run_id=pipeline_run.id,
-            parameters=payload.get("parameters"),
+            parameters=data.get("parameters"),
             cwl=cwl,
-            username=request.user.username,
+            username=user.username,
         )
 
         pipeline_run.executed_cwl = yaml_cwl
@@ -189,13 +188,22 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         pipeline_run.save()
         logger.debug("Run %s updated with CWL and inputs", pipeline_run.id)
 
+        return pipeline_run
+
+    def create(self, request, *args, **kwargs) -> Response:
+        user = self.request.user
+        # logger.info("User %s is creating a pipeline run (admin=%s)", user, user.is_staff)
+        pipeline_id = self.kwargs["pipeline_id"]
+        # logger.info("Creating a new run for pipeline %s", pipeline_id)
+        pipeline_run = PipelineRunViewSet._create(user, pipeline_id, request.data)
         serializer = self.get_serializer(pipeline_run)
         return Response(
             serializer.data,
             status=status.HTTP_201_CREATED
         )
 
-    def _merge_params(self, subworkflow: Subworkflow, default_inputs: dict) -> dict:
+    @staticmethod
+    def _merge_params(subworkflow: Subworkflow, default_inputs: dict) -> dict:
         if subworkflow.slug not in default_inputs:
             return subworkflow.user_params
 
@@ -211,7 +219,8 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
 
         return merged_params
 
-    def _render_cwl(self, pipeline):
+    @staticmethod
+    def _render_cwl(pipeline):
         logger.debug("Rendering CWL for pipeline '%s'", pipeline.id)
         rendered_subworkflows = []
 
@@ -222,7 +231,7 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             subtool = {
                 "definition": subtemplate.render(subcontext),
                 "slug": subworkflow.pk,
-                "user_params": self._merge_params(subworkflow, pipeline.default_inputs),
+                "user_params": PipelineRunViewSet._merge_params(subworkflow, pipeline.default_inputs),
                 "pipeline_step": subworkflow.pipeline_step,
             }
             rendered_subworkflows.append(subtool)
