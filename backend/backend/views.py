@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 
 from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag
 from backend.tasks import run_workflow_task
-from backend.utils.cloudevents import handle_cloudevent, encode, decode
+from backend.utils.cloudevents import encode, decode
 from . import serializers
 
 
