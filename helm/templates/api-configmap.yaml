@@ -10,7 +10,7 @@ data:
   {{- else }}
   BACKEND_SERVICE_HOST: {{ include "application-quality.fullname" . }}-api.{{ .Release.Namespace }}.svc.cluster.local
   {{- end }}
-  BACKEND_SERVICE_PORT: {{ .Values.api.containerPort | quote }}
+  BACKEND_SERVICE_PORT: {{ .Values.api.servicePort | quote }}
 
   BACKEND_SERVICE_ADMIN_USER: {{ .Values.api.adminUser | quote }}
   BACKEND_SERVICE_ADMIN_PASSWORD: {{ .Values.api.adminPassword | quote }}
