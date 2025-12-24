@@ -63,22 +63,68 @@ class EventsView(APIView):
             logger.info("Event received %s", request)
             payload, headers = decode(request.body, request.META.items())
             event_id = headers.get('Ce-Id')
+            event_user = headers.get('Ce-User', None)
+            event_type = headers.get('Ce-Type', None)
+            event_subject = headers.get('Ce-Subject', None)
 
-            # Do something here like create a pipeline run
+            user = None
+            pipeline_id = None
 
+            if event_user:
+                user = User.objects.get(username=event_user)
+                logger.debug("User: %s", user)
+            else:
+                logger.debug("No user identified in the event")
+
+            if event_subject and event_subject.startswith("pipelines/"):
+                pipeline_id = event_subject.split("/")[-1]
+                logger.debug("Pipeline: %s", pipeline_id)
+            else:
+                logger.debug("No pipeline identified in the event")
+
+            # Default response data
             res_data = {
-                "status": "accepted",
+                "status": "unknown",
                 "processed_id": event_id,
                 "timestamp": int(time.time()),
-                "message": "Data successfully validated and propagated."
+                "message": "Unknown event."
             }
             res_attrs = {
-                "id": event_id,  # Same ID as in the request
+                "id": event_id,
                 "source": RESPONSE_SOURCE,
-                "type": RESPONSE_TYPE_PREFIX + ".accepted",
-                # "subject": TODO: Include a meaningful subject (e.g. a pipeline run identifier)
+                "type": RESPONSE_TYPE_PREFIX + ".unknown",
                 "specversion": "1.0",
             }
+
+            # React to the event
+            # Note: The Trigger must filter on the event type prefix
+
+            if event_type.endswith(".probes.health"):
+                logger.debug("Received a health check event")
+                res_data.update({
+                    "status": "ok",
+                    # "processed_id": event_id,
+                    "timestamp": int(time.time()),
+                    "message": "Healthy.",
+                })
+                res_attrs.update({
+                    "type": RESPONSE_TYPE_PREFIX + ".ok"
+                })
+
+            if user and pipeline_id and event_type.endswith(".event.pipeline.execute"):
+                pipeline_run = PipelineRunViewSet._create(user, pipeline_id, payload)
+                logger.debug("Pipeline run: %s", pipeline_run)
+
+                res_data.update({
+                    "status": "accepted",
+                    # "processed_id": event_id,
+                    "timestamp": int(time.time()),
+                    "message": "Pipeline execution created.",
+                })
+                res_attrs.update({
+                    "type": RESPONSE_TYPE_PREFIX + ".accepted",
+                    "subject": pipeline_run.id,
+                })
 
             res_body, res_headers = encode(res_attrs, res_data)
             logger.debug("Response Headers: %s", res_headers)
@@ -196,6 +242,9 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         pipeline_id = self.kwargs["pipeline_id"]
         # logger.info("Creating a new run for pipeline %s", pipeline_id)
         pipeline_run = PipelineRunViewSet._create(user, pipeline_id, request.data)
+        if isinstance(pipeline_run, Response):
+            # An error occurred which is described in the Response instance
+            return pipeline_run
         serializer = self.get_serializer(pipeline_run)
         return Response(
             serializer.data,
