@@ -64,6 +64,14 @@ class Tag(models.Model):
 
 
 class Subworkflow(models.Model):
+
+    class Status(models.TextChoices):
+        BETA = 'Beta'
+        CANDIDATE = 'Candidate'
+        DISABLED = 'Disabled'
+        STABLE = 'Stable'
+        DEPRECATED = 'Deprecated'
+
     slug            = models.SlugField(primary_key=True, max_length=50)
     name            = models.CharField(max_length=50)
     description     = models.TextField(null=True)
@@ -73,6 +81,8 @@ class Subworkflow(models.Model):
     tags            = models.ManyToManyField(Tag, related_name="subworkflows", blank=True)
     tools           = models.ManyToManyField("CommandLineTool", related_name="subworkflows")
     version         = models.CharField(max_length=50)
+    status          = models.CharField(max_length=20, choices=Status.choices, default=Status.STABLE)
+    available       = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name

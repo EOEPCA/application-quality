@@ -64,6 +64,8 @@ class SubworkflowSerializer(serializers.ModelSerializer):
             "tags",
             "tools",
             "version",
+            "status",
+            "available",
         ]
 
 
