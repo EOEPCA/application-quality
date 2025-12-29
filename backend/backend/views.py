@@ -369,8 +369,19 @@ class JobReportViewSet(
 
 
 class SubworkflowViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Subworkflow.objects.all()
     serializer_class = serializers.SubworkflowSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if user:
+            logger.info(f"User {user} is requesting the tools information")
+        else:
+            logger.info(f"Anonymous user is requesting the tools information")
+        if user and user.is_staff:
+            logger.info(f"User {user} is staff / admin")
+            # Admins may get all the tools, whatever their status or availability flag
+            return Subworkflow.objects.all()
+        return Subworkflow.objects.filter(available=True)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):

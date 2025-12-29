@@ -21,7 +21,7 @@ class PipelineRunSettings(admin.ModelAdmin):
     }
 
 class ToolSettings(admin.ModelAdmin):
-    list_display = ("slug", "name", "version")
+    list_display = ("slug", "name", "version", "status", "available")
     formfield_overrides = {
         JSONField: {"widget": SvelteJSONEditorWidget}
     }
