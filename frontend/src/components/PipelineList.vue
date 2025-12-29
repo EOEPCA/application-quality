@@ -100,6 +100,7 @@
               <v-icon> mdi-flash </v-icon>
             </v-btn>
             <v-btn
+              v-if="settings.isDebugEnabled()"
               color="primary"
               variant="text"
               v-tooltip:bottom-end="'Execution payload template'"
@@ -293,6 +294,7 @@
 import { useAuthStore } from '@/stores/auth';
 import { useToolStore } from '@/stores/tools';
 import { usePipelineStore } from '@/stores/pipelines';
+import { useSettingsStore } from '@/stores/settings';
 import JsonToHtmlTable from '@/components/JsonToHtmlTable.vue';
 import PipelineCreationPanel from './PipelineCreationPanel.vue';
 import PipelineExecutionPanel from './PipelineExecutionPanel.vue';
@@ -364,7 +366,8 @@ export default {
     const authStore = useAuthStore();
     const pipelineStore = usePipelineStore();
     const toolStore = useToolStore();
-    return { pipelineStore, toolStore, authStore };
+    const settings = useSettingsStore();
+    return { pipelineStore, toolStore, authStore, settings };
   },
 
   mounted() {
@@ -436,6 +439,7 @@ export default {
 
     canExecuteRemotely(pipeline) {
       // TODO: Use pipeline property / flag
+      console.debug('Can this pipeline be executed remotely?', pipeline);
       return this.authStore.isAdmin;
     },
 
