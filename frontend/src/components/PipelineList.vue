@@ -81,16 +81,15 @@
               v-tooltip:bottom-end="'Pipeline information (' + item.name + ')'"
               @click="viewPipelineDetails(item)"
             >
-              <v-icon size="26px"> mdi-information </v-icon>
+              <v-icon> mdi-information </v-icon>
             </v-btn>
             <v-btn
-              icon="mdi-monitor-eye"
               color="primary"
               variant="text"
               v-tooltip:bottom-end="'Pipeline executions'"
               @click="viewPipelineExecutions(item)"
             >
-              <v-icon size="26px"> mdi-monitor-eye </v-icon>
+              <v-icon> mdi-monitor-eye </v-icon>
             </v-btn>
             <v-btn
               color="pink"
@@ -98,7 +97,16 @@
               v-tooltip:bottom-end="'Execute ' + item.name"
               @click="showExecutionPanel(item)"
             >
-              <v-icon size="26px"> mdi-flash </v-icon>
+              <v-icon> mdi-flash </v-icon>
+            </v-btn>
+            <v-btn
+              color="primary"
+              variant="text"
+              v-tooltip:bottom-end="'Execution payload template'"
+              @click="viewPipelinePayload(item)"
+              :disabled="!canExecuteRemotely(item)"
+            >
+              <v-icon> mdi-code-json </v-icon>
             </v-btn>
             <!-- Dropdown menu with extra actions: edit, delete -->
             <v-menu location="bottom end" :disabled="!canEditPipeline(item)">
@@ -108,7 +116,7 @@
                   variant="text"
                   :disabled="!canEditPipeline(item)"
                 >
-                  <v-icon size="26px"> mdi-dots-vertical </v-icon>
+                  <v-icon> mdi-dots-vertical </v-icon>
                 </v-btn>
               </template>
 
@@ -120,7 +128,24 @@
                   <template v-slot:prepend>
                     <v-icon color="warning" icon="mdi-pencil" />
                   </template>
-                  <v-list-item-title>Edit</v-list-item-title>
+                  <v-list-item-title
+                    v-tooltip:bottom-end="'Edit pipeline ' + item.name"
+                    >Edit</v-list-item-title
+                  >
+                </v-list-item>
+
+                <v-list-item
+                  v-if="this.authStore.isAdmin"
+                  @click="changePipelineOwner(item)"
+                  :disabled="true"
+                >
+                  <template v-slot:prepend>
+                    <v-icon color="warning" icon="mdi-account-edit" />
+                  </template>
+                  <v-list-item-title
+                    v-tooltip:bottom-end="'Change the pipeline owner'"
+                    >Change Owner</v-list-item-title
+                  >
                 </v-list-item>
 
                 <v-list-item
@@ -130,7 +155,10 @@
                   <template v-slot:prepend>
                     <v-icon color="error" icon="mdi-delete" />
                   </template>
-                  <v-list-item-title>Delete</v-list-item-title>
+                  <v-list-item-title
+                    v-tooltip:bottom-end="'Delete this pipeline'"
+                    >Delete</v-list-item-title
+                  >
                 </v-list-item>
               </v-list>
             </v-menu>
@@ -167,6 +195,32 @@
             class="mb-4"
           />
           <JsonToHtmlTable :data="prunePipelineDetails(selectedPipeline)" />
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <!-- Pipeline Payload Dialog -->
+    <v-dialog v-model="showPayloadDialog" max-width="800px">
+      <v-card v-if="selectedPipeline">
+        <!-- v-card-title>
+            {{ selectedPipeline.name || selectedPipeline.id }}
+            <v-spacer />
+            <v-btn icon="mdi-close" variant="text" @click="showDetails = false" />
+          </v-card-title -->
+        <v-card-text>
+          <v-alert v-if="selectedPipeline" type="info" class="mb-4"
+            >Use the template below to execute the pipeline using cloud events
+            or API calls.<br />
+            Pipeline name: <b>{{ selectedPipeline.name }}</b
+            ><br />
+            Pipeline identifier: <b>{{ selectedPipeline.id }}</b
+            ><br />
+            See the definition of the parameters in the tool information.<br />
+            Change the parameter values as necessary.</v-alert
+          >
+          <pre class="report-json">{{
+            JSON.stringify(executionPayload, null, 2)
+          }}</pre>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -257,6 +311,7 @@ export default {
     return {
       search: '',
       showDetailsDialog: false,
+      showPayloadDialog: false,
       selectedPipeline: null,
       creationPanelVisible: false,
       creationParameters: {},
@@ -334,6 +389,13 @@ export default {
         return allText.toLowerCase().includes(searchTerm);
       });
     },
+
+    executionPayload() {
+      // Generate a pipeline execution payload template
+      return {
+        parameters: this.getPipelineUserParams(this.selectedPipeline),
+      };
+    },
   },
 
   methods: {
@@ -372,6 +434,11 @@ export default {
       );
     },
 
+    canExecuteRemotely(pipeline) {
+      // TODO: Use pipeline property / flag
+      return this.authStore.isAdmin;
+    },
+
     prunePipelineDetails(pipeline) {
       const keysToKeep = [
         'name',
@@ -396,6 +463,11 @@ export default {
     viewPipelineDetails(pipeline) {
       this.selectedPipeline = pipeline;
       this.showDetailsDialog = true;
+    },
+
+    viewPipelinePayload(pipeline) {
+      this.selectedPipeline = pipeline;
+      this.showPayloadDialog = true;
     },
 
     viewPipelineExecutions(pipeline) {
@@ -603,5 +675,10 @@ export default {
 .v-btn {
   padding: 5px;
   min-width: 0px;
+}
+
+.v-icon {
+  font-size: 26px;
+  min-width: 30px;
 }
 </style>

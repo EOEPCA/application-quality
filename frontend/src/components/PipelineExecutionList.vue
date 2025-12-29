@@ -60,7 +60,7 @@
     <v-data-table
       v-model:items-per-page="itemsPerPage"
       v-model:sort-by="sortBy"
-      :headers="_headers"
+      :headers="filteredHeaders"
       :items="store.executions"
       :filter-keys="['pipeline']"
       :custom-filter="filterOnPipelineId"
@@ -274,7 +274,7 @@ export default {
       return `${seconds}s ago`;
     },
 
-    _headers() {
+    filteredHeaders() {
       // Filter out columns restricted to admins if necessary
       return this.headers.filter(
         (x) => !x.admins_only || this.authStore.isAdmin,
