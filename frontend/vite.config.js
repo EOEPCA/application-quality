@@ -2,6 +2,10 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
+// const target_url = 'http://application-quality-2.eoepca-plus-testing';
+// const target_url = 'http://eoepca-plus-testing:30002';  // application-quality (very old)
+const target_url = 'http://application-quality-2.eoepca-plus-testing:30080/';  // (current)
+
 // Doc: https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -25,8 +29,7 @@ export default defineConfig({
     },
     proxy: {
       '/login': {
-        //target: 'http://eoepca-plus-testing:30002',
-        target: 'http://application-quality-2.eoepca-plus-testing',
+        target: target_url,
         changeOrigin: true,
         secure: false,
         ws: true,
@@ -44,8 +47,7 @@ export default defineConfig({
         }
       },
       '/oidc': {
-        //target: 'http://eoepca-plus-testing:30002',
-        target: 'http://application-quality-2.eoepca-plus-testing',
+        target: target_url,
         changeOrigin: true,
         secure: false,
         ws: true,
@@ -63,8 +65,7 @@ export default defineConfig({
         }
       },
       '/api': {
-        //target: 'http://eoepca-plus-testing:30002',
-        target: 'http://application-quality-2.eoepca-plus-testing',
+        target: target_url,
         changeOrigin: true,
         secure: false,
         ws: true,
