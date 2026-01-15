@@ -49,7 +49,7 @@
         "id": 3,
         "libraryPanel": {
           "name": "Notebook BP Validator Report",
-          "uid": "dey5uyuuv1ji8e"
+          "uid": "notebook-bp-validator-report"
         },
         "title": "Notebook BP Validator Report",
         "type": "library-panel-ref"
