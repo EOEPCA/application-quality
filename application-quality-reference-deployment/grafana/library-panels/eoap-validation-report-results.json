@@ -1,0 +1,254 @@
+{
+  "folderUid": "application-quality-service-reports",
+  "uid": "eoap-validation-report-results",
+  "name": "EO AP Validation Report Results",
+  "kind": 1,
+  "type": "table",
+  "description": "",
+  "model": {
+    "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "application-quality-db"
+    },
+    "description": "",
+    "fieldConfig": {
+      "defaults": {
+        "color": {
+          "fixedColor": "transparent",
+          "mode": "fixed"
+        },
+        "custom": {
+          "align": "auto",
+          "cellOptions": {
+            "type": "auto",
+            "wrapText": false
+          },
+          "filterable": false,
+          "inspect": false,
+          "minWidth": 80
+        },
+        "fieldMinMax": false,
+        "mappings": [
+          {
+            "options": {
+              "error": {
+                "color": "semi-dark-red",
+                "index": 1,
+                "text": "Error"
+              },
+              "hint": {
+                "color": "semi-dark-blue",
+                "index": 0,
+                "text": "Hint"
+              }
+            },
+            "type": "value"
+          }
+        ],
+        "noValue": "-",
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {
+              "color": "transparent",
+              "value": null
+            }
+          ]
+        }
+      },
+      "overrides": [
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Requirement ID"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 134
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Type"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 80
+            },
+            {
+              "id": "custom.cellOptions",
+              "value": {
+                "type": "color-background"
+              }
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Issue"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 889
+            },
+            {
+              "id": "custom.inspect",
+              "value": true
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Req ID"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 74
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Req ID"
+          },
+          "properties": [
+            {
+              "id": "links",
+              "value": [
+                {
+                  "targetBlank": true,
+                  "title": "OGC Best Practice",
+                  "url": "https://docs.ogc.org/bp/20-089r1.html"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Requirement"
+          },
+          "properties": [
+            {
+              "id": "custom.inspect",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    "options": {
+      "cellHeight": "sm",
+      "footer": {
+        "countRows": false,
+        "enablePagination": false,
+        "fields": "",
+        "reducer": [
+          "sum"
+        ],
+        "show": false
+      },
+      "frameIndex": 1,
+      "showHeader": true,
+      "sortBy": []
+    },
+    "pluginVersion": "12.0.1",
+    "targets": [
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "application-quality-db"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "hide": false,
+        "rawQuery": true,
+        "rawSql": "SELECT\n  issues ->> 'type' AS \"Type\",\n  issues ->> 'message' AS \"Issue\",\n  issues ->> 'req' AS \"Requirement ID\"\nFROM\n  (\n    SELECT\n      jsonb_array_elements(output :: jsonb -> 'issues') AS issues\n    FROM\n      reports_admin\n    WHERE\n      id = ${report_id}\n  ) AS sub;",
+        "refId": "A",
+        "sql": {
+          "columns": [
+            {
+              "parameters": [],
+              "type": "function"
+            }
+          ],
+          "groupBy": [
+            {
+              "property": {
+                "type": "string"
+              },
+              "type": "groupBy"
+            }
+          ],
+          "limit": 50
+        }
+      },
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "application-quality-db"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "hide": false,
+        "rawQuery": true,
+        "rawSql": "SELECT\n  req ->> 'key' AS \"Requirement ID\",\n  req ->> 'value' AS \"Requirement\"\nFROM\n  (\n    SELECT\n      to_jsonb(jsonb_each(output :: jsonb -> 'requirements')) AS req\n    FROM\n      reports_admin\n    WHERE\n      id = ${report_id}\n  ) AS sub;",
+        "refId": "B",
+        "sql": {
+          "columns": [
+            {
+              "parameters": [],
+              "type": "function"
+            }
+          ],
+          "groupBy": [
+            {
+              "property": {
+                "type": "string"
+              },
+              "type": "groupBy"
+            }
+          ],
+          "limit": 50
+        }
+      }
+    ],
+    "title": "Issues",
+    "transformations": [
+      {
+        "id": "joinByField",
+        "options": {
+          "byField": "Requirement ID",
+          "mode": "outerTabular"
+        }
+      },
+      {
+        "id": "organize",
+        "options": {
+          "excludeByName": {},
+          "includeByName": {},
+          "indexByName": {
+            "Issue": 1,
+            "Requirement": 3,
+            "Requirement ID": 2,
+            "Type": 0
+          },
+          "renameByName": {
+            "Requirement ID": "Req ID"
+          }
+        }
+      }
+    ],
+    "type": "table"
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "folderUid": "application-quality-service-reports",
+  "uid": "eoap-validation-report-statistics",
+  "name": "EO AP Validation Report Statistics",
+  "kind": 1,
+  "type": "piechart",
+  "description": "",
+  "model": {
+    "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "application-quality-db"
+    },
+    "description": "",
+    "fieldConfig": {
+      "defaults": {
+        "color": {
+          "mode": "palette-classic"
+        },
+        "custom": {
+          "hideFrom": {
+            "legend": false,
+            "tooltip": false,
+            "viz": false
+          }
+        },
+        "fieldMinMax": false,
+        "mappings": [
+          {
+            "options": {
+              "error": {
+                "index": 0,
+                "text": "Errors"
+              },
+              "hint": {
+                "index": 1,
+                "text": "Hints"
+              }
+            },
+            "type": "value"
+          }
+        ]
+      },
+      "overrides": [
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Errors"
+          },
+          "properties": [
+            {
+              "id": "color",
+              "value": {
+                "fixedColor": "semi-dark-red",
+                "mode": "fixed"
+              }
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Hints"
+          },
+          "properties": [
+            {
+              "id": "color",
+              "value": {
+                "fixedColor": "semi-dark-blue",
+                "mode": "fixed"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "options": {
+      "displayLabels": [
+        "name",
+        "value"
+      ],
+      "legend": {
+        "displayMode": "table",
+        "placement": "bottom",
+        "showLegend": true,
+        "sortBy": "Value",
+        "sortDesc": true,
+        "values": [
+          "percent",
+          "value"
+        ]
+      },
+      "pieType": "pie",
+      "reduceOptions": {
+        "calcs": [
+          "lastNotNull"
+        ],
+        "fields": "",
+        "values": true
+      },
+      "tooltip": {
+        "hideZeros": false,
+        "mode": "single",
+        "sort": "none"
+      }
+    },
+    "pluginVersion": "12.0.1",
+    "targets": [
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "application-quality-db"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT\n  severity,\n  COUNT(*) AS total_count\nFROM\n  (\n    SELECT\n      jsonb_array_elements(output :: jsonb -> 'issues') ->> 'type' AS severity\n    FROM\n      reports_admin\n    WHERE\n      id = ${report_id}\n  ) AS sub\nGROUP BY\n  severity\nORDER BY\n  CASE severity\n    WHEN 'Error' THEN 1\n    WHEN 'Hint' THEN 2\n    ELSE 3\n  END;",
+        "refId": "A",
+        "sql": {
+          "columns": [
+            {
+              "parameters": [],
+              "type": "function"
+            }
+          ],
+          "groupBy": [
+            {
+              "property": {
+                "type": "string"
+              },
+              "type": "groupBy"
+            }
+          ],
+          "limit": 50
+        }
+      }
+    ],
+    "title": "Statistics",
+    "type": "piechart"
+  }
+}
