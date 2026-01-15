@@ -109,6 +109,7 @@ nodeSelector: {}
 
 oidc:
   enabled: false
+  realm: eoepca
   realmBaseUrl: ".../realms/master"
   # Client ID and Secret set in SealedSecret
   clientId: ""
@@ -122,6 +123,19 @@ oidc:
   logoutRedirectUrl: "/"
   rpRedirectUri: ""
   rpSignAlgo: "RS256"
+
+  iam_provisioning:
+    enabled: false
+    keycloakProviderConfig: keycloak-provider-config
+    clientName: Application Quality BB
+    clientDescription: Application Quality Web Portal and Grafana OIDC
+    clientSecretName: application-quality-iam-client
+    clientSecretKey: client_secret
+    clientEnabled: true
+    namespace: iam-management
+    accessType: PUBLIC
+    httpScheme: https
+    initialiseTestUsers: false
 
 sonarqube:
   enabled: false
