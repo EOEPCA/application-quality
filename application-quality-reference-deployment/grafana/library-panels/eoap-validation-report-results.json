@@ -32,14 +32,19 @@
           {
             "options": {
               "error": {
-                "color": "semi-dark-red",
-                "index": 1,
+                "color": "dark-red",
+                "index": 0,
                 "text": "Error"
               },
               "hint": {
                 "color": "semi-dark-blue",
-                "index": 0,
+                "index": 1,
                 "text": "Hint"
+              },
+              "note": {
+                "color": "dark-green",
+                "index": 2,
+                "text": "Note"
               }
             },
             "type": "value"
@@ -223,13 +228,13 @@
         }
       }
     ],
-    "title": "Issues",
+    "title": "Output",
     "transformations": [
       {
         "id": "joinByField",
         "options": {
           "byField": "Requirement ID",
-          "mode": "outerTabular"
+          "mode": "outer"
         }
       },
       {

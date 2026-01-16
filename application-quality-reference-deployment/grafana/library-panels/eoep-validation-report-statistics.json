@@ -34,6 +34,10 @@
               "hint": {
                 "index": 1,
                 "text": "Hints"
+              },
+              "note": {
+                "index": 2,
+                "text": "Note"
               }
             },
             "type": "value"
@@ -66,6 +70,21 @@
               "id": "color",
               "value": {
                 "fixedColor": "semi-dark-blue",
+                "mode": "fixed"
+              }
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Note"
+          },
+          "properties": [
+            {
+              "id": "color",
+              "value": {
+                "fixedColor": "semi-dark-green",
                 "mode": "fixed"
               }
             }
