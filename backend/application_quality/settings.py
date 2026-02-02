@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 
 from pathlib import Path
+from urllib.parse import urlparse
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -54,7 +56,23 @@ LOGGING = {
     },
 }
 
-ALLOWED_HOSTS = ["*"]
+# Build the ALLOWED_HOSTS variable
+
+# PUBLIC_URL should contain a scheme, and possibly a port number
+allowed_host = os.getenv("PUBLIC_URL")
+if "://" not in allowed_host:
+    allowed_host = "http://" + allowed_host
+parsed_allowed_host = urlparse(allowed_host)
+allowed_domain = parsed_allowed_host.netloc
+if ":" in allowed_domain:
+    # Remove the port number, if any
+    allowed_domain = allowed_domain.split(":")[0]
+
+ALLOWED_HOSTS = [allowed_domain]
+add_hosts_raw = os.getenv("ADDITIONAL_ALLOWED_HOSTS")
+if add_hosts_raw:
+    add_hosts_list = [host.strip() for host in add_hosts_raw.split(',') if host.strip()]
+    ALLOWED_HOSTS.extend(add_hosts_list)
 
 
 # Application definition
@@ -245,9 +263,8 @@ if OIDC_ENABLED.lower() == "true":
 
 
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOWED_ORIGINS = [os.getenv("PUBLIC_URL")]  # Frontend URL
-
 CORS_ALLOW_HEADERS = "*"
+CORS_ALLOWED_ORIGINS = [os.getenv("PUBLIC_URL")]  # Frontend URL
 
 #CSRF_COOKIE_SECURE = False
 #CSRF_USE_SESSIONS = True

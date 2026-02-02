@@ -23,10 +23,10 @@ AQBB_MAXRAM = os.getenv("AQBB_MAXRAM", "2Gi")
 AQBB_SECRET = os.getenv("AQBB_SECRET", None)
 # Create a ServiceAccount for Calrissian with the right roles and use it here
 AQBB_SERVICEACCOUNT = os.getenv("AQBB_SERVICEACCOUNT", None)
-# Backend service replicated in the vcluster (for reports storage)
+# Backend service, possibly replicated in a virtual cluster (for storing reports)
 BACKEND_SERVICE_HOST = os.getenv(
     "BACKEND_SERVICE_HOST",
-    "backend-service.default.svc.cluster.local"
+    "application-quality-api.application-quality.svc.cluster.local"
 )
 BACKEND_SERVICE_PORT = os.getenv("BACKEND_SERVICE_PORT", "80")
 SONARQUBE_SERVER = os.getenv(
