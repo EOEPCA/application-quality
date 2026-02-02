@@ -1,0 +1,36 @@
+{
+  "folderUid": "application-quality-service-reports",
+  "uid": "pipeline-execution-report-header",
+  "name": "Pipeline Execution Report Header",
+  "kind": 1,
+  "type": "text",
+  "description": "",
+  "model": {
+    "description": "",
+    "options": {
+      "code": {
+        "language": "plaintext",
+        "showLineNumbers": false,
+        "showMiniMap": false
+      },
+      "content": "# Pipeline Execution Report\n\nSee below the details of the execution report ...\n\n* Pipeline: **${pipeline_name}** (ID: ${pipeline_id})\n* Pipeline execution ID: [**${execution_id}**](/d/pipeline-execution/pipeline-execution?)\n* Execution report ID: **${report_id}**",
+      "mode": "markdown"
+    },
+    "pluginVersion": "12.0.1",
+    "transparent": true,
+    "type": "text",
+    "targets": [
+      {
+        "refId": "A",
+        "datasource": {
+          "uid": "application-quality-db",
+          "type": "grafana-postgresql-datasource"
+        }
+      }
+    ],
+    "datasource": {
+      "uid": "application-quality-db",
+      "type": "grafana-postgresql-datasource"
+    }
+  }
+}

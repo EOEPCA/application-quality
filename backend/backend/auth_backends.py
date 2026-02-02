@@ -9,12 +9,11 @@ logger = logging.getLogger(__name__)
 
 
 class CustomOIDCAuthenticationBackend(OIDCAuthenticationBackend):
-
     def verify_claims(self, claims):
         if "email" not in claims:
             username = claims.get("preferred_username", claims["sub"])
             claims["email"] = f"{username}@example.com"
-        logger.info(f"Claims to verify: {claims}")
+        logger.info("Claims to verify: %s", claims)
         return super().verify_claims(claims)
 
     def create_user(self, claims):
@@ -22,14 +21,22 @@ class CustomOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         user.username = claims.get("preferred_username", claims["sub"])
         user.first_name = claims.get("given_name", user.username)
         user.last_name = claims.get("family_name", "")
-        logger.info(f"Creating user with username '{user.username}'")
+        logger.info("Creating user with username '%s'", user.username)
         user.save()
+        return user
+
+    def update_user(self, user, claims):
+        user = super().update_user(user, claims)
+        user.first_name = claims.get("given_name", user.username)
+        user.last_name = claims.get("family_name", "")
+        logger.info("Updating user with username '%s'", user.username)
+        user.save(update_fields=["first_name", "last_name", "email"])
         return user
 
 
 def logout_next_url(request):
     url = (
-        f'{settings.OIDC_OP_USER_ENDPOINT.replace("userinfo", "logout")}'
+        f"{settings.OIDC_OP_USER_ENDPOINT.replace('userinfo', 'logout')}"
         "?response_type=code"
         f"&client_id={settings.OIDC_RP_CLIENT_ID}"
         f"&post_logout_redirect_uri={settings.OIDC_POST_LOGOUT_REDIRECT_URL}"

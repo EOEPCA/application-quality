@@ -48,12 +48,19 @@ persistence:
 
 vclusters:
   enabled: false
+  required: false
   # Templated
   name: "{{ .Release.Namespace }}-vcluster"
   # Templated
   namespace: "{{ .Release.Namespace }}-vcluster"
   # Local "namespace/service" to the backend service inside the vcluster:
   #service: default/backend-service
+
+workspace:
+  apiServiceUrl: ""
+  vcluster:
+    enabled: false
+    required: false
 
 calrissian:
   image: "terradue/calrissian:0.14.0"
@@ -62,18 +69,8 @@ calrissian:
   maxRam: "2Gi"
   storageClassName: nfs-client
 
-opensearch:
-  # Enable or disable saving runs and reports in Opensearch (default: false)
+grafana:
   enabled: false
-  # Internal URL of the Opensearch servier (e.g. https://opensearch-cluster-master.application-quality-opensearch.svc.cluster.local:9200)
-  #url:
-  # Name of the Opensearch index where the pipeline runs must be stored (default: application-quality-pipeline-runs)
-  #indexRuns: 
-  # Name of the Opensearch index where the pipeline run reports must be stored (default: application-quality-pipeline-run-reports)
-  #indexReports:
-  # Username and password of an Opensearch user who has access to the two indices above
-  #username:
-  #password:
 
 web_server:
   access_scheme: http

@@ -1,0 +1,132 @@
+{
+  "folderUid": "application-quality-service-reports",
+  "overwrite": false,
+  "dashboard": {
+    "description": "Dashboard for displaying Jupyter notebooks Best Practice Validation Reports",
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 13,
+    "links": [
+      {
+        "asDropdown": false,
+        "icon": "dashboard",
+        "includeVars": true,
+        "keepTime": false,
+        "tags": [
+          "pipeline-execution-dashboard"
+        ],
+        "targetBlank": false,
+        "title": "Pipeline Execution Dashboard",
+        "tooltip": "Go to pipeline execution dashboard",
+        "type": "dashboards",
+        "url": ""
+      }
+    ],
+    "panels": [
+      {
+        "gridPos": {
+          "h": 5,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        },
+        "id": 2,
+        "libraryPanel": {
+          "name": "Pipeline Execution Report Header",
+          "uid": "pipeline-execution-report-header"
+        },
+        "title": "",
+        "type": "library-panel-ref"
+      },
+      {
+        "gridPos": {
+          "h": 15,
+          "w": 24,
+          "x": 0,
+          "y": 5
+        },
+        "id": 3,
+        "libraryPanel": {
+          "name": "Notebook BP Validator Report",
+          "uid": "dey5uyuuv1ji8e"
+        },
+        "title": "Notebook BP Validator Report",
+        "type": "library-panel-ref"
+      }
+    ],
+    "preload": false,
+    "schemaVersion": 41,
+    "tags": [],
+    "templating": {
+      "list": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "application-quality-db"
+          },
+          "definition": "SELECT id FROM reports_admin WHERE name = 'notebook-bp-validator'",
+          "hide": 2,
+          "label": "Report ID",
+          "name": "report_id",
+          "options": [],
+          "query": "SELECT id FROM reports_admin WHERE name = 'notebook-bp-validator'",
+          "refresh": 1,
+          "regex": "",
+          "type": "query"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "application-quality-db"
+          },
+          "definition": "SELECT run_id FROM reports_admin WHERE id = $report_id",
+          "hide": 2,
+          "label": "Execution ID",
+          "name": "execution_id",
+          "options": [],
+          "query": "SELECT run_id FROM reports_admin WHERE id = $report_id",
+          "refresh": 1,
+          "regex": "",
+          "type": "query"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "application-quality-db"
+          },
+          "definition": "SELECT pipeline_id FROM executions_admin WHERE id = $execution_id",
+          "hide": 2,
+          "label": "Pipeline ID",
+          "name": "pipeline_id",
+          "options": [],
+          "query": "SELECT pipeline_id FROM executions_admin WHERE id = $execution_id",
+          "refresh": 1,
+          "regex": "",
+          "type": "query"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "application-quality-db"
+          },
+          "definition": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
+          "hide": 2,
+          "label": "Pipeline Name",
+          "name": "pipeline_name",
+          "options": [],
+          "query": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
+          "refresh": 1,
+          "regex": "",
+          "type": "query"
+        }
+      ]
+    },
+    "timepicker": {
+      "hidden": true
+    },
+    "timezone": "browser",
+    "title": "Notebook BP Validator Report",
+    "uid": "default-notebook-bp-validator-report"
+  }
+}

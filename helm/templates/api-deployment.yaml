@@ -37,7 +37,7 @@ spec:
           command:
             - supervisord
             - -c
-            - /etc/supervisor/conf.d/supervisord.conf
+            - /etc/supervisor/supervisord.conf
           envFrom:
             - configMapRef:
                 name: {{ include "application-quality.fullname" . }}-api-env
@@ -45,9 +45,9 @@ spec:
             #    name: application-quality-db-creds
             - secretRef:
                 name: application-quality-auth-client
-            {{- if .Values.opensearch.enabled }}
+            {{- if .Values.grafana.enabled }}
             - secretRef:
-                name: {{ include "application-quality.fullname" . }}-opensearch
+                name: application-quality-grafana-dashboards-admin-creds
             {{- end }}
           resources:
             requests:

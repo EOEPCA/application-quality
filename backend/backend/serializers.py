@@ -1,5 +1,5 @@
-from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag
 from rest_framework import serializers
+from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag
 
 
 class PipelineSerializer(serializers.ModelSerializer):
@@ -49,7 +49,7 @@ class PipelineRunSerializer(serializers.ModelSerializer):
 class JobReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobReport
-        fields = ["name", "output", "run"]
+        fields = ["id", "name", "instance", "created_at", "output", "run"]
         read_only_fields = ["run"]
 
 
@@ -64,6 +64,8 @@ class SubworkflowSerializer(serializers.ModelSerializer):
             "tags",
             "tools",
             "version",
+            "status",
+            "available",
         ]
 
 

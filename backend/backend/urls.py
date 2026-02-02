@@ -1,3 +1,4 @@
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 from backend.views import (
     PipelineViewSet,
@@ -5,6 +6,8 @@ from backend.views import (
     JobReportViewSet,
     SubworkflowViewSet,
     TagViewSet,
+    SettingsView,
+    EventsView,
 )
 
 router = DefaultRouter()
@@ -16,3 +19,8 @@ router.register(r"tools",                                                       
 router.register(r"tags",                                                                    TagViewSet,         basename="tag")
 
 urlpatterns = router.urls
+
+urlpatterns += [
+    path("settings/", SettingsView.as_view(), name="settings"),
+    path("events/", EventsView.as_view(), name="events"),
+]

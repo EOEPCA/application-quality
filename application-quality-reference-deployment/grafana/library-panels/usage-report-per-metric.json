@@ -1,0 +1,156 @@
+{
+  "folderUid": "application-quality-service",
+  "uid": "usage-report-per-metric",
+  "name": "Usage Report per Metric",
+  "kind": 1,
+  "type": "barchart",
+  "description": "",
+  "model": {
+    "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "application-quality-db"
+    },
+    "description": "",
+    "fieldConfig": {
+      "defaults": {
+        "color": {
+          "fixedColor": "orange",
+          "mode": "palette-classic"
+        },
+        "custom": {
+          "axisBorderShow": false,
+          "axisCenteredZero": false,
+          "axisColorMode": "text",
+          "axisGridShow": true,
+          "axisLabel": "",
+          "axisPlacement": "auto",
+          "fillOpacity": 80,
+          "gradientMode": "none",
+          "hideFrom": {
+            "legend": false,
+            "tooltip": false,
+            "viz": false
+          },
+          "lineWidth": 1,
+          "scaleDistribution": {
+            "type": "linear"
+          },
+          "thresholdsStyle": {
+            "mode": "off"
+          }
+        },
+        "mappings": [],
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {
+              "color": "green",
+              "value": null
+            }
+          ]
+        },
+        "unit": "s"
+      },
+      "overrides": []
+    },
+    "options": {
+      "barRadius": 0,
+      "barWidth": 0.97,
+      "fullHighlight": true,
+      "groupWidth": 0.7,
+      "legend": {
+        "calcs": [],
+        "displayMode": "list",
+        "placement": "right",
+        "showLegend": true
+      },
+      "orientation": "auto",
+      "showValue": "always",
+      "stacking": "none",
+      "tooltip": {
+        "hideZeros": false,
+        "mode": "single",
+        "sort": "none"
+      },
+      "xField": "Field",
+      "xTickLabelRotation": 0,
+      "xTickLabelSpacing": 0
+    },
+    "pluginVersion": "12.0.1",
+    "targets": [
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "application-quality-db"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT\n--  e.id AS execution_id,\n  child ->> 'name' AS step_name,\n  (child ->> 'cpu_hours') :: float AS cpu_hours,\n  (child ->> 'elapsed_seconds') :: float AS elapsed_seconds,\n  (child ->> 'ram_megabyte_hours') :: float AS ram_megabyte_hours\nFROM\n  executions_admin e,\n  jsonb_array_elements(e.usage_report :: jsonb -> 'children') AS child\nWHERE\n  e.usage_report IS NOT NULL\n  AND id = $execution_id \n  AND (child ->> 'name') NOT LIKE 'clone_%'\n  AND (child ->> 'name') NOT LIKE 'filter_%'\n  AND (child ->> 'name') NOT LIKE 'save_%'\nLIMIT\n  50;",
+        "refId": "A",
+        "sql": {
+          "columns": [
+            {
+              "parameters": [
+                {
+                  "name": "*",
+                  "type": "functionParameter"
+                }
+              ],
+              "type": "function"
+            }
+          ],
+          "groupBy": [
+            {
+              "property": {
+                "type": "string"
+              },
+              "type": "groupBy"
+            }
+          ],
+          "limit": 10,
+          "whereJsonTree": {
+            "children1": [
+              {
+                "id": "b89a8b9a-cdef-4012-b456-719768bf3b6e",
+                "properties": {
+                  "field": "usage_report",
+                  "fieldSrc": "field",
+                  "operator": "is_not_null",
+                  "value": [],
+                  "valueSrc": [],
+                  "valueType": []
+                },
+                "type": "rule"
+              }
+            ],
+            "id": "8b9998a8-0123-4456-b89a-b19768778aa4",
+            "type": "group"
+          },
+          "whereString": "usage_report IS NOT NULL"
+        },
+        "table": "executions"
+      }
+    ],
+    "title": "Usage Report per Metric",
+    "transformations": [
+      {
+        "id": "sortBy",
+        "options": {
+          "fields": {},
+          "sort": [
+            {
+              "desc": false,
+              "field": "step_name"
+            }
+          ]
+        }
+      },
+      {
+        "id": "transpose",
+        "options": {}
+      }
+    ],
+    "type": "barchart"
+  }
+}

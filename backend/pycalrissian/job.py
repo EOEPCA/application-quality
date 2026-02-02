@@ -284,8 +284,8 @@ class CalrissianJob:
                 )
             ),
             resources=V1ResourceRequirements(
-                requests={"cpu": "1000m", "memory": "1G"},
-                limits={"cpu": "2000m", "memory": "2G"},
+                requests={"cpu": "250m", "memory": "250Mi"},
+                limits={"cpu": "250m", "memory": "250Mi"},
             ),
         )
 

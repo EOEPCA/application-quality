@@ -1,0 +1,188 @@
+{
+  "folderUid": "application-quality-service",
+  "overwrite": false,
+  "dashboard": {
+    "editable": true,
+    "links": [
+      {
+        "asDropdown": false,
+        "icon": "dashboard",
+        "includeVars": true,
+        "keepTime": false,
+        "tags": [
+          "pipeline-executions-dashboard"
+        ],
+        "targetBlank": false,
+        "title": "Pipeline Executions",
+        "tooltip": "Open the pipeline executions dashboard",
+        "type": "dashboards",
+        "url": ""
+      }
+    ],
+    "panels": [
+      {
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 6,
+          "w": 7,
+          "x": 0,
+          "y": 0
+        },
+        "id": 1,
+        "options": {
+          "code": {
+            "language": "plaintext",
+            "showLineNumbers": false,
+            "showMiniMap": false
+          },
+          "content": "# Pipeline Execution\n\n* Pipeline: **${pipeline_name}** (ID: ${pipeline_id})\n* Execution ID: **${execution_id}**",
+          "mode": "markdown"
+        },
+        "pluginVersion": "12.0.1",
+        "title": "",
+        "transparent": true,
+        "type": "text"
+      },
+      {
+        "gridPos": {
+          "h": 6,
+          "w": 17,
+          "x": 7,
+          "y": 0
+        },
+        "id": 3,
+        "libraryPanel": {
+          "name": "Pipeline Inputs",
+          "uid": "pipeline-inputs"
+        },
+        "title": "Pipeline Inputs",
+        "type": "library-panel-ref"
+      },
+      {
+        "gridPos": {
+          "h": 4,
+          "w": 24,
+          "x": 0,
+          "y": 6
+        },
+        "id": 6,
+        "libraryPanel": {
+          "name": "Pipeline Usage Report",
+          "uid": "pipeline-usage-report"
+        },
+        "title": "Pipeline Usage Report",
+        "type": "library-panel-ref"
+      },
+      {
+        "gridPos": {
+          "h": 6,
+          "w": 24,
+          "x": 0,
+          "y": 10
+        },
+        "id": 2,
+        "libraryPanel": {
+          "name": "Pipeline Execution Reports List",
+          "uid": "pipeline-executions-report-list"
+        },
+        "title": "Pipeline Execution Reports",
+        "type": "library-panel-ref"
+      },
+      {
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        },
+        "id": 4,
+        "libraryPanel": {
+          "name": "Usage Report per Metric",
+          "uid": "usage-report-per-metric"
+        },
+        "title": "Usage Report per Metric",
+        "type": "library-panel-ref"
+      },
+      {
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 16
+        },
+        "id": 5,
+        "libraryPanel": {
+          "name": "Usage Report per Tool",
+          "uid": "usage-report-per-tool"
+        },
+        "title": "Usage Report per Tool",
+        "type": "library-panel-ref"
+      }
+    ],
+    "preload": false,
+    "schemaVersion": 41,
+    "tags": [
+      "pipeline-execution-dashboard"
+    ],
+    "templating": {
+      "list": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "application-quality-db"
+          },
+          "definition": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
+          "hide": 2,
+          "label": "Pipeline ID",
+          "name": "pipeline_name",
+          "options": [],
+          "query": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
+          "refresh": 1,
+          "regex": "",
+          "type": "query"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "application-quality-db"
+          },
+          "definition": "SELECT pipeline_id FROM executions_admin WHERE id = $execution_id",
+          "description": "",
+          "hide": 2,
+          "label": "Pipeline ID",
+          "name": "pipeline_id",
+          "options": [],
+          "query": "SELECT pipeline_id FROM executions_admin WHERE id = $execution_id",
+          "refresh": 1,
+          "regex": "",
+          "type": "query"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "application-quality-db"
+          },
+          "definition": "SELECT id FROM executions_admin WHERE id IS NOT NULL ",
+          "hide": 2,
+          "label": "Execution ID",
+          "name": "execution_id",
+          "options": [],
+          "query": "SELECT id FROM executions_admin WHERE id IS NOT NULL ",
+          "refresh": 1,
+          "regex": "",
+          "sort": 4,
+          "type": "query"
+        }
+      ]
+    },
+    "timepicker": {
+      "hidden": true
+    },
+    "timezone": "browser",
+    "title": "Pipeline Execution",
+    "uid": "pipeline-execution"
+  }
+}

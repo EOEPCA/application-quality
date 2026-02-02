@@ -1,0 +1,163 @@
+{
+  "folderUid": "application-quality-service-reports",
+  "uid": "trivy-report-metadata",
+  "name": "Trivy Report Metadata",
+  "kind": 1,
+  "type": "table",
+  "description": "",
+  "model": {
+    "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "application-quality-db"
+    },
+    "description": "",
+    "fieldConfig": {
+      "defaults": {
+        "color": {
+          "mode": "thresholds"
+        },
+        "custom": {
+          "align": "auto",
+          "cellOptions": {
+            "type": "auto"
+          },
+          "inspect": false
+        },
+        "mappings": [],
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {
+              "color": "green",
+              "value": null
+            },
+            {
+              "color": "red",
+              "value": 80
+            }
+          ]
+        }
+      },
+      "overrides": [
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Artifact Name"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 197
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Property"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 367
+            }
+          ]
+        }
+      ]
+    },
+    "options": {
+      "cellHeight": "sm",
+      "footer": {
+        "countRows": false,
+        "enablePagination": false,
+        "fields": "",
+        "reducer": [
+          "sum"
+        ],
+        "show": false
+      },
+      "showHeader": true,
+      "sortBy": []
+    },
+    "pluginVersion": "12.0.1",
+    "targets": [
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "application-quality-db"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "hide": false,
+        "rawQuery": true,
+        "rawSql": "SELECT\n  'Value' AS \"Property\",\n  artifact_name AS \"Artifact Name\",\n  artifact_type AS \"Artifact Type\",\n  schema_version AS \"Schema Version\",\n  metadata ->> 'ImageID' AS \"Image ID\",\n  metadata -> 'OS' ->> 'Family' AS \"OS Name\",\n  metadata -> 'OS' ->> 'Name' AS \"OS Version\",\n  metadata -> 'ImageConfig' ->> 'os' AS \"OS Type\",\n  metadata -> 'ImageConfig' ->> 'architecture' AS \"Architecture\",\n  metadata -> 'ImageConfig' ->> 'created' AS \"Created\",\n  TO_CHAR(\n    TO_TIMESTAMP(\n        (metadata -> 'ImageConfig' ->> 'created'),\n        'YYYY-MM-DD\"T\"HH24:MI:SS'\n      ),\n      'DD Month YYYY at HH24:MI:SS'\n    ) AS \"Image Created\",\n  metadata -> 'ImageConfig' -> 'config' -> 'Labels' AS \"Labels\"\nFROM\n  (\n    SELECT\n      (output :: jsonb -> 'Metadata') AS metadata,\n      (output :: jsonb ->> 'ArtifactName') AS artifact_name,\n      (output :: jsonb ->> 'ArtifactType') AS artifact_type,\n      (output :: jsonb -> 'SchemaVersion') AS schema_version\n    FROM\n      reports_admin\n    WHERE\n      id = ${report_id}\n  ) AS sub;",
+        "refId": "A",
+        "sql": {
+          "columns": [
+            {
+              "parameters": [],
+              "type": "function"
+            }
+          ],
+          "groupBy": [
+            {
+              "property": {
+                "type": "string"
+              },
+              "type": "groupBy"
+            }
+          ],
+          "limit": 50
+        }
+      }
+    ],
+    "title": "Metadata",
+    "transformations": [
+      {
+        "id": "extractFields",
+        "options": {
+          "delimiter": ",",
+          "keepTime": false,
+          "replace": false,
+          "source": "Labels"
+        }
+      },
+      {
+        "id": "filterFieldsByName",
+        "options": {
+          "byVariable": false,
+          "include": {
+            "names": [
+              "Property",
+              "Artifact Name",
+              "Artifact Type",
+              "Schema Version",
+              "Image ID",
+              "OS Name",
+              "OS Version",
+              "OS Type",
+              "Architecture",
+              "Image Created",
+              "org.opencontainers.image.url",
+              "org.opencontainers.image.title",
+              "org.opencontainers.image.source",
+              "org.opencontainers.image.created",
+              "org.opencontainers.image.version",
+              "org.opencontainers.image.licenses",
+              "org.opencontainers.image.revision",
+              "org.opencontainers.image.description"
+            ]
+          }
+        }
+      },
+      {
+        "id": "transpose",
+        "options": {
+          "firstFieldName": "Property",
+          "restFieldsName": "Value"
+        }
+      }
+    ],
+    "type": "table"
+  }
+}

@@ -10,9 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 import os
-import sys
 
 from pathlib import Path
+from urllib.parse import urlparse
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-2)ffxll8_-u0fa4=cme!-ehj_n#5=mpk_2%t&!*ecwne7e0fur"
 
-DEBUG = os.getenv("BACKEND_SERVICE_DEBUG_ENABLED", False)
+DEBUG = os.getenv("BACKEND_SERVICE_DEBUG_ENABLED", "False").lower() in ("yes", "y", "true", "1", "t")
 
 LOGGING = {
     "version": 1,
@@ -55,7 +56,23 @@ LOGGING = {
     },
 }
 
-ALLOWED_HOSTS = ["*"]
+# Build the ALLOWED_HOSTS variable
+
+# PUBLIC_URL should contain a scheme, and possibly a port number
+allowed_host = os.getenv("PUBLIC_URL")
+if "://" not in allowed_host:
+    allowed_host = "http://" + allowed_host
+parsed_allowed_host = urlparse(allowed_host)
+allowed_domain = parsed_allowed_host.netloc
+if ":" in allowed_domain:
+    # Remove the port number, if any
+    allowed_domain = allowed_domain.split(":")[0]
+
+ALLOWED_HOSTS = [allowed_domain]
+add_hosts_raw = os.getenv("ADDITIONAL_ALLOWED_HOSTS")
+if add_hosts_raw:
+    add_hosts_list = [host.strip() for host in add_hosts_raw.split(',') if host.strip()]
+    ALLOWED_HOSTS.extend(add_hosts_list)
 
 
 # Application definition
@@ -72,6 +89,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "backend",
     "mozilla_django_oidc",
+    "django_svelte_jsoneditor",  # See SVELTE_JSONEDITOR_PROPS, below
 ]
 
 MIDDLEWARE = [
@@ -128,8 +146,8 @@ DATABASES = {
     }
 }
 
-if 'test' in sys.argv:
-    DATABASES['default'] = {'ENGINE': 'django.db.backends.sqlite3'}
+# if 'test' in sys.argv:
+#     DATABASES['default'] = {'ENGINE': 'django.db.backends.sqlite3'}
 
 
 # Password validation
@@ -149,6 +167,25 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+
+# svelte-jsoneditor default properties for all widgets rendered in the app.
+# See: https://django-svelte-jsoneditor.readthedocs.io/en/latest/settings.html
+
+SVELTE_JSONEDITOR_PROPS = {
+    # Just the subset to customize:
+    "mode": "tree",
+    "mainMenuBar": True,
+    "navigationBar": True,
+    "statusBar": True,
+    "askToFormat": True,
+    "readOnly": False,
+    "indentation": 4,
+    "tabSize": 4,
+    "escapeControlCharacters": False,
+    "escapeUnicodeCharacters": False,
+    "flattenColumns": True,
+}
 
 
 # Internationalization
@@ -226,10 +263,9 @@ if OIDC_ENABLED.lower() == "true":
 
 
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOWED_ORIGINS = [os.getenv("PUBLIC_URL")] # Frontend URL
-
 CORS_ALLOW_HEADERS = "*"
+CORS_ALLOWED_ORIGINS = [os.getenv("PUBLIC_URL")]  # Frontend URL
 
 #CSRF_COOKIE_SECURE = False
 #CSRF_USE_SESSIONS = True
-CSRF_TRUSTED_ORIGINS = [os.getenv("PUBLIC_URL")]  # (Api Base Url)
+CSRF_TRUSTED_ORIGINS = [os.getenv("PUBLIC_URL")]  # API Base URL

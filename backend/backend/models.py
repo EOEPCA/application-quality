@@ -42,7 +42,7 @@ class PipelineRun(models.Model):
         return self.jobreports.count()
 
     def __str__(self):
-        return f"{"✅" if self.status == "succeeded" else "❌"} Run {self.id}: {self.pipeline.name}"
+        return f"{'✅' if self.status == 'succeeded' else '❌'} Run {self.id}: {self.pipeline.name}"
 
 
 class JobReport(models.Model):
@@ -50,9 +50,10 @@ class JobReport(models.Model):
     name            = models.SlugField(max_length=50)
     output          = models.JSONField()
     created_at      = models.DateTimeField(null=True)
+    instance        = models.CharField(max_length=200, default="")
 
     def __str__(self):
-        return f"Run {self.run.id} ({self.run.pipeline.name}): {self.name} job"
+        return f"Run {self.run.id} ({self.run.pipeline.name}): {self.name} {'/' if self.instance else ''} {self.instance}"
 
 
 class Tag(models.Model):
@@ -63,6 +64,14 @@ class Tag(models.Model):
 
 
 class Subworkflow(models.Model):
+
+    class Status(models.TextChoices):
+        BETA = 'Beta'
+        CANDIDATE = 'Candidate'
+        DISABLED = 'Disabled'
+        STABLE = 'Stable'
+        DEPRECATED = 'Deprecated'
+
     slug            = models.SlugField(primary_key=True, max_length=50)
     name            = models.CharField(max_length=50)
     description     = models.TextField(null=True)
@@ -72,6 +81,8 @@ class Subworkflow(models.Model):
     tags            = models.ManyToManyField(Tag, related_name="subworkflows", blank=True)
     tools           = models.ManyToManyField("CommandLineTool", related_name="subworkflows")
     version         = models.CharField(max_length=50)
+    status          = models.CharField(max_length=20, choices=Status.choices, default=Status.STABLE)
+    available       = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
