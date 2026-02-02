@@ -1,0 +1,142 @@
+{{- if and .Values.oidc.enabled .Values.oidc.iam_provisioning.enabled }}
+
+apiVersion: openidclient.keycloak.m.crossplane.io/v1alpha1
+kind: Client
+metadata:
+  name: {{ .Values.oidc.clientId }}
+  namespace: {{ .Values.oidc.iam_provisioning.namespace }}
+spec:
+  forProvider:
+    realmId: {{ .Values.oidc.realm }}
+    clientId: {{ .Values.oidc.clientId }}
+    name:  {{ .Values.oidc.iam_provisioning.clientName }}
+    description: {{ .Values.oidc.iam_provisioning.clientDescription }}
+    enabled: {{ .Values.oidc.iam_provisioning.clientEnabled }}
+    accessType: {{ .Values.oidc.iam_provisioning.accessType }}
+    rootUrl: {{ .Values.oidc.loginRedirectUrl }}
+    baseUrl: {{ .Values.oidc.loginRedirectUrl }}
+    adminUrl: {{ .Values.oidc.loginRedirectUrl }}
+    fullScopeAllowed: true
+    serviceAccountsEnabled: false
+    directAccessGrantsEnabled: true
+    standardFlowEnabled: true
+    implicitFlowEnabled: false
+    oauth2DeviceAuthorizationGrantEnabled: true
+    useRefreshTokens: true
+    validRedirectUris:
+      - "/*"
+    webOrigins:
+      - "/*"
+    clientSecretSecretRef:
+      # The Secret used by the Application Quality backend/api could also be used here
+      name: {{ .Values.oidc.iam_provisioning.clientSecretName }}
+      key: {{ .Values.oidc.iam_provisioning.clientSecretKey }}
+      # namespace: {{ .Release.Namespace }}
+  providerConfigRef:
+    name: {{ .Values.oidc.iam_provisioning.keycloakProviderConfig }}
+    kind: ProviderConfig
+
+---
+
+kind: Role
+metadata:
+  name: {{ .Values.oidc.clientId }}-grafana-viewer
+  namespace: {{ .Values.oidc.iam_provisioning.namespace }}
+spec:
+  forProvider:
+    # Used in Value grafana.ini.auth.generic_oauth.role_attribute_path
+    name: application-quality-grafana-viewer
+    realmId: {{ .Values.oidc.realm }}
+    clientIdRef:
+      name: {{ .Values.oidc.clientId }}
+    description: "Viewer role for {{ .Values.oidc.clientId }} dashboards"
+  providerConfigRef:
+    name: {{ .Values.oidc.iam_provisioning.keycloakProviderConfig }}
+    kind: ProviderConfig
+
+---
+
+kind: Role
+metadata:
+  name: {{ .Values.oidc.clientId }}-grafana-editor
+  namespace: {{ .Values.oidc.iam_provisioning.namespace }}
+spec:
+  forProvider:
+    # Used in Value grafana.ini.auth.generic_oauth.role_attribute_path
+    name: application-quality-grafana-editor
+    realmId: {{ .Values.oidc.realm }}
+    clientIdRef:
+      name: {{ .Values.oidc.clientId }}
+    description: "Editor role for {{ .Values.oidc.clientId }} dashboards"
+  providerConfigRef:
+    name: {{ .Values.oidc.iam_provisioning.keycloakProviderConfig }}
+    kind: ProviderConfig
+
+---
+
+kind: Role
+metadata:
+  name: {{ .Values.oidc.clientId }}-grafana-admin
+  namespace: {{ .Values.oidc.iam_provisioning.namespace }}
+spec:
+  forProvider:
+    # Used in Value grafana.ini.auth.generic_oauth.role_attribute_path
+    name: application-quality-grafana-admin
+    realmId: {{ .Values.oidc.realm }}
+    clientIdRef:
+      name: {{ .Values.oidc.clientId }}
+    description: "Admin role for {{ .Values.oidc.clientId }} dashboards"
+  providerConfigRef:
+    name: {{ .Values.oidc.iam_provisioning.keycloakProviderConfig }}
+    kind: ProviderConfig
+
+---
+
+apiVersion: openidclient.keycloak.m.crossplane.io/v1alpha1
+kind: ClientDefaultScopes
+metadata:
+  name: {{ .Values.oidc.clientId }}-default-scopes
+  namespace: {{ .Values.oidc.iam_provisioning.namespace }}
+spec:
+  forProvider:
+    clientIdRef:
+      name: {{ .Values.oidc.clientId }}
+    defaultScopes:
+    - openid
+    - profile
+    - email
+    - roles
+    realmId: eoepca
+  initProvider: {}
+  providerConfigRef:
+    name: {{ .Values.oidc.iam_provisioning.keycloakProviderConfig }}
+    kind: ProviderConfig
+
+---
+
+apiVersion: client.keycloak.m.crossplane.io/v1alpha1
+kind: ProtocolMapper
+metadata:
+  name: {{ .Values.oidc.clientId }}-roles-in-tokens
+  namespace: {{ .Values.oidc.iam_provisioning.namespace }}
+spec:
+  forProvider:
+    clientIdRef:
+      name: {{ .Values.oidc.clientId }}
+    realmId: {{ .Values.oidc.realm }}
+    name: "client-roles-mapper"
+    protocol: "openid-connect"
+    protocolMapper: "oidc-usermodel-client-role-mapper"
+    config: {
+      "multivalued": "true",
+      "claim.name": "roles",
+      "jsonType.label": "String",
+      "id.token.claim": "true",
+      "access.token.claim": "true",
+      "userinfo.token.claim": "true",
+    }
+  providerConfigRef:
+    name: {{ .Values.oidc.iam_provisioning.keycloakProviderConfig }}
+    kind: ProviderConfig
+
+{{- end }}

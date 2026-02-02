@@ -1,0 +1,126 @@
+{
+  "folderUid": "application-quality-service-reports",
+  "uid": "papermill-report-metadata",
+  "name": "Papermill Report Metadata",
+  "kind": 1,
+  "type": "table",
+  "description": "",
+  "model": {
+    "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "application-quality-db"
+    },
+    "description": "",
+    "fieldConfig": {
+      "defaults": {
+        "color": {
+          "mode": "thresholds"
+        },
+        "custom": {
+          "align": "auto",
+          "cellOptions": {
+            "type": "auto"
+          },
+          "inspect": false
+        },
+        "mappings": [],
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {
+              "color": "green",
+              "value": null
+            },
+            {
+              "color": "red",
+              "value": 80
+            }
+          ]
+        }
+      },
+      "overrides": [
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Artifact Name"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 197
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Property"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 367
+            }
+          ]
+        }
+      ]
+    },
+    "options": {
+      "cellHeight": "sm",
+      "footer": {
+        "countRows": false,
+        "enablePagination": false,
+        "fields": "",
+        "reducer": [
+          "sum"
+        ],
+        "show": false
+      },
+      "showHeader": true,
+      "sortBy": []
+    },
+    "pluginVersion": "12.0.1",
+    "targets": [
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "application-quality-db"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "hide": false,
+        "rawQuery": true,
+        "rawSql": "SELECT\n  'Value' AS \"Property\", -- Becomes table headers\n  -- metadata -> 'papermill' ->> 'input_path' AS \"Notebook\",\n  SUBSTRING(\n        input_path, \n        POSITION('/./' IN input_path) + 3 -- Start after the last '/' in '/./'\n    ) AS \"Notebook\",\n  metadata -> 'papermill' ->> 'parameters' AS \"Parameters\",\n  metadata -> 'papermill' ->> 'default_parameters' AS \"Default parameters\",\n  metadata -> 'papermill' ->> 'environment_variables' AS \"environment variables\",\n  metadata -> 'papermill' ->> 'version' AS \"Papermill version\",\n  -- metadata -> 'papermill' ->> 'start_time' AS \"Start\",\n  TO_CHAR(\n    TO_TIMESTAMP(\n        (metadata -> 'papermill' ->> 'start_time'),\n        'YYYY-MM-DD\"T\"HH24:MI:SS'\n      ),\n      'DD Month YYYY at HH24:MI:SS'\n    ) AS \"Start time\",\n  -- metadata -> 'papermill' ->> 'end_time' AS \"End\",\n  TO_CHAR(\n    TO_TIMESTAMP(\n        (metadata -> 'papermill' ->> 'end_time'),\n        'YYYY-MM-DD\"T\"HH24:MI:SS'\n      ),\n      'DD Month YYYY at HH24:MI:SS'\n    ) AS \"End time\",\n  metadata -> 'papermill' ->> 'duration' AS \"Duration (s)\",\n  metadata -> 'kernelspec' ->> 'name' AS \"Kernel name\",\n  metadata -> 'kernelspec' ->> 'display_name' AS \"Kernel display name\",\n  metadata -> 'kernelspec' ->> 'language' AS \"Kernel language\",\n  metadata -> 'language_info' ->> 'version' AS \"Kernel language version\",\n  metadata -> 'papermill' ->> 'exception' AS \"Exception\"\nFROM\n  (\n    SELECT\n      (output :: jsonb -> 'metadata') AS metadata,\n      (output :: jsonb -> 'metadata' -> 'papermill' ->> 'input_path') AS input_path\n    FROM\n      reports_admin\n    WHERE\n      id = ${report_id}\n  ) AS sub;",
+        "refId": "A",
+        "sql": {
+          "columns": [
+            {
+              "parameters": [],
+              "type": "function"
+            }
+          ],
+          "groupBy": [
+            {
+              "property": {
+                "type": "string"
+              },
+              "type": "groupBy"
+            }
+          ],
+          "limit": 50
+        }
+      }
+    ],
+    "title": "Papermill Execution Properties",
+    "transformations": [
+      {
+        "id": "transpose",
+        "options": {
+          "firstFieldName": "Property",
+          "restFieldsName": "Value"
+        }
+      }
+    ],
+    "type": "table"
+  }
+}

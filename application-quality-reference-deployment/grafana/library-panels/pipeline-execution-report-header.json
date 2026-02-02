@@ -13,7 +13,7 @@
         "showLineNumbers": false,
         "showMiniMap": false
       },
-      "content": "# Pipeline Execution Report\n\nSee below the details of the execution report ...\n\n* Pipeline: **${pipeline_name}** (ID: ${pipeline_id})\n* Pipeline execution ID: [**${execution_id}**](/d/pipeline-execution/pipeline-execution?)\n* Execution report ID: **${report_id}**",
+      "content": "# **${pipeline_name}**\n## Execution Report\n* Pipeline ID: **${pipeline_id}**\n* Pipeline execution ID: **${execution_id}**\n* Execution report ID: **${report_id}**",
       "mode": "markdown"
     },
     "pluginVersion": "12.0.1",

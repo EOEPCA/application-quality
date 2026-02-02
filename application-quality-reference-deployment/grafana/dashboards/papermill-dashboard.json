@@ -2,11 +2,10 @@
   "folderUid": "application-quality-service-reports",
   "overwrite": false,
   "dashboard": {
-    "description": "Dashboard for displaying Jupyter notebooks Best Practice Validation Reports",
     "editable": true,
     "fiscalYearStartMonth": 0,
     "graphTooltip": 0,
-    "id": 13,
+    "id": 17,
     "links": [
       {
         "asDropdown": false,
@@ -26,12 +25,12 @@
     "panels": [
       {
         "gridPos": {
-          "h": 5,
-          "w": 24,
+          "h": 12,
+          "w": 7,
           "x": 0,
           "y": 0
         },
-        "id": 2,
+        "id": 1,
         "libraryPanel": {
           "name": "Pipeline Execution Report Header",
           "uid": "pipeline-execution-report-header"
@@ -41,17 +40,32 @@
       },
       {
         "gridPos": {
-          "h": 15,
+          "h": 12,
+          "w": 17,
+          "x": 7,
+          "y": 0
+        },
+        "id": 772,
+        "libraryPanel": {
+          "name": "Papermill Report Metadata",
+          "uid": "papermill-report-metadata"
+        },
+        "title": "Papermill Execution Properties",
+        "type": "library-panel-ref"
+      },
+      {
+        "gridPos": {
+          "h": 10,
           "w": 24,
           "x": 0,
-          "y": 5
+          "y": 12
         },
-        "id": 3,
+        "id": 773,
         "libraryPanel": {
-          "name": "Notebook BP Validator Report",
-          "uid": "notebook-bp-validator-report"
+          "name": "Papermill Notebook Details",
+          "uid": "papermill-report-notebook"
         },
-        "title": "Notebook BP Validator Report",
+        "title": "Notebook Outputs",
         "type": "library-panel-ref"
       }
     ],
@@ -65,12 +79,31 @@
             "type": "grafana-postgresql-datasource",
             "uid": "application-quality-db"
           },
-          "definition": "SELECT id FROM reports_admin WHERE name = 'notebook-bp-validator'",
+          "definition": "SELECT pipeline_id FROM executions_admin WHERE id = $execution_id",
           "hide": 2,
-          "label": "Report ID",
-          "name": "report_id",
+          "label": "Pipeline ID",
+          "name": "pipeline_id",
           "options": [],
-          "query": "SELECT id FROM reports_admin WHERE name = 'notebook-bp-validator'",
+          "query": "SELECT pipeline_id FROM executions_admin WHERE id = $execution_id",
+          "refresh": 1,
+          "regex": "",
+          "type": "query"
+        },
+        {
+          "current": {
+            "text": "Notebook execution pipeline",
+            "value": "Notebook execution pipeline"
+          },
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "application-quality-db"
+          },
+          "definition": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
+          "hide": 2,
+          "label": "Pipeline Name",
+          "name": "pipeline_name",
+          "options": [],
+          "query": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
           "refresh": 1,
           "regex": "",
           "type": "query"
@@ -95,27 +128,12 @@
             "type": "grafana-postgresql-datasource",
             "uid": "application-quality-db"
           },
-          "definition": "SELECT pipeline_id FROM executions_admin WHERE id = $execution_id",
+          "definition": "SELECT id FROM reports_admin WHERE name = 'bandit'",
           "hide": 2,
-          "label": "Pipeline ID",
-          "name": "pipeline_id",
+          "label": "Report ID",
+          "name": "report_id",
           "options": [],
-          "query": "SELECT pipeline_id FROM executions_admin WHERE id = $execution_id",
-          "refresh": 1,
-          "regex": "",
-          "type": "query"
-        },
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "application-quality-db"
-          },
-          "definition": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
-          "hide": 2,
-          "label": "Pipeline Name",
-          "name": "pipeline_name",
-          "options": [],
-          "query": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
+          "query": "SELECT id FROM reports_admin WHERE name = 'bandit'",
           "refresh": 1,
           "regex": "",
           "type": "query"
@@ -126,7 +144,7 @@
       "hidden": true
     },
     "timezone": "browser",
-    "title": "Notebook BP Validator Report",
-    "uid": "default-notebook-bp-validator-report"
+    "title": "Papermill Report",
+    "uid": "default-papermill-report"
   }
 }

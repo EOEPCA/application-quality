@@ -38,7 +38,7 @@
             "showLineNumbers": false,
             "showMiniMap": false
           },
-          "content": "# Pipeline Execution\n\n* Pipeline: **${pipeline_name}** (ID: ${pipeline_id})\n* Execution ID: **${execution_id}**",
+          "content": "# ${pipeline_name}\n## Pipeline Execution\n* Pipeline ID: **${pipeline_id}**\n* Pipeline execution ID: **${execution_id}**",
           "mode": "markdown"
         },
         "pluginVersion": "12.0.1",

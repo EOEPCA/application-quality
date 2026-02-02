@@ -16,11 +16,12 @@ web:
     pullPolicy: IfNotPresent
     #pullSecrets:
     #  - name: spaceapps-nexus-asb-ro
-  serviceType: NodePort
+  serviceType: ClusterIP
   servicePort: 80
   containerPort: 80
   replicaCount: 1
-  # The URL used to access the frontend (required by the backend to authorize the requests)
+  # The full URL of the frontend
+  # Also used by the backend to authorize the requests (see also api.additionalAllowedHosts, below)
   publicUrl: ""
 
 api:
@@ -30,13 +31,15 @@ api:
     pullPolicy: IfNotPresent
     #pullSecrets:
     #  - name: spaceapps-nexus-asb-ro
-  serviceType: NodePort
-  servicePort: 8000
+  serviceType: ClusterIP
+  servicePort: 80
   containerPort: 8000
   replicaCount: 1
   adminUser: ""
   adminPassword: ""
   adminEmail: ""
+  # Comma-separated list of domain names (will be added to web.publicUrl)
+  additionalAllowedHosts: ""
 
 persistence:
   enabled: true
@@ -109,6 +112,7 @@ nodeSelector: {}
 
 oidc:
   enabled: false
+  realm: eoepca
   realmBaseUrl: ".../realms/master"
   # Client ID and Secret set in SealedSecret
   clientId: ""
@@ -123,6 +127,19 @@ oidc:
   rpRedirectUri: ""
   rpSignAlgo: "RS256"
 
+  iam_provisioning:
+    enabled: false
+    keycloakProviderConfig: keycloak-provider-config
+    clientName: Application Quality BB
+    clientDescription: Application Quality Web Portal and Grafana OIDC
+    clientSecretName: application-quality-iam-client
+    clientSecretKey: client_secret
+    clientEnabled: true
+    namespace: iam-management
+    accessType: PUBLIC
+    httpScheme: https
+    initialiseTestUsers: false
+
 sonarqube:
   enabled: false
   serverUrl: ""
@@ -136,3 +153,16 @@ affinity: {}
 
 serviceAccount:
   create: false
+
+notifications:
+  enabled: false
+  middleware: "knative"
+  brokerName: "primary"
+  brokerNamespace: "default"
+  # Also used as type prefix for incoming notifications
+  channelPrefix: "org.eoepca.application-quality"
+  responseSource: "/eoepca/application-quality"
+  responseTypePrefix: "org.eoepca.application-quality.response"
+
+automations:
+  enabled: false

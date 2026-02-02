@@ -4,13 +4,14 @@ metadata:
   name: {{ include "application-quality.fullname" . }}-api-env
 data:
   PUBLIC_URL: {{ .Values.web.publicUrl }}
+  ADDITIONAL_ALLOWED_HOSTS: {{ .Values.api.additionalAllowedHosts | quote }}
 
   {{- if .Values.vclusters.enabled }}
   BACKEND_SERVICE_HOST: backend-service.default.svc.local.cluster
   {{- else }}
   BACKEND_SERVICE_HOST: {{ include "application-quality.fullname" . }}-api.{{ .Release.Namespace }}.svc.cluster.local
   {{- end }}
-  BACKEND_SERVICE_PORT: {{ .Values.api.containerPort | quote }}
+  BACKEND_SERVICE_PORT: {{ .Values.api.servicePort | quote }}
 
   BACKEND_SERVICE_ADMIN_USER: {{ .Values.api.adminUser | quote }}
   BACKEND_SERVICE_ADMIN_PASSWORD: {{ .Values.api.adminPassword | quote }}
@@ -34,6 +35,7 @@ data:
   AQBB_MAXCORES: {{ .Values.calrissian.maxCores | quote }}
   AQBB_MAXRAM: {{ .Values.calrissian.maxRam | quote }}
 
+  # OpenID Connect
   OIDC_ENABLED: {{ .Values.oidc.enabled | default false | quote }}
   {{- if .Values.oidc.enabled }}
   # From Sealed Secret: OIDC_RP_CLIENT_ID: {{ .Values.oidc.clientId }}
@@ -57,6 +59,7 @@ data:
   SONARQUBE_SERVER: {{ .Values.sonarqube.serverUrl }}
   SONARQUBE_TOKEN: {{ .Values.sonarqube.accessToken }}
   {{- end }}
+
   # vCluster
   SHARED_VCLUSTER_ENABLED: {{ .Values.vclusters.enabled | default false | quote }}
   {{- if .Values.vclusters.enabled }}
@@ -72,4 +75,13 @@ data:
   {{- if .Values.workspace.vcluster.enabled }}
   WORKSPACE_VCLUSTER_REQUIRED: {{ .Values.workspace.vcluster.required | default false | quote }}
   WORKSPACE_API_SERVICE_URL: {{ .Values.workspace.apiServiceUrl | default "" }}
+  {{- end }}
+
+  # Notifications
+  NOTIF_ENABLED: {{ .Values.notifications.enabled | default false | quote }}
+  {{- if and .Values.notifications.enabled (eq .Values.notifications.middleware "knative") }}
+  NOTIF_MIDDLEWARE: {{ .Values.notifications.middleware }}
+  NOTIF_CHANNEL_PREFIX: {{ .Values.notifications.channelPrefix }}
+  NOTIF_RESPONSE_SOURCE: {{ .Values.notifications.responseSource }}
+  NOTIF_RESPONSE_TYPE_PREFIX: {{ .Values.notifications.responseTypePrefix }}
   {{- end }}
