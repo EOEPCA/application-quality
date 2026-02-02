@@ -19,6 +19,7 @@ nav:
       - usage/user-manual.md
       - usage/analysis-dashboards.md
       - usage/analysis-tools.md
+      - usage/remote-execution.md
     #  - usage/tutorials.md
     #  - usage/howtos.md
     #- Administration:
