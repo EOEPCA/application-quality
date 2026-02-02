@@ -20,7 +20,8 @@ web:
   servicePort: 80
   containerPort: 80
   replicaCount: 1
-  # The URL used to access the frontend (required by the backend to authorize the requests)
+  # The full URL of the frontend
+  # Also used by the backend to authorize the requests (see also api.additionalAllowedHosts, below)
   publicUrl: ""
 
 api:
@@ -37,6 +38,8 @@ api:
   adminUser: ""
   adminPassword: ""
   adminEmail: ""
+  # Comma-separated list of domain names (will be added to web.publicUrl)
+  additionalAllowedHosts: ""
 
 persistence:
   enabled: true

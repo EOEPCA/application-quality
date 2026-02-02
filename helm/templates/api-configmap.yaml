@@ -4,6 +4,7 @@ metadata:
   name: {{ include "application-quality.fullname" . }}-api-env
 data:
   PUBLIC_URL: {{ .Values.web.publicUrl }}
+  ADDITIONAL_ALLOWED_HOSTS: {{ .Values.api.additionalAllowedHosts | quote }}
 
   {{- if .Values.vclusters.enabled }}
   BACKEND_SERVICE_HOST: backend-service.default.svc.local.cluster
