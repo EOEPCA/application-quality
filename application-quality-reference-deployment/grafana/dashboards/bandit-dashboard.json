@@ -3,6 +3,9 @@
   "overwrite": false,
   "dashboard": {
     "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 10,
     "links": [
       {
         "asDropdown": false,
@@ -37,17 +40,32 @@
       },
       {
         "gridPos": {
-          "h": 15,
+          "h": 10,
           "w": 24,
           "x": 0,
-          "y": 6
+          "y": 5
         },
-        "id": 1,
+        "id": 4,
         "libraryPanel": {
-          "name": "Ruff Report",
-          "uid": "ruff-report"
+          "name": "Bandit Results Report",
+          "uid": "bandit-results-report"
         },
-        "title": "Ruff Report",
+        "title": "Bandit Results",
+        "type": "library-panel-ref"
+      },
+      {
+        "gridPos": {
+          "h": 9,
+          "w": 24,
+          "x": 0,
+          "y": 15
+        },
+        "id": 3,
+        "libraryPanel": {
+          "name": "Bandit Metrics Report",
+          "uid": "bandit-metrics-report"
+        },
+        "title": "Bandit Metrics",
         "type": "library-panel-ref"
       }
     ],
@@ -57,23 +75,43 @@
     "templating": {
       "list": [
         {
+          "allowCustomValue": false,
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "application-quality-db"
           },
-          "definition": "SELECT id FROM reports_admin WHERE name = 'ruff'",
-          "description": "",
+          "definition": "SELECT pipeline_id FROM executions_admin WHERE id = $execution_id",
           "hide": 2,
-          "label": "Report ID",
-          "name": "report_id",
+          "label": "Pipeline ID",
+          "name": "pipeline_id",
           "options": [],
-          "query": "SELECT id FROM reports_admin WHERE name = 'ruff'",
+          "query": "SELECT pipeline_id FROM executions_admin WHERE id = $execution_id",
           "refresh": 1,
           "regex": "",
-          "sort": 4,
           "type": "query"
         },
         {
+          "allowCustomValue": false,
+          "current": {
+            "text": "Python pipeline",
+            "value": "Python pipeline"
+          },
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "application-quality-db"
+          },
+          "definition": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
+          "hide": 2,
+          "label": "Pipeline Name",
+          "name": "pipeline_name",
+          "options": [],
+          "query": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
+          "refresh": 1,
+          "regex": "",
+          "type": "query"
+        },
+        {
+          "allowCustomValue": false,
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "application-quality-db"
@@ -86,33 +124,20 @@
           "query": "SELECT run_id FROM reports_admin WHERE id = $report_id",
           "refresh": 1,
           "regex": "",
-          "sort": 4,
           "type": "query"
         },
         {
+          "allowCustomValue": false,
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "application-quality-db"
           },
-          "definition": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
+          "definition": "SELECT id FROM reports_admin WHERE name = 'bandit'",
           "hide": 2,
-          "name": "pipeline_name",
+          "label": "Report ID",
+          "name": "report_id",
           "options": [],
-          "query": "SELECT pipeline_name FROM executions_admin WHERE id = $execution_id",
-          "refresh": 1,
-          "regex": "",
-          "type": "query"
-        },
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "application-quality-db"
-          },
-          "definition": "SELECT pipeline_id FROM executions_admin WHERE id = $execution_id",
-          "hide": 2,
-          "name": "pipeline_id",
-          "options": [],
-          "query": "SELECT pipeline_id FROM executions_admin WHERE id = $execution_id",
+          "query": "SELECT id FROM reports_admin WHERE name = 'bandit'",
           "refresh": 1,
           "regex": "",
           "type": "query"
@@ -123,7 +148,7 @@
       "hidden": true
     },
     "timezone": "browser",
-    "title": "Ruff Report",
-    "uid": "default-ruff-report"
+    "title": "Bandit Report",
+    "uid": "default-bandit-report"
   }
 }

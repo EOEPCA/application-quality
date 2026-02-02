@@ -1,7 +1,7 @@
 {
   "folderUid": "application-quality-service-reports",
-  "uid": "pylint-report",
-  "name": "Pylint Report",
+  "uid": "flake8-report",
+  "name": "Flake8 Report",
   "kind": 1,
   "type": "table",
   "description": "",
@@ -31,10 +31,6 @@
             {
               "color": "green",
               "value": null
-            },
-            {
-              "color": "red",
-              "value": 80
             }
           ]
         }
@@ -51,18 +47,18 @@
               "value": 100
             },
             {
-              "id": "custom.filterable",
-              "value": true
-            },
-            {
               "id": "links",
               "value": [
                 {
                   "targetBlank": true,
                   "title": "Open documentation for ${__data.fields.Code}",
-                  "url": "https://pylint.readthedocs.io/en/stable/user_guide/messages/${__data.fields.type}/${__data.fields.symbol}.html"
+                  "url": "https://www.flake8rules.com/rules/${__data.fields.Code}.html"
                 }
               ]
+            },
+            {
+              "id": "custom.filterable",
+              "value": true
             }
           ]
         },
@@ -81,16 +77,9 @@
         {
           "matcher": {
             "id": "byName",
-            "options": "Object"
+            "options": "Path to File"
           },
           "properties": [
-            {
-              "id": "custom.width",
-              "value": 200
-            },
-            {
-              "id": "noValue"
-            },
             {
               "id": "custom.filterable",
               "value": true
@@ -100,31 +89,7 @@
         {
           "matcher": {
             "id": "byName",
-            "options": "type"
-          },
-          "properties": [
-            {
-              "id": "custom.hidden",
-              "value": true
-            }
-          ]
-        },
-        {
-          "matcher": {
-            "id": "byName",
-            "options": "type"
-          },
-          "properties": [
-            {
-              "id": "custom.hidden",
-              "value": true
-            }
-          ]
-        },
-        {
-          "matcher": {
-            "id": "byName",
-            "options": "Path to File"
+            "options": "Message"
           },
           "properties": [
             {
@@ -139,7 +104,6 @@
       "cellHeight": "sm",
       "footer": {
         "countRows": false,
-        "enablePagination": true,
         "fields": "",
         "reducer": [
           "sum"
@@ -149,8 +113,8 @@
       "showHeader": true,
       "sortBy": [
         {
-          "desc": true,
-          "displayName": "Code"
+          "desc": false,
+          "displayName": "Message"
         }
       ]
     },
@@ -163,8 +127,9 @@
         },
         "editorMode": "code",
         "format": "table",
+        "hide": false,
         "rawQuery": true,
-        "rawSql": "SELECT elem ->> 'path' AS \"Path to File\", elem ->> 'obj' AS \"Object\", elem ->> 'message' AS \"Message\", elem ->> 'type' AS type, elem ->> 'symbol' AS symbol, elem ->> 'message-id' AS \"Code\", 'L' || (elem ->> 'line') || 'C' || (elem ->> 'column') || CASE WHEN elem ->> 'endLine' IS NOT NULL AND elem ->> 'endColumn' IS NOT NULL THEN '-L' || (elem ->> 'endLine') || 'C' || (elem ->> 'endColumn') ELSE '' END AS \"Location\" FROM (SELECT jsonb_array_elements(output :: jsonb) AS elem FROM reports_admin WHERE id = ${report_id}) AS sub;",
+        "rawSql": "SELECT\n  (t.row_data :: jsonb) ->> 'filename' AS \"Path to File\",\n  (t.row_data :: jsonb) ->> 'text' AS \"Message\",\n  (t.row_data :: jsonb) ->> 'code' AS \"Code\",\n  'L' || ((t.row_data :: jsonb) ->> 'line_number') || 'C' || ((t.row_data :: jsonb) ->> 'column_number') AS \"Location\",\n  -- (t.row_data :: jsonb) ->> 'line_number' AS Line,\n  -- (t.row_data :: jsonb) ->> 'column_number' AS Column,\n  (t.row_data :: jsonb) ->> 'physical_line' AS \"Source Code\"\n  -- t.row_data AS val\nFROM (\n  SELECT\n  unnest(\n  ARRAY(\n    SELECT\n      ARRAY[val]\n    FROM\n      jsonb_each(report.output::jsonb) as t,\n      jsonb_array_elements_text(t.value) AS val\n  )\n  ) AS row_data\nFROM reports_admin as report\nWHERE report.id = ${report_id}\n) AS t;",
         "refId": "A",
         "sql": {
           "columns": [
@@ -185,7 +150,7 @@
         }
       }
     ],
-    "title": "Pylint Report",
+    "title": "Flake8 Report",
     "type": "table"
   }
 }

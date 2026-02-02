@@ -37,7 +37,7 @@ spec:
           command:
             - supervisord
             - -c
-            - /etc/supervisor/conf.d/supervisord.conf
+            - /etc/supervisor/supervisord.conf
           envFrom:
             - configMapRef:
                 name: {{ include "application-quality.fullname" . }}-api-env

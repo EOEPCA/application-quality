@@ -9,12 +9,14 @@
         "icon": "dashboard",
         "includeVars": true,
         "keepTime": false,
-        "tags": [],
+        "tags": [
+          "pipeline-execution-dashboard"
+        ],
         "targetBlank": false,
-        "title": "Pipeline Execution ${execution_id}",
-        "tooltip": "Go to pipeline run ${execution_id} dashboard",
-        "type": "link",
-        "url": "/d/pipeline-execution/pipeline-execution?${__all_values}"
+        "title": "Pipeline Execution Dashboard",
+        "tooltip": "Go to pipeline execution dashboard",
+        "type": "dashboards",
+        "url": ""
       }
     ],
     "panels": [
@@ -35,7 +37,7 @@
       },
       {
         "gridPos": {
-          "h": 10,
+          "h": 14,
           "w": 24,
           "x": 0,
           "y": 5
@@ -60,8 +62,8 @@
             "uid": "application-quality-db"
           },
           "definition": "SELECT id FROM reports_admin WHERE name = 'pylint'",
-          "hide": 2,
           "description": "",
+          "hide": 2,
           "label": "Report ID",
           "name": "report_id",
           "options": [],
