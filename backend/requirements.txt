@@ -1,14 +1,16 @@
-celery[Redis]
-cwltool
+celery[Redis]==5.5.3
+cwltool==3.1.20251031082601
 Django==5.1.8
-djangorestframework
+djangorestframework==3.16.1
 django-cors-headers==4.6.0
-djangorestframework-simplejwt
+djangorestframework-simplejwt==5.5.1
+django-svelte-jsoneditor==0.4.4
 # To serve admin static files in production
 whitenoise==6.8.2
 # gunicorn
-Jinja2
+Jinja2==3.1.6
 kubernetes==28.1.0
-loguru
-mozilla-django-oidc
-psycopg2
+loguru==0.7.3
+mozilla-django-oidc==4.0.1
+psycopg2==2.9.11
+cloudevents==1.12

@@ -6,7 +6,8 @@ from backend.views import (
     JobReportViewSet,
     SubworkflowViewSet,
     TagViewSet,
-    SettingsView
+    SettingsView,
+    EventsView,
 )
 
 router = DefaultRouter()
@@ -21,4 +22,5 @@ urlpatterns = router.urls
 
 urlpatterns += [
     path("settings/", SettingsView.as_view(), name="settings"),
+    path("events/", EventsView.as_view(), name="events"),
 ]

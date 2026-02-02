@@ -1,9 +1,11 @@
 import logging
 import os
+import time
 import yaml
 
 from django.utils import timezone
 from django.db.utils import IntegrityError
+from django.contrib.auth.models import User
 from jinja2 import Template
 
 from rest_framework import mixins, permissions, status, viewsets
@@ -13,6 +15,7 @@ from rest_framework.views import APIView
 
 from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag
 from backend.tasks import run_workflow_task
+from backend.utils.cloudevents import encode, decode
 from . import serializers
 
 
@@ -45,6 +48,95 @@ class SettingsView(APIView):
             logger.info("Not found: %s", settings_file)
             settings = None
         return Response(settings)
+
+
+RESPONSE_SOURCE = os.getenv("NOTIF_RESPONSE_SOURCE", "/eoepca/application-quality")
+RESPONSE_TYPE_PREFIX = os.getenv(
+    "NOTIF_RESPONSE_TYPE_PREFIX",
+    "org.eoepca.application-quality.response"
+)
+
+
+class EventsView(APIView):
+    def post(self, request, *args, **kwargs):
+        try:
+            logger.info("Event received %s", request)
+            payload, headers = decode(request.body, request.META.items())
+            event_id = headers.get('Ce-Id')
+            event_user = headers.get('Ce-User', None)
+            event_type = headers.get('Ce-Type', None)
+            event_subject = headers.get('Ce-Subject', None)
+
+            user = None
+            pipeline_id = None
+
+            if event_user:
+                user = User.objects.get(username=event_user)
+                logger.debug("User: %s", user)
+            else:
+                logger.debug("No user identified in the event")
+
+            if event_subject and event_subject.startswith("pipelines/"):
+                pipeline_id = event_subject.split("/")[-1]
+                logger.debug("Pipeline: %s", pipeline_id)
+            else:
+                logger.debug("No pipeline identified in the event")
+
+            # Default response data
+            res_data = {
+                "status": "unknown",
+                "processed_id": event_id,
+                "timestamp": int(time.time()),
+                "message": "Unknown event."
+            }
+            res_attrs = {
+                "id": event_id,
+                "source": RESPONSE_SOURCE,
+                "type": RESPONSE_TYPE_PREFIX + ".unknown",
+                "specversion": "1.0",
+            }
+
+            # React to the event
+            # Note: The Trigger must filter on the event type prefix
+
+            if event_type.endswith(".probes.health"):
+                logger.debug("Received a health check event")
+                res_data.update({
+                    "status": "ok",
+                    # "processed_id": event_id,
+                    "timestamp": int(time.time()),
+                    "message": "Healthy.",
+                })
+                res_attrs.update({
+                    "type": RESPONSE_TYPE_PREFIX + ".ok"
+                })
+
+            if user and pipeline_id and event_type.endswith(".event.pipeline.execute"):
+                pipeline_run = PipelineRunViewSet._create(user, pipeline_id, payload)
+                logger.debug("Pipeline run: %s", pipeline_run)
+
+                res_data.update({
+                    "status": "accepted",
+                    # "processed_id": event_id,
+                    "timestamp": int(time.time()),
+                    "message": "Pipeline execution created.",
+                })
+                res_attrs.update({
+                    "type": RESPONSE_TYPE_PREFIX + ".accepted",
+                    "subject": pipeline_run.id,
+                })
+
+            res_body, res_headers = encode(res_attrs, res_data)
+            logger.debug("Response Headers: %s", res_headers)
+            logger.debug("Response Body: %s", res_body)
+            return Response(res_body, status=202, headers=res_headers)
+
+        except Exception as e:
+            logger.error("Exception: %s", e)
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class IsOwnerOrAdmin(permissions.BasePermission):
@@ -100,10 +192,9 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             return PipelineRun.objects.filter(started_by=self.request.user)
         return PipelineRun.objects.filter(pipeline_id=p_id, started_by=self.request.user)
 
-    def create(self, request, *args, **kwargs):
-        user = self.request.user
+    @staticmethod
+    def _create(user: User, pipeline_id: str, data: dict) -> PipelineRun:
         logger.info("User %s is creating a pipeline run (admin=%s)", user, user.is_staff)
-        pipeline_id = self.kwargs["pipeline_id"]
         logger.info("Creating a new run for pipeline %s", pipeline_id)
 
         try:
@@ -120,20 +211,19 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             usage_report="",
             start_time=timezone.now(),
             status="starting",
-            started_by=request.user,
+            started_by=user,
         )
         logger.info("Pipeline run created with id %s", pipeline_run.id)
 
-        yaml_cwl = self._render_cwl(pipeline)
+        yaml_cwl = PipelineRunViewSet._render_cwl(pipeline)
         cwl = yaml.safe_load(yaml_cwl)
 
         logger.info("Running workflow with id %s", pipeline_run.id)
-        payload = request.data  # dict
         run_workflow_task.delay(
             run_id=pipeline_run.id,
-            parameters=payload.get("parameters"),
+            parameters=data.get("parameters"),
             cwl=cwl,
-            username=request.user.username,
+            username=user.username,
         )
 
         pipeline_run.executed_cwl = yaml_cwl
@@ -144,13 +234,25 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         pipeline_run.save()
         logger.debug("Run %s updated with CWL and inputs", pipeline_run.id)
 
+        return pipeline_run
+
+    def create(self, request, *args, **kwargs) -> Response:
+        user = self.request.user
+        # logger.info("User %s is creating a pipeline run (admin=%s)", user, user.is_staff)
+        pipeline_id = self.kwargs["pipeline_id"]
+        # logger.info("Creating a new run for pipeline %s", pipeline_id)
+        pipeline_run = PipelineRunViewSet._create(user, pipeline_id, request.data)
+        if isinstance(pipeline_run, Response):
+            # An error occurred which is described in the Response instance
+            return pipeline_run
         serializer = self.get_serializer(pipeline_run)
         return Response(
             serializer.data,
             status=status.HTTP_201_CREATED
         )
 
-    def _merge_params(self, subworkflow: Subworkflow, default_inputs: dict) -> dict:
+    @staticmethod
+    def _merge_params(subworkflow: Subworkflow, default_inputs: dict) -> dict:
         if subworkflow.slug not in default_inputs:
             return subworkflow.user_params
 
@@ -166,7 +268,8 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
 
         return merged_params
 
-    def _render_cwl(self, pipeline):
+    @staticmethod
+    def _render_cwl(pipeline):
         logger.debug("Rendering CWL for pipeline '%s'", pipeline.id)
         rendered_subworkflows = []
 
@@ -177,7 +280,7 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             subtool = {
                 "definition": subtemplate.render(subcontext),
                 "slug": subworkflow.pk,
-                "user_params": self._merge_params(subworkflow, pipeline.default_inputs),
+                "user_params": PipelineRunViewSet._merge_params(subworkflow, pipeline.default_inputs),
                 "pipeline_step": subworkflow.pipeline_step,
             }
             rendered_subworkflows.append(subtool)
@@ -205,6 +308,9 @@ class JobReportViewSet(
         tool_name = self.request.query_params.get("name")
         if tool_name:
             queryset = queryset.filter(name=tool_name)
+        instance = self.request.query_params.get("instance")
+        if instance:
+            queryset = queryset.filter(instance=instance)
 
         return queryset
 
@@ -216,6 +322,9 @@ class JobReportViewSet(
         tool_name = request.query_params.get("name")
         if not tool_name:
             raise ValidationError("Tool 'name' is required as a query parameter.")
+        
+        # The (optional) instance parameter allows to distinguish reports from scattered steps
+        instance = request.query_params.get("instance", "")
 
         try:
             run = PipelineRun.objects.get(pipeline__id=pipeline_id, id=run_id)
@@ -230,25 +339,27 @@ class JobReportViewSet(
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        if JobReport.objects.filter(run=run, name=tool_name).exists():
+        if JobReport.objects.filter(run=run, name=tool_name, instance=instance).exists():
             logger.warning(
-                "Couln't create a job report: A job report for '%s' already exists in run %s",
+                "Could not create a job report: A job report for '%s'/'%s' already exists in run %s",
                 tool_name,
+                instance,
                 run_id
             )
             return Response(
-                {"error": f"A job report for '{tool_name}' already exists for this run."},
+                {"error": f"A job report for '{tool_name}/{instance}' already exists for this run."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         job_report = JobReport.objects.create(
             name=tool_name,
+            instance=instance,
             run=run,
             output=request.data,
             created_at=timezone.now()
         )
 
-        logger.info("Job report created for tool '%s' in run %s", tool_name, run_id)
+        logger.info("Job report created for tool '%s'/'%s' in run %s", tool_name, instance, run_id)
 
         serializer = self.get_serializer(job_report)
         return Response(
@@ -258,8 +369,19 @@ class JobReportViewSet(
 
 
 class SubworkflowViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Subworkflow.objects.all()
     serializer_class = serializers.SubworkflowSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if user:
+            logger.info(f"User {user} is requesting the tools information")
+        else:
+            logger.info(f"Anonymous user is requesting the tools information")
+        if user and user.is_staff:
+            logger.info(f"User {user} is staff / admin")
+            # Admins may get all the tools, whatever their status or availability flag
+            return Subworkflow.objects.all()
+        return Subworkflow.objects.filter(available=True)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):

@@ -23,10 +23,10 @@ AQBB_MAXRAM = os.getenv("AQBB_MAXRAM", "2Gi")
 AQBB_SECRET = os.getenv("AQBB_SECRET", None)
 # Create a ServiceAccount for Calrissian with the right roles and use it here
 AQBB_SERVICEACCOUNT = os.getenv("AQBB_SERVICEACCOUNT", None)
-# Backend service replicated in the vcluster (for reports storage)
+# Backend service, possibly replicated in a virtual cluster (for storing reports)
 BACKEND_SERVICE_HOST = os.getenv(
     "BACKEND_SERVICE_HOST",
-    "backend-service.default.svc.cluster.local"
+    "application-quality-api.application-quality.svc.cluster.local"
 )
 BACKEND_SERVICE_PORT = os.getenv("BACKEND_SERVICE_PORT", "80")
 SONARQUBE_SERVER = os.getenv(
@@ -130,17 +130,6 @@ def run_workflow(
     # If cluster_config_file is None here, the ultimate option (if vclusters are not required)
     # is running the pipeline in the host cluster
 
-    namespace_name = f"applicationqualitypipeline-{run_id}"
-    session = CalrissianContext(
-        namespace=namespace_name,
-        kubeconfig_file=cluster_config_file,
-        storage_class=AQBB_STORAGECLASS,
-        volume_size=AQBB_VOLUMESIZE,
-        image_pull_secrets=AQBB_SECRET,
-    )
-
-    session.initialise()
-
     # TODO: Remove Sonarqube parameters
     sonarqube_project = f"{username}-{pipeline_run.pipeline.pk}-{str(run_id)}"
     params = {
@@ -162,6 +151,17 @@ def run_workflow(
     pipeline_run.save(update_fields=['inputs'])  # Overwrite previous value because of server_url
     logger.debug("Run %s updated with server url", pipeline_run.id)
     logger.debug("Pipeline parameters: %s", params)
+
+    namespace_name = f"applicationqualitypipeline-{run_id}"
+    session = CalrissianContext(
+        namespace=namespace_name,
+        kubeconfig_file=cluster_config_file,
+        storage_class=AQBB_STORAGECLASS,
+        volume_size=AQBB_VOLUMESIZE,
+        image_pull_secrets=AQBB_SECRET,
+    )
+
+    session.initialise()
 
     #
     # Create the Calrissian job
