@@ -25,7 +25,7 @@
         target="appquality_user_manual"
         :href="settings.user_manual__url"
       >
-        <v-icon size="24px"> mdi-help-box </v-icon>
+        <v-icon size="24px" style="min-width: 32px"> mdi-help-box </v-icon>
       </v-btn>
 
       <v-btn
@@ -35,7 +35,7 @@
         target="_blank"
         :href="settings.getGrafanaDashboardsURL()"
       >
-        <v-icon size="24px"> mdi-chart-box </v-icon>
+        <v-icon size="24px" style="min-width: 32px"> mdi-chart-box </v-icon>
       </v-btn>
 
       <v-btn
@@ -45,7 +45,7 @@
         target="_blank"
         :href="settings.source__url"
       >
-        <v-icon size="24px"> mdi-github </v-icon>
+        <v-icon size="24px" style="min-width: 32px"> mdi-github </v-icon>
       </v-btn>
 
       <span

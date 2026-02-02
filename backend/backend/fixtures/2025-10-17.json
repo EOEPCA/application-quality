@@ -5,15 +5,15 @@
   "fields": {
    "name": "Python pipeline",
    "description": "Runs a series of static analysis tools on python files",
-   "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n{%- for tool in subworkflows %}\r\n  {%- for tool_name, params in tool.user_params.items() %}\r\n    {%- for param_name, param in params.items() %}\r\n    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:\r\n      label: \"{{ param.label or param_name }}\"\r\n      {%- if param.doc %}\r\n      doc: |-\r\n        {{ param.doc }}\r\n      {%- endif %}\r\n      type: {{ param.type }}\r\n      default: {{ param.default | tojson }}\r\n    {%- endfor %}\r\n  {%- endfor %}\r\n{%- endfor %}\r\n    branch:\r\n      type: string\r\n      default: ''\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n  id: main\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.0",
+   "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n{%- for tool in subworkflows %}\r\n  {%- for tool_name, params in tool.user_params.items() %}\r\n    {%- for param_name, param in params.items() %}\r\n    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:\r\n      label: \"{{ param.label or param_name }}\"\r\n      {%- if param.doc %}\r\n      doc: |-\r\n        {{ param.doc }}\r\n      {%- endif %}\r\n      type: {{ param.type }}\r\n      default: {{ param.default | tojson }}\r\n    {%- endfor %}\r\n  {%- endfor %}\r\n{%- endfor %}\r\n    branch:\r\n      type: string\r\n      default: ''\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n  id: main\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.2",
    "default_inputs": {},
    "owner": null,
    "created_at": null,
    "edited_at": null,
    "version": "0.1",
    "tools": [
-    "bandit_subworkflow",
     "clone_subworkflow",
+    "bandit_subworkflow",
     "flake8_subworkflow",
     "pylint_subworkflow",
     "ruff_subworkflow"
@@ -26,7 +26,7 @@
   "fields": {
    "name": "Notebook pipeline",
    "description": "Runs a static analysis and then executes Jupyter Notebooks files (ipynb).",
-   "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n{%- for tool in subworkflows %}\r\n  {%- for tool_name, params in tool.user_params.items() %}\r\n    {%- for param_name, param in params.items() %}\r\n    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:\r\n      label: \"{{ param.label or param_name }}\"\r\n      {%- if param.doc %}\r\n      doc: |-\r\n        {{ param.doc }}\r\n      {%- endif %}\r\n      type: {{ param.type }}\r\n      default: {{ param.default | tojson }}\r\n    {%- endfor %}\r\n  {%- endfor %}\r\n{%- endfor %}\r\n    branch:\r\n      type: string\r\n      default: ''\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n  id: main\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.0",
+   "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n{%- for tool in subworkflows %}\r\n  {%- for tool_name, params in tool.user_params.items() %}\r\n    {%- for param_name, param in params.items() %}\r\n    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:\r\n      label: \"{{ param.label or param_name }}\"\r\n      {%- if param.doc %}\r\n      doc: |-\r\n        {{ param.doc }}\r\n      {%- endif %}\r\n      type: {{ param.type }}\r\n      default: {{ param.default | tojson }}\r\n    {%- endfor %}\r\n  {%- endfor %}\r\n{%- endfor %}\r\n    branch:\r\n      type: string\r\n      default: ''\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n  id: main\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.2",
    "default_inputs": {},
    "owner": null,
    "created_at": null,
@@ -34,7 +34,7 @@
    "version": "0.1",
    "tools": [
     "clone_subworkflow",
-    "ipynb_specs_checker_subworkflow",
+    "notebook-bp-validator_subworkflow",
     "papermill_subworkflow",
     "ruff_ipynb_subworkflow"
    ]
@@ -46,7 +46,7 @@
   "fields": {
    "name": "Docker pipeline",
    "description": "Finds vulnerabilities and misconfigurations in Docker images.",
-   "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n{%- for tool in subworkflows %}\r\n  {%- for tool_name, params in tool.user_params.items() %}\r\n    {%- for param_name, param in params.items() %}\r\n    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:\r\n      label: \"{{ param.label or param_name }}\"\r\n      {%- if param.doc %}\r\n      doc: |-\r\n        {{ param.doc }}\r\n      {%- endif %}\r\n      type: {{ param.type }}\r\n      default: {{ param.default | tojson }}\r\n    {%- endfor %}\r\n  {%- endfor %}\r\n{%- endfor %}\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n  id: main\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.0",
+   "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n{%- for tool in subworkflows %}\r\n  {%- for tool_name, params in tool.user_params.items() %}\r\n    {%- for param_name, param in params.items() %}\r\n    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:\r\n      label: \"{{ param.label or param_name }}\"\r\n      {%- if param.doc %}\r\n      doc: |-\r\n        {{ param.doc }}\r\n      {%- endif %}\r\n      type: {{ param.type }}\r\n      default: {{ param.default | tojson }}\r\n    {%- endfor %}\r\n  {%- endfor %}\r\n{%- endfor %}\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n  id: main\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.2",
    "default_inputs": {},
    "owner": null,
    "created_at": null,
@@ -273,12 +273,12 @@
  },
  {
   "model": "backend.subworkflow",
-  "pk": "ipynb_specs_checker_subworkflow",
+  "pk": "notebook-bp-validator_subworkflow",
   "fields": {
-   "name": "Jupyter Notebook Best Practices Checker",
-   "description": "Best practices checker for Jupyter notebook specs",
-   "pipeline_step": "ipynb_specs_checker_subworkflow:\r\n  in:\r\n    filter.regex: ipynb_specs_checker_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    ipynb_specs_checker.schema: ipynb_specs_checker_subworkflow.ipynb_specs_checker.schema\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#ipynb_specs_checker_subworkflow'\r\n  out: []",
-   "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: ipynb_specs_checker\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    ipynb_specs_checker.schema: string\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    ipynb_specs_checker_report:\r\n      type: File\r\n      outputSource: ipynb_specs_checker_step/ipynb_specs_checker_report\r\n\r\n  steps:\r\n    filter_ipynb_specs_checker_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    ipynb_specs_checker_step:\r\n      in:\r\n        file_list: filter_ipynb_specs_checker_step/file_list\r\n        source_directory: source_directory\r\n        schema: ipynb_specs_checker.schema\r\n      run: '#ipynb_specs_checker_tool'\r\n      out:\r\n      - ipynb_specs_checker_report\r\n    save_ipynb_specs_checker_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: ipynb_specs_checker_step/ipynb_specs_checker_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n  id: ipynb_specs_checker_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+   "name": "Jupyter Notebook Best Practices Validator",
+   "description": "This tool aims at validating the notebooks against the CEOS Jupyter Notebook Best Practice v1.1 document.",
+   "pipeline_step": "notebook-bp-validator_subworkflow:\r\n  in:\r\n    filter.regex: notebook-bp-validator_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    notebook-bp-validator.abspath: notebook-bp-validator_subworkflow.notebook-bp-validator.abspath\r\n    notebook-bp-validator.schema: notebook-bp-validator_subworkflow.notebook-bp-validator.schema\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#notebook-bp-validator_subworkflow'\r\n  out: []",
+   "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: notebook-bp-validator\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    notebook-bp-validator.abspath: boolean\r\n    notebook-bp-validator.schema: string\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    notebook-bp-validator_report:\r\n      type: File\r\n      outputSource: notebook-bp-validator_step/notebook-bp-validator_report\r\n\r\n  steps:\r\n    filter_notebook-bp-validator_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    notebook-bp-validator_step:\r\n      in:\r\n        abspath: notebook-bp-validator.abspath \r\n        file_list: filter_notebook-bp-validator_step/file_list\r\n        source_directory: source_directory\r\n        schema: notebook-bp-validator.schema\r\n      run: '#notebook-bp-validator_tool'\r\n      out:\r\n      - notebook-bp-validator_report\r\n    save_notebook-bp-validator_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: notebook-bp-validator_step/notebook-bp-validator_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n  id: notebook-bp-validator_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
    "user_params": {
     "filter": {
      "regex": {
@@ -287,10 +287,18 @@
       "default": ".*\\.ipynb"
      }
     },
-    "ipynb_specs_checker": {
+    "notebook-bp-validator": {
      "schema": {
+      "doc": "Supported values: 'eumetsat' or 'schema.org'",
       "type": "string",
+      "label": "Schema",
       "default": "eumetsat"
+     },
+     "abspath": {
+      "doc": "Uses absolute paths in output.",
+      "type": "boolean",
+      "label": "Absolute path",
+      "default": false
      }
     }
    },
@@ -301,7 +309,7 @@
    ],
    "tools": [
     "filter",
-    "ipynb_specs_checker",
+    "notebook-bp-validator",
     "save"
    ]
   }
@@ -537,7 +545,7 @@
   "pk": "filter",
   "fields": {
    "name": "Filter",
-   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: alpine:latest\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          cd $(inputs.source_directory.path)\r\n          find . -type f -regex \"$(inputs.regex)\" > $HOME/filter.out\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    regex: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    file_list:\r\n      type: string[]\r\n      outputBinding:\r\n        glob: filter.out\r\n        outputEval: $(self[0].contents.split('\\n').filter(line => line.trim() !== ''))\r\n        loadContents: true\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: filter_tool",
+   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: alpine:latest\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          cd $(inputs.source_directory.path)\r\n          find . -type f -regex \"$(inputs.regex)\" > $HOME/filter.out\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    regex: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    file_list:\r\n      type: string[]\r\n      outputBinding:\r\n        glob: filter.out\r\n        outputEval: |-\r\n          $(self[0].contents.split('\\n').filter(function(line) {return line.trim() !== '';}))\r\n        loadContents: true\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: filter_tool",
    "version": "0.1"
   }
  },
@@ -552,10 +560,10 @@
  },
  {
   "model": "backend.commandlinetool",
-  "pk": "ipynb_specs_checker",
+  "pk": "notebook-bp-validator",
   "fields": {
-   "name": "Jupyter Notebook Best Practices Checker",
-   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: python:slim\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          cd $(inputs.source_directory.path)\r\n          python ~/script.py > ~/ipynb_specs_checker_report.json\r\n          exit 0\r\n      - entryname: script.py\r\n        entry: |-\r\n          import json\r\n          import os\r\n\r\n          schema = '$(inputs.schema)'\r\n\r\n          def read_notebook(notebook_path: str):\r\n              result = {\"filename\": os.path.relpath(notebook_path, os.path.expanduser('$(inputs.source_directory.path)/..')), \"schema\": schema}\r\n              try:\r\n                  with open(notebook_path) as f:\r\n                      notebook = json.load(f)\r\n              except Exception as e:\r\n                  result['error'] = (f\"Error reading notebook file: {e}\")\r\n                  return result\r\n\r\n              if \"metadata\" not in notebook:\r\n                  result['error'] = (\"Notebook does not contain a 'metadata' section.\")\r\n                  return result\r\n\r\n              metadata = notebook[\"metadata\"]\r\n\r\n              if schema.lower() == \"eumetsat\":\r\n                  mandatory_fields = [\"author\", \"title\", \"description\", \"services\"]\r\n                  optional_fields = [\"image\", \"tags\"]\r\n              elif schema.lower() == \"schema.org\":\r\n                  mandatory_fields = [\"author\", \"name\", \"description\", \"keywords\"]\r\n                  optional_fields = [\"identifier\", \"image\", \"potentialAction\", \"domain\", \"platform\", \"instruments\", \"tags\", \"license\"]\r\n              else:\r\n                  result['error'] = f\"Unknown schema type: {schema}\"\r\n                  return result\r\n\r\n              errors = []\r\n              for field in mandatory_fields:\r\n                  if field not in metadata:\r\n                      errors.append(field)\r\n\r\n              warnings = []\r\n              for field in optional_fields:\r\n                  if field not in metadata:\r\n                      warnings.append(field)\r\n\r\n              result['valid'] = (len(errors) == 0)\r\n              result['missing_mandatory_fields'] = errors\r\n              result['missing_optional_fields'] = warnings\r\n\r\n              return result\r\n\r\n          output = []\r\n\r\n          for notebook_path in $(inputs.file_list):\r\n              output.append(read_notebook(notebook_path))\r\n\r\n          print(json.dumps(output, indent=4))\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    schema: string\r\n    file_list: string[]\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    ipynb_specs_checker_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: ipynb_specs_checker_report.json\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: ipynb_specs_checker_tool",
+   "name": "Jupyter Notebook Best Practices Validator",
+   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: eoepca/notebook-bp-validator:2025-05-12.1\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          cd $(inputs.source_directory.path)\r\n\r\n          PARAMS=\"-s $(inputs.schema)\"\r\n          if [ '$(inputs.abspath)' == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS -p\"\r\n          fi\r\n\r\n          nb-validator $PARAMS $(inputs.file_list.join(\" \")) > ~/notebook-bp-validator_report.json\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    abspath: boolean\r\n    file_list: string[]\r\n    schema: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    notebook-bp-validator_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: notebook-bp-validator_report.json\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: notebook-bp-validator_tool",
    "version": "0.1"
   }
  },
@@ -591,7 +599,7 @@
   "pk": "save",
   "fields": {
    "name": "Save report",
-   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: curlimages/curl\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    name: string\r\n    pipeline_id: string\r\n    report: File\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  baseCommand: curl\r\n  arguments:\r\n  - prefix: -X\r\n    valueFrom: POST\r\n  - prefix: -L\r\n    valueFrom: |-\r\n      $('http://' + inputs.server_url + '/api/pipelines/' + inputs.pipeline_id + '/runs/' + inputs.run_id + '/jobreports/?name=' + inputs.name)\r\n  - prefix: -H\r\n    valueFrom: Content-Type:application/json\r\n  - prefix: -d\r\n    valueFrom: $('@' + inputs.report.path)\r\n  id: save_tool",
+   "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: curlimages/curl\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    name: string\r\n    pipeline_id: string\r\n    report: File\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  baseCommand: curl\r\n  arguments:\r\n  - prefix: -X\r\n    valueFrom: POST\r\n  - prefix: -L\r\n    valueFrom: |-\r\n      $(inputs.server_url + '/api/pipelines/' + inputs.pipeline_id + '/runs/' + inputs.run_id + '/jobreports/?name=' + inputs.name)\r\n  - prefix: -H\r\n    valueFrom: Content-Type:application/json\r\n  - prefix: -d\r\n    valueFrom: $('@' + inputs.report.path)\r\n  id: save_tool",
    "version": "0.1"
   }
  },

@@ -35,9 +35,20 @@ else
   echo "Admin user already exists"
 fi
 
-if [ "$VCLUSTER_ENABLED" = "true" ]; then
-  echo "Setting up vcluster..."
-  sh vcluster.sh
+# Generate a kubeconfig for in-cluster access
+sh /app/scripts/setup_incluster_kubeconfig.sh
+
+if [ "$SHARED_VCLUSTER_ENABLED" = "true" ]; then
+  echo "Setting up a shared vcluster..."
+  sh /app/scripts/setup_shared_vcluster.sh
+else
+  echo "Not using a shared vcluster..."
+fi
+
+if [ "$WORKSPACE_VCLUSTER_ENABLED" = "true" ] && [ "$WORKSPACE_API_SERVICE_URL" != "" ]; then
+  echo "Checking Workspace API access for using user workspace vClusters..."
+  . /app/scripts/check_service.sh
+  check_service "${WORKSPACE_API_SERVICE_URL}/probe"
 fi
 
 echo "Collecting static files ..."

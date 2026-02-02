@@ -60,7 +60,7 @@
     <v-data-table
       v-model:items-per-page="itemsPerPage"
       v-model:sort-by="sortBy"
-      :headers="headers"
+      :headers="filteredHeaders"
       :items="store.executions"
       :filter-keys="['pipeline']"
       :custom-filter="filterOnPipelineId"
@@ -77,6 +77,7 @@
           <td>
             {{ item.pipeline && store.pipelineById(item.pipeline).version }}
           </td>
+          <td v-if="this.authStore.isAdmin">{{ item.started_by }}</td>
           <td>{{ formatDate(item.start_time) }}</td>
           <td>{{ formatDate(item.completion_time) }}</td>
           <td class="first-letter">{{ item.status || 'Unknown' }}</td>
@@ -89,7 +90,7 @@
               :max="progressMax(item)"
               :indeterminate="item.status.toLowerCase() == 'starting'"
             >
-              <strong>{{ progress(item) }} / {{ progressMax(item) }}</strong>
+              Reports:&nbsp;<strong>{{ progress(item) }}</strong>
             </v-progress-linear>
           </td>
           <td class="text-right nowrap">
@@ -116,7 +117,6 @@
               v-if="settings.isGrafanaEnabled()"
               color="secondary"
               variant="text"
-              :disabled="item.job_reports_count == 0"
               v-tooltip:bottom-end="'View execution dashboard (new page)'"
               @click="viewPipelineExecutionDashboard(item)"
             >
@@ -216,6 +216,13 @@ export default {
           sortable: true,
         },
         {
+          // Only shown to admins using computed property, below
+          title: 'User',
+          key: 'started_by',
+          sortable: true,
+          admins_only: true,
+        },
+        {
           title: 'Started',
           key: 'start_time',
           sortable: true,
@@ -265,6 +272,13 @@ export default {
       if (!this.lastPollTime) return 'Never';
       const seconds = Math.floor((Date.now() - this.lastPollTime) / 1000);
       return `${seconds}s ago`;
+    },
+
+    filteredHeaders() {
+      // Filter out columns restricted to admins if necessary
+      return this.headers.filter(
+        (x) => !x.admins_only || this.authStore.isAdmin,
+      );
     },
   },
 
