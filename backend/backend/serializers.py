@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag
+from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag, TriggerType #, Trigger
 
 
 class PipelineSerializer(serializers.ModelSerializer):
@@ -73,3 +73,9 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ["id", "name"]
+
+
+class TriggerTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TriggerType
+        fields = ["slug", "name", "description", "statu", "data"]

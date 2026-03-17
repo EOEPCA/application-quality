@@ -8,6 +8,7 @@ from backend.views import (
     TagViewSet,
     SettingsView,
     EventsView,
+    TriggerTypeViewSet,
 )
 
 router = DefaultRouter()
@@ -17,6 +18,7 @@ router.register(r"pipelines/(?P<pipeline_id>[^/.]+)/runs",                      
 router.register(r"pipelines/(?P<pipeline_id>[^/.]+)/runs/(?P<run_id>[^/.]+)/jobreports",    JobReportViewSet,   basename="pipeline-run-jobreport")
 router.register(r"tools",                                                                   SubworkflowViewSet, basename="tool")
 router.register(r"tags",                                                                    TagViewSet,         basename="tag")
+router.register(r"triggertypes",                                                            TriggerTypeViewSet, basename="trigger-type")
 
 urlpatterns = router.urls
 

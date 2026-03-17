@@ -13,9 +13,9 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag
+from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag, TriggerType
 from backend.tasks import run_workflow_task
-from backend.utils.cloudevents import encode, decode
+from backend.utils.cloudevents import encode as ce_encode, decode as ce_decode
 from . import serializers
 
 
@@ -61,8 +61,10 @@ class EventsView(APIView):
     def post(self, request, *args, **kwargs):
         try:
             logger.info("Event received %s", request)
-            payload, headers = decode(request.body, request.META.items())
+            payload, headers = ce_decode(request.body, request.META.items())
             event_id = headers.get('Ce-Id')
+            event_source = headers.get('Ce-Source', None)
+            event_webhook_source = headers.get('Ce-Webhooksource', None)
             event_user = headers.get('Ce-User', None)
             event_type = headers.get('Ce-Type', None)
             event_subject = headers.get('Ce-Subject', None)
@@ -98,8 +100,15 @@ class EventsView(APIView):
 
             # React to the event
             # Note: The Trigger must filter on the event type prefix
+            if event_type == "org.eoepca.webhook.github.ping":
+                logger.debug("Received a ping event from GitHub")
+                logger.debug("Originating GitHub repository: %s", event_source)
 
-            if event_type.endswith(".probes.health"):
+            elif event_type == "org.eoepca.webhook.gitlab.ping":
+                logger.debug("Received a ping event from GitLab")
+                logger.debug("Originating GitLab repository: %s", event_source)
+
+            elif event_type.endswith(".probes.health"):
                 logger.debug("Received a health check event")
                 res_data.update({
                     "status": "ok",
@@ -126,7 +135,7 @@ class EventsView(APIView):
                     "subject": pipeline_run.id,
                 })
 
-            res_body, res_headers = encode(res_attrs, res_data)
+            res_body, res_headers = ce_encode(res_attrs, res_data)
             logger.debug("Response Headers: %s", res_headers)
             logger.debug("Response Body: %s", res_body)
             return Response(res_body, status=202, headers=res_headers)
@@ -387,3 +396,19 @@ class SubworkflowViewSet(viewsets.ReadOnlyModelViewSet):
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = serializers.TagSerializer
+
+
+class TriggerTypeViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = serializers.TriggerTypeSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if user:
+            logger.info(f"User {user} is requesting the trigger types information")
+        else:
+            logger.info(f"Anonymous user is requesting the trigger types information")
+        if user and user.is_staff:
+            logger.info(f"User {user} is staff / admin")
+            # Admins may get all the tools, whatever their status or availability flag
+            return TriggerType.objects.all()
+        return TriggerType.objects.filter(available=True)

@@ -7,7 +7,6 @@ from django.db.models import JSONField
 from django_svelte_jsoneditor.widgets import SvelteJSONEditorWidget
 
 
-
 class PipelineSettings(admin.ModelAdmin):
     list_display = ("name", "description", "owner", "version", "created_at", "edited_at")
     formfield_overrides = {
@@ -38,9 +37,16 @@ class JobReportSettings(admin.ModelAdmin):
         JSONField: {"widget": SvelteJSONEditorWidget}
     }
 
+class TriggerTypeSettings(admin.ModelAdmin):
+    list_display = ("__str__", "slug", "event_type_prefix", "status", "available")
+    formfield_overrides = {
+        JSONField: {"widget": SvelteJSONEditorWidget}
+    }
+
 admin.site.register(models.Pipeline, PipelineSettings)
 admin.site.register(models.PipelineRun, PipelineRunSettings)
 admin.site.register(models.Subworkflow, ToolSettings)
 admin.site.register(models.CommandLineTool, CommandSettings)
 admin.site.register(models.JobReport, JobReportSettings)
+admin.site.register(models.TriggerType, TriggerTypeSettings)
 admin.site.register(models.Tag)

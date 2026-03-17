@@ -96,3 +96,28 @@ class CommandLineTool(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class TriggerType(models.Model):
+
+    class Status(models.TextChoices):
+        DISABLED = 'Disabled'
+        TESTING = 'Testing'
+        RESTRICTED = 'Restricted'
+        ENABLED = 'Enabled'
+        DELETED = 'Deleted'
+
+    slug              = models.SlugField(primary_key=True, max_length=50)
+    description       = models.TextField(null=False, blank=False)
+    name              = models.CharField(max_length=100, null=False, blank=False)
+    event_type_prefix = models.CharField(max_length=100, null=False, blank=False)
+    data              = models.JSONField(default=dict, blank=True)
+    status            = models.CharField(max_length=20, choices=Status.choices, default=Status.ENABLED)
+    available         = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Trigger Type"
+        verbose_name_plural = "Trigger Types"
