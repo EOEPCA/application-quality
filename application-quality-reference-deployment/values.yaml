@@ -118,6 +118,7 @@ application-quality:
     channelPrefix: "org.eoepca.application-quality"
     responseSource: "/eoepca/application-quality"
     responseTypePrefix: "org.eoepca.application-quality.response"
+    webhookPrefix: "org.eoepca.webhook"
 
   automations:
     enabled: false
