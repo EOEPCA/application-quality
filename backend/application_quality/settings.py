@@ -59,16 +59,20 @@ LOGGING = {
 # Build the ALLOWED_HOSTS variable
 
 # PUBLIC_URL should contain a scheme, and possibly a port number
-allowed_host = os.getenv("PUBLIC_URL")
-if "://" not in allowed_host:
-    allowed_host = "http://" + allowed_host
-parsed_allowed_host = urlparse(allowed_host)
-allowed_domain = parsed_allowed_host.netloc
-if ":" in allowed_domain:
+public_url = os.getenv("PUBLIC_URL")
+if "://" not in public_url:
+    public_url = "http://" + public_url
+parsed_public_url = urlparse(public_url)
+public_domain = parsed_public_url.netloc
+if ":" in public_domain:
     # Remove the port number, if any
-    allowed_domain = allowed_domain.split(":")[0]
+    public_domain = public_domain.split(":")[0]
 
-ALLOWED_HOSTS = [allowed_domain]
+# BACKEND_SERVICE_HOST contains the internal k8s Service host name
+# E.g. application-quality-api.application-quality.svc.cluster.local
+service_host = os.getenv("BACKEND_SERVICE_HOST")
+
+ALLOWED_HOSTS = [public_domain, service_host]
 add_hosts_raw = os.getenv("ADDITIONAL_ALLOWED_HOSTS")
 if add_hosts_raw:
     add_hosts_list = [host.strip() for host in add_hosts_raw.split(',') if host.strip()]
