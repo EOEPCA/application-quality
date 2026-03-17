@@ -14,10 +14,10 @@ spec:
           type: {{ .Values.notifications.channelPrefix }}.probes.
       - prefix:
           type: {{ .Values.notifications.channelPrefix }}.events.
-    - prefix:
-        type: {{ .Values.notifications.webhookPrefix }}.github.
-    - prefix:
-        type: {{ .Values.notifications.webhookPrefix }}.gitlab.
+      - prefix:
+          type: {{ .Values.notifications.webhookPrefix }}.github.
+      - prefix:
+          type: {{ .Values.notifications.webhookPrefix }}.gitlab.
   subscriber:
     ref:
       # If using a Knative Service, the port is deduced from its definition.
