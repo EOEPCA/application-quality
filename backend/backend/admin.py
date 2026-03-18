@@ -43,10 +43,25 @@ class TriggerTypeSettings(admin.ModelAdmin):
         JSONField: {"widget": SvelteJSONEditorWidget}
     }
 
+class TriggerSettings(admin.ModelAdmin):
+    list_display = ("__str__", "owner", "trigger_type", "pipeline__name", "pipeline__version", "status", "enabled")
+    formfield_overrides = {
+        JSONField: {"widget": SvelteJSONEditorWidget}
+    }
+
+class TriggerEventSettings(admin.ModelAdmin):
+    list_display = ("event_time", "trigger__trigger_type__name", "event_type", "source", "trigger__slug", "trigger__pipeline__name", "trigger__pipeline__version", "pipeline_run")
+    formfield_overrides = {
+        JSONField: {"widget": SvelteJSONEditorWidget}
+    }
+
+
 admin.site.register(models.Pipeline, PipelineSettings)
 admin.site.register(models.PipelineRun, PipelineRunSettings)
 admin.site.register(models.Subworkflow, ToolSettings)
 admin.site.register(models.CommandLineTool, CommandSettings)
 admin.site.register(models.JobReport, JobReportSettings)
 admin.site.register(models.TriggerType, TriggerTypeSettings)
+admin.site.register(models.Trigger, TriggerSettings)
+admin.site.register(models.TriggerEvent, TriggerEventSettings)
 admin.site.register(models.Tag)

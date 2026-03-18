@@ -118,6 +118,38 @@ class TriggerType(models.Model):
     def __str__(self):
         return self.name
 
-    class Meta:
-        verbose_name = "Trigger Type"
-        verbose_name_plural = "Trigger Types"
+
+class Trigger(models.Model):
+
+    class Status(models.TextChoices):
+        DISABLED = 'Disabled'
+        TESTING = 'Testing'
+        RESTRICTED = 'Restricted'
+        ENABLED = 'Enabled'
+        DELETED = 'Deleted'
+    
+    slug              = models.SlugField(primary_key=True, max_length=50)
+    description       = models.TextField(null=True, blank=True)
+    cql2_filter       = models.JSONField(default=dict, blank=True, help_text="Filter expressed in CQL2-JSON")
+    params            = models.JSONField(default=dict, blank=True)
+    trigger_type      = models.ForeignKey(TriggerType, related_name="triggers", on_delete=models.CASCADE)
+    pipeline          = models.ForeignKey(Pipeline, related_name="triggers", on_delete=models.CASCADE)
+    owner             = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name="triggers")
+    status            = models.CharField(max_length=20, choices=Status.choices, default=Status.ENABLED)
+    enabled           = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Trigger of type: {self.trigger_type.name}, Pipeline: {self.pipeline.name}, Pipeline version: {self.pipeline.version}"
+
+
+class TriggerEvent(models.Model):
+    trigger       = models.ForeignKey(Trigger, related_name="trigger_events", on_delete=models.CASCADE)
+    source        = models.CharField(max_length=100, null=False, blank=False)
+    event_time    = models.DateTimeField(auto_now_add=False, blank=False, null=False)
+    event_type    = models.CharField(max_length=100, null=False, blank=False)
+    event_headers = models.JSONField(default=dict, blank=True)  # Stored, e.g. a CloudEvent headers
+    event_body    = models.JSONField(default=dict, blank=True)  # Stored, e.g. a CloudEvent body
+    pipeline_run  = models.ForeignKey(PipelineRun, on_delete=models.SET_NULL, null=True, blank=True, related_name="triggered_by")
+
+    def __str__(self):
+        return f"Trigger Event {self.id}: {self.trigger}, Run: {self.pipeline_run}"

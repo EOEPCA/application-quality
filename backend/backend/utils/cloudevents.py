@@ -5,12 +5,15 @@ import time
 
 from cloudevents.conversion import to_structured
 from cloudevents.http import CloudEvent
+# Used to apply CQL2-JSON filters on the cloudevent content
+from pygeofilter.parsers.cql2_json import parse as parse_cql2_json
+from pygeofilter.backends.native.evaluate import handle
 
 
 logger = logging.getLogger(__name__)
 
 
-def decode(body, headers: dict) -> tuple[dict, dict]:
+def decode(body: str, headers: dict) -> tuple[dict, dict]:
     """
     Decode CloudEvent and return the payload and the headers
     """
@@ -46,7 +49,7 @@ def decode(body, headers: dict) -> tuple[dict, dict]:
     return payload_dict, headers_dict
 
 
-def encode(attributes, data, headers=None):
+def encode(attributes: dict, data: dict, headers=None):
     event = CloudEvent(attributes, data)
     logger.debug("Event: %s", event)
     _ignore, payload = to_structured(event)
@@ -57,3 +60,36 @@ def encode(attributes, data, headers=None):
     logger.debug("Headers: %s", headers_dict)
     logger.debug("Payload: %s", payload)
     return payload, headers_dict
+
+
+def is_match(filter: dict, payload: dict) -> bool:
+    """
+    Determine if the dictionnary 'doc' matches the given filter.
+    The filter must be encoded using the CQL2-JSON format.
+    For example:
+    ```python
+    filter_json = {
+      "op": "and",
+      "args": [
+        {"op": "=", "args": [{"property": "repository.full_name"}, "SpaceApplications/eoepca-aqbb-test-files"]},
+        {"op": "=", "args": [{"property": "ref"}, "refs/heads/main"]}
+      ]
+    }
+    """
+    added_files = set()
+    deleted_files = set()
+    modified_files = set()
+    for commit in payload.get("commits", []):
+        added_files.update(commit.get("added", []))
+        deleted_files.update(commit.get("deleted", []))
+        modified_files.update(commit.get("modified", []))
+    payload["added_files"] = list(added_files)
+    payload["deleted_files"] = list(deleted_files)
+    payload["modified_files"] = list(modified_files)
+    logger.debug(
+        "Files in commit: added=%s, deleted=%s, modified=%s", added_files, deleted_files, modified_files
+    )
+    # ---
+    _is_match = bool(handle(parse_cql2_json(filter), payload))
+    logger.debug("Filter matched: %s", _is_match)
+    return _is_match

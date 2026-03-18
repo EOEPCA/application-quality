@@ -13,7 +13,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag, TriggerType
+from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag, TriggerType, Trigger
 from backend.tasks import run_workflow_task
 from backend.utils.cloudevents import encode as ce_encode, decode as ce_decode
 from . import serializers
@@ -68,6 +68,8 @@ class EventsView(APIView):
             event_user = headers.get('Ce-User', None)
             event_type = headers.get('Ce-Type', None)
             event_subject = headers.get('Ce-Subject', None)
+            event_time = headers.get('Ce-Time', None)
+            event_source = headers.get('Ce-Source', None)
 
             user = None
             pipeline_id = None
@@ -99,14 +101,60 @@ class EventsView(APIView):
             }
 
             # React to the event
-            # Note: The Trigger must filter on the event type prefix
-            if event_type == "org.eoepca.webhook.github.ping":
-                logger.debug("Received a ping event from GitHub")
-                logger.debug("Originating GitHub repository: %s", event_source)
+            # Note: The Knative Trigger filters on the event type prefix
 
-            elif event_type == "org.eoepca.webhook.gitlab.ping":
-                logger.debug("Received a ping event from GitLab")
-                logger.debug("Originating GitLab repository: %s", event_source)
+            # Check if the event_type matches one (or more?) active TriggerType
+            _trigger_types = TriggerType.objects.filter(
+                available=True,
+                status__in=["Testing", "Restricted", "Enabled"]
+            )
+            trigger_types = [
+                t for t in _trigger_types if event_type.startswith(t.event_type_prefix)
+            ]
+            logger.debug("The event matches these trigger types: %s", trigger_types)
+
+            # Retrieve active Triggers, if any
+            for trigger_type in trigger_types:
+                triggers = trigger_type.triggers.filter(enabled=True)
+                logger.debug("Enabled triggers of type '%s': %s", trigger_type, triggers)
+                for trigger in triggers:
+                    user = trigger.owner
+                    logger.debug("Trigger owner: %s", user)
+                    # Verify if the event matches the filter configured in the trigger
+                    filter_json = trigger.filter
+                    logger.debug("CQL2-JSON Filter: %s", filter_json)
+                    ce_is_match = is_match(filter_json, payload)
+                    logger.debug("CloudEvent is %smatching!", "" if ce_is_match else "not ")
+
+                    if ce_is_match:
+                        # Create a TriggerEvent record and start a pipeline execution
+                        trigger_event = TriggerEvent.objects.create(
+                            trigger=trigger,
+                            source=event_source,
+                            event_time=event_time,
+                            event_type=event_type,
+                            event_headers=headers,
+                            event_body=payload,
+                        )
+                        logger.info("Trigger event created with id %s", trigger_event.id)
+                        try:
+                            pipeline_id = trigger.pipeline.id
+                            params = trigger.params
+                            pipeline_run = PipelineRunViewSet._create(user, pipeline_id, params)
+                            logger.debug("Pipeline run: %s", pipeline_run)
+                            trigger_event.pipeline_run = pipeline_run
+                        except Exception as e:
+                            logger.error("Exception: %s", e)
+                        trigger_event.save()
+            # ---
+
+            # if event_type == "org.eoepca.webhook.github.ping":
+            #     logger.debug("Received a ping event from GitHub")
+            #     logger.debug("Originating GitHub repository: %s", event_source)
+
+            # elif event_type == "org.eoepca.webhook.gitlab.ping":
+            #     logger.debug("Received a ping event from GitLab")
+            #     logger.debug("Originating GitLab repository: %s", event_source)
 
             elif event_type.endswith(".probes.health"):
                 logger.debug("Received a health check event")
@@ -194,10 +242,10 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         logger.info("User %s is requesting pipeline runs (admin=%s)", user, user.is_staff)
         p_id = self.kwargs["pipeline_id"]
         if user.is_staff:
-            if p_id == "_":
+            if p_id in ["_", "-"]:
                 return PipelineRun.objects
             return PipelineRun.objects.filter(pipeline_id=p_id)
-        if p_id == "_":
+        if p_id in ["_", "-"]:
             return PipelineRun.objects.filter(started_by=self.request.user)
         return PipelineRun.objects.filter(pipeline_id=p_id, started_by=self.request.user)
 
@@ -412,3 +460,58 @@ class TriggerTypeViewSet(viewsets.ReadOnlyModelViewSet):
             # Admins may get all the tools, whatever their status or availability flag
             return TriggerType.objects.all()
         return TriggerType.objects.filter(available=True)
+
+
+class TriggerViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.TriggerSerializer
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return Trigger.objects.all()
+        return (
+            Trigger.objects.filter(owner=self.request.user)
+            | Trigger.objects.filter(owner__isnull=True)
+        )
+
+    def perform_create(self, serializer):
+        pass
+        # try:
+        #     serializer.save(owner=self.request.user, template=pipeline_cwl_template)
+        # except IntegrityError as ie:
+        #     logger.error(ie)
+        #     raise ValidationError(
+        #         {
+        #             "detail": "A pipeline with this name, version, and owner already exists."
+        #         }
+        #     ) from ie
+
+    def get_permissions(self):
+        if self.action in ["create", "list", "retrieve"]:
+            return [permissions.IsAuthenticated()]
+        if self.action in ["update", "partial_update", "destroy"]:
+            return [permissions.IsAuthenticated(), IsOwnerOrAdmin()]
+        return super().get_permissions()
+
+
+class TriggerEventViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = serializers.TriggerEventSerializer
+
+    def get_queryset(self):
+        trigger_slug = self.kwargs["trigger_slug"]
+        user = self.request.user
+        if user:
+            logger.info(f"User {user} is requesting trigger events information for trigger {trigger_slug}")
+        else:
+            logger.info(f"Anonymous user is requesting trigger events information for trigger {trigger_slug}")
+        if user and user.is_staff:
+            logger.info(f"User {user} is staff / admin")
+            # Admins may get all the tools, whatever their status or availability flag
+            if trigger_slug in ["_", "-"]:
+                return TriggerEvent.objects.all()
+            else:
+                return TriggerEvent.objects.filter(trigger__slug=trigger_slug)
+        # Return only the trigger events owned by the requesting user
+        if trigger_slug in ["_", "-"]:
+            return TriggerEvent.objects.filter(pipeline_run__user=user)
+        else:
+            return TriggerEvent.objects.filter(pipeline_run__user=user, trigger__slug=trigger_slug)
