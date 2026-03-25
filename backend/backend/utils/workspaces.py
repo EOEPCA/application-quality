@@ -13,7 +13,7 @@ WORKSPACE_API_SERVICE_URL = os.getenv(
 logger = logging.getLogger(__name__)
 
 
-def get_vcluster_config(ws_name: str) -> tuple([dict, str]):
+def get_vcluster_config(ws_name: str) -> (dict, str):
     logger.info("Fetching kubeconfig for workspace %s", ws_name)
     logger.debug("HTTP request URL: %s/workspaces/%s", WORKSPACE_API_SERVICE_URL, ws_name)
     ws_info = requests.get(f"{WORKSPACE_API_SERVICE_URL}/workspaces/{ws_name}", timeout=10)
@@ -27,7 +27,7 @@ def get_vcluster_config(ws_name: str) -> tuple([dict, str]):
     if ws_info_dict.get("status", "unknown") in [None, "unknown"]:
         logger.error("Error: workspace %s not found", ws_name)
         return None, "error"
-    if not ws_info_dict.get("status", None) == "ready":
+    if ws_info_dict.get("status", None) != "ready":
         logger.error("Error: workspace %s is not ready", ws_name)
         return None, "error"
     logger.info("Workspace %s is ready", ws_name)
@@ -39,7 +39,7 @@ def get_vcluster_config(ws_name: str) -> tuple([dict, str]):
     ws_cluster_status = ws_cluster_dict.get("status", None)
     ws_cluster_config = ws_cluster_dict.get("config", None)
     logger.debug("Workspace cluster status: %s", ws_cluster_status)
-    if not ws_cluster_status == "active":
+    if ws_cluster_status != "active":
         # Other possible statuses: suspended, disabled
         logger.info("Cluster not active => Must resume or active it now (TODO)")
         return "", ws_cluster_status

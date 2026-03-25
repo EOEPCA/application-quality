@@ -146,15 +146,15 @@ class EventsView(APIView):
                         except Exception as e:
                             logger.error("Exception: %s", e)
                         trigger_event.save()
-            # ---
+                # ---
 
-            # if event_type == "org.eoepca.webhook.github.ping":
-            #     logger.debug("Received a ping event from GitHub")
-            #     logger.debug("Originating GitHub repository: %s", event_source)
+                # if event_type == "org.eoepca.webhook.github.ping":
+                #     logger.debug("Received a ping event from GitHub")
+                #     logger.debug("Originating GitHub repository: %s", event_source)
 
-            # elif event_type == "org.eoepca.webhook.gitlab.ping":
-            #     logger.debug("Received a ping event from GitLab")
-            #     logger.debug("Originating GitLab repository: %s", event_source)
+                # elif event_type == "org.eoepca.webhook.gitlab.ping":
+                #     logger.debug("Received a ping event from GitLab")
+                #     logger.debug("Originating GitLab repository: %s", event_source)
 
             elif event_type.endswith(".probes.health"):
                 logger.debug("Received a health check event")
