@@ -156,7 +156,7 @@ class EventsView(APIView):
                 #     logger.debug("Received a ping event from GitLab")
                 #     logger.debug("Originating GitLab repository: %s", event_source)
 
-            elif event_type.endswith(".probes.health"):
+            if event_type.endswith(".probes.health"):
                 logger.debug("Received a health check event")
                 res_data.update({
                     "status": "ok",
