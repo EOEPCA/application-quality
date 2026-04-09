@@ -27,8 +27,8 @@ jobs:
 
       - name: Run Ruff Linting
         env:
-          # GITHUB_REF_NAME contains the name of the branch that triggered the workflow execution
-          BRANCH_NAME: ${{ env.GITHUB_REF_NAME }}
+          # Contains the name of the branch that triggered the workflow execution
+          BRANCH_NAME: ${{ github.ref_name }}
         run: |
           mkdir -p reports
           ruff check --no-cache --exit-zero --verbose --output-format json --output-file reports/ruff-report.json $BRANCH_NAME
@@ -38,8 +38,8 @@ jobs:
       # Step 3: Generate the SonarQube project properties
       - name: SonarQube Project properties
         env:
-          # GITHUB_REF_NAME contains the name of the branch that triggered the workflow execution
-          BRANCH_NAME: ${{ env.GITHUB_REF_NAME }}
+          # Contains the name of the branch that triggered the workflow execution
+          BRANCH_NAME: ${{ github.ref_name }}
         run: |
           echo "Generating the Sonar project properties file ..."
           echo "# Sonar Project Properties" > sonar-project.properties
