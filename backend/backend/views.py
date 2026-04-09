@@ -13,9 +13,9 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag, TriggerType, Trigger
+from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag, TriggerType, Trigger, TriggerEvent
 from backend.tasks import run_workflow_task
-from backend.utils.cloudevents import encode as ce_encode, decode as ce_decode
+from backend.utils.cloudevents import encode as ce_encode, decode as ce_decode, is_match
 from . import serializers
 
 
@@ -58,33 +58,71 @@ RESPONSE_TYPE_PREFIX = os.getenv(
 
 
 class EventsView(APIView):
+
+    @staticmethod
+    def _get_matching_user(event_user):
+        user = None
+        if event_user:
+            user = User.objects.get(username=event_user)
+            logger.debug("User: %s", user)
+        else:
+            logger.debug("No user identified in the event")
+        return user
+
+    @staticmethod
+    def _get_pipeline_id(event_subject):
+        pipeline_id = None
+        if event_subject and event_subject.startswith("pipelines/"):
+            pipeline_id = event_subject.split("/")[-1]
+            logger.debug("Pipeline: %s", pipeline_id)
+        else:
+            logger.debug("No pipeline identified in the event")
+        return pipeline_id
+
+    @staticmethod
+    def _get_matching_triggers(event_type, event_payload):
+        triggers = []
+        # Check if the event_type matches one (or more?) active TriggerType
+        _trigger_types = TriggerType.objects.filter(
+            available=True,
+            status__in=["Testing", "Restricted", "Enabled"]
+        )
+        trigger_types = [
+            t for t in _trigger_types if event_type.startswith(t.event_type_prefix)
+        ]
+        logger.debug("The event matches these trigger types: %s", trigger_types)
+        # Retrieve active Triggers, if any
+        for trigger_type in trigger_types:
+            triggers = trigger_type.triggers.filter(enabled=True)
+            logger.debug("Enabled triggers of type '%s': %s", trigger_type, triggers)
+            for trigger in triggers:
+                user = trigger.owner
+                logger.debug("Trigger owner: %s", user)
+                # Verify if the event matches the filter configured in the trigger
+                filter_json = trigger.filter
+                logger.debug("CQL2-JSON Filter: %s", filter_json)
+                ce_is_match = is_match(filter_json, event_payload)
+                logger.debug("CloudEvent is %smatching!", "" if ce_is_match else "not ")
+
+                if ce_is_match:
+                    triggers.append(trigger)
+        return triggers
+
     def post(self, request, *args, **kwargs):
         try:
             logger.info("Event received %s", request)
             payload, headers = ce_decode(request.body, request.META.items())
             event_id = headers.get('Ce-Id')
             event_source = headers.get('Ce-Source', None)
-            event_webhook_source = headers.get('Ce-Webhooksource', None)
+            # event_webhook_source = headers.get('Ce-Webhooksource', None)
             event_user = headers.get('Ce-User', None)
             event_type = headers.get('Ce-Type', None)
             event_subject = headers.get('Ce-Subject', None)
             event_time = headers.get('Ce-Time', None)
             event_source = headers.get('Ce-Source', None)
 
-            user = None
-            pipeline_id = None
-
-            if event_user:
-                user = User.objects.get(username=event_user)
-                logger.debug("User: %s", user)
-            else:
-                logger.debug("No user identified in the event")
-
-            if event_subject and event_subject.startswith("pipelines/"):
-                pipeline_id = event_subject.split("/")[-1]
-                logger.debug("Pipeline: %s", pipeline_id)
-            else:
-                logger.debug("No pipeline identified in the event")
+            user = self._get_matching_user(event_user)
+            pipeline_id = self._get_pipeline_id(event_subject)
 
             # Default response data
             res_data = {
@@ -102,59 +140,35 @@ class EventsView(APIView):
 
             # React to the event
             # Note: The Knative Trigger filters on the event type prefix
-
-            # Check if the event_type matches one (or more?) active TriggerType
-            _trigger_types = TriggerType.objects.filter(
-                available=True,
-                status__in=["Testing", "Restricted", "Enabled"]
-            )
-            trigger_types = [
-                t for t in _trigger_types if event_type.startswith(t.event_type_prefix)
-            ]
-            logger.debug("The event matches these trigger types: %s", trigger_types)
-
-            # Retrieve active Triggers, if any
-            for trigger_type in trigger_types:
-                triggers = trigger_type.triggers.filter(enabled=True)
-                logger.debug("Enabled triggers of type '%s': %s", trigger_type, triggers)
-                for trigger in triggers:
-                    user = trigger.owner
-                    logger.debug("Trigger owner: %s", user)
-                    # Verify if the event matches the filter configured in the trigger
-                    filter_json = trigger.filter
-                    logger.debug("CQL2-JSON Filter: %s", filter_json)
-                    ce_is_match = is_match(filter_json, payload)
-                    logger.debug("CloudEvent is %smatching!", "" if ce_is_match else "not ")
-
-                    if ce_is_match:
-                        # Create a TriggerEvent record and start a pipeline execution
-                        trigger_event = TriggerEvent.objects.create(
-                            trigger=trigger,
-                            source=event_source,
-                            event_time=event_time,
-                            event_type=event_type,
-                            event_headers=headers,
-                            event_body=payload,
-                        )
-                        logger.info("Trigger event created with id %s", trigger_event.id)
-                        try:
-                            pipeline_id = trigger.pipeline.id
-                            params = trigger.params
-                            pipeline_run = PipelineRunViewSet._create(user, pipeline_id, params)
-                            logger.debug("Pipeline run: %s", pipeline_run)
-                            trigger_event.pipeline_run = pipeline_run
-                        except Exception as e:
-                            logger.error("Exception: %s", e)
-                        trigger_event.save()
+            for trigger in self._get_matching_triggers(event_type, payload):
+                # Create a TriggerEvent record and start a pipeline execution
+                trigger_event = TriggerEvent.objects.create(
+                    trigger=trigger,
+                    source=event_source,
+                    event_time=event_time,
+                    event_type=event_type,
+                    event_headers=headers,
+                    event_body=payload,
+                )
+                logger.info("Trigger event created with id %s", trigger_event.id)
+                try:
+                    pipeline_id = trigger.pipeline.id
+                    params = trigger.params
+                    pipeline_run = PipelineRunViewSet._create(user, pipeline_id, params)
+                    logger.debug("Pipeline run: %s", pipeline_run)
+                    trigger_event.pipeline_run = pipeline_run
+                except Exception as e:
+                    logger.error("Exception: %s", e)
+                trigger_event.save()
                 # ---
 
-                # if event_type == "org.eoepca.webhook.github.ping":
-                #     logger.debug("Received a ping event from GitHub")
-                #     logger.debug("Originating GitHub repository: %s", event_source)
+            # if event_type == "org.eoepca.webhook.github.ping":
+            #     logger.debug("Received a ping event from GitHub")
+            #     logger.debug("Originating GitHub repository: %s", event_source)
 
-                # elif event_type == "org.eoepca.webhook.gitlab.ping":
-                #     logger.debug("Received a ping event from GitLab")
-                #     logger.debug("Originating GitLab repository: %s", event_source)
+            # elif event_type == "org.eoepca.webhook.gitlab.ping":
+            #     logger.debug("Received a ping event from GitLab")
+            #     logger.debug("Originating GitLab repository: %s", event_source)
 
             if event_type.endswith(".probes.health"):
                 logger.debug("Received a health check event")
@@ -168,20 +182,20 @@ class EventsView(APIView):
                     "type": RESPONSE_TYPE_PREFIX + ".ok"
                 })
 
-            if user and pipeline_id and event_type.endswith(".event.pipeline.execute"):
-                pipeline_run = PipelineRunViewSet._create(user, pipeline_id, payload)
-                logger.debug("Pipeline run: %s", pipeline_run)
+            # if user and pipeline_id and event_type.endswith(".event.pipeline.execute"):
+            #     pipeline_run = PipelineRunViewSet._create(user, pipeline_id, payload)
+            #     logger.debug("Pipeline run: %s", pipeline_run)
 
-                res_data.update({
-                    "status": "accepted",
-                    # "processed_id": event_id,
-                    "timestamp": int(time.time()),
-                    "message": "Pipeline execution created.",
-                })
-                res_attrs.update({
-                    "type": RESPONSE_TYPE_PREFIX + ".accepted",
-                    "subject": pipeline_run.id,
-                })
+            #     res_data.update({
+            #         "status": "accepted",
+            #         # "processed_id": event_id,
+            #         "timestamp": int(time.time()),
+            #         "message": "Pipeline execution created.",
+            #     })
+            #     res_attrs.update({
+            #         "type": RESPONSE_TYPE_PREFIX + ".accepted",
+            #         "subject": pipeline_run.id,
+            #     })
 
             res_body, res_headers = ce_encode(res_attrs, res_data)
             logger.debug("Response Headers: %s", res_headers)
@@ -316,13 +330,24 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         merged_params = subworkflow.user_params.copy()
         defaults = default_inputs[subworkflow.slug]
 
+        # for key, value in merged_params.items():
+        #     if isinstance(value, dict) and key in defaults:
+        #         for sub_key, sub_value in value.items():
+        #             if isinstance(sub_value, dict) and "default" in sub_value:
+        #                 if sub_key in defaults[key] and "default" in defaults[key][sub_key]:
+        #                     merged_params[key][sub_key]["default"] = defaults[key][sub_key]["default"]
         for key, value in merged_params.items():
-            if isinstance(value, dict) and key in defaults:
-                for sub_key, sub_value in value.items():
-                    if isinstance(sub_value, dict) and "default" in sub_value:
-                        if sub_key in defaults[key] and "default" in defaults[key][sub_key]:
-                            merged_params[key][sub_key]["default"] = defaults[key][sub_key]["default"]
-
+            if not isinstance(value, dict):
+                continue
+            if key not in defaults:
+                continue
+            for sub_key, sub_value in value.items():
+                if not isinstance(sub_value, dict):
+                    continue
+                if "default" not in sub_value:
+                    continue
+                if sub_key in defaults[key] and "default" in defaults[key][sub_key]:
+                    merged_params[key][sub_key]["default"] = defaults[key][sub_key]["default"]
         return merged_params
 
     @staticmethod
@@ -433,7 +458,7 @@ class SubworkflowViewSet(viewsets.ReadOnlyModelViewSet):
         if user:
             logger.info(f"User {user} is requesting the tools information")
         else:
-            logger.info(f"Anonymous user is requesting the tools information")
+            logger.info("Anonymous user is requesting the tools information")
         if user and user.is_staff:
             logger.info(f"User {user} is staff / admin")
             # Admins may get all the tools, whatever their status or availability flag
@@ -454,7 +479,7 @@ class TriggerTypeViewSet(viewsets.ReadOnlyModelViewSet):
         if user:
             logger.info(f"User {user} is requesting the trigger types information")
         else:
-            logger.info(f"Anonymous user is requesting the trigger types information")
+            logger.info("Anonymous user is requesting the trigger types information")
         if user and user.is_staff:
             logger.info(f"User {user} is staff / admin")
             # Admins may get all the tools, whatever their status or availability flag

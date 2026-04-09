@@ -2,7 +2,6 @@ import logging
 import os
 import requests
 import subprocess
-import sys
 
 
 WORKSPACE_API_SERVICE_URL = os.getenv(

@@ -64,7 +64,7 @@ class HelperPod:
                 ],
             },
         }
-        resp = self.context.core_v1_api.create_namespaced_pod(
+        _ = self.context.core_v1_api.create_namespaced_pod(
             body=pod_manifest,
             namespace=self.context.namespace,
         )

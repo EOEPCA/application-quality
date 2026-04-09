@@ -1,7 +1,5 @@
 import json
 import logging
-import os
-import time
 
 from cloudevents.conversion import to_structured
 from cloudevents.http import CloudEvent
@@ -49,7 +47,7 @@ def decode(body: str, headers: dict) -> tuple[dict, dict]:
     return payload_dict, headers_dict
 
 
-def encode(attributes: dict, data: dict, headers=None):
+def encode(attributes: dict, data: dict):
     event = CloudEvent(attributes, data)
     logger.debug("Event: %s", event)
     _ignore, payload = to_structured(event)
