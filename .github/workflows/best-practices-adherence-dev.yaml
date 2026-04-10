@@ -39,9 +39,9 @@ jobs:
       - name: Coding Best Practices for OSS
         uses: EOEPCA/coding-best-practices-for-oss-action@main
         with:
-          path_to_check: 'backend'
-          output_file: 'reports/coding-best-practices-report.json'
-          output_format: 'generic'
+          path-to-check: 'backend'
+          output-file: 'reports/coding-best-practices-report.json'
+          output-format: 'generic'
 
       # Generate the SonarQube project properties
       - name: SonarQube Project properties
