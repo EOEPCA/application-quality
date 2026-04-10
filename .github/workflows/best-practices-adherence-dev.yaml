@@ -15,13 +15,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Clone the repository
+      # Clone the repository
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Helps SonarQube to calculate "New Code"
 
-      # Step 2: Apply Ruff and store report
+      # Apply Ruff and store report
       - name: Install Ruff
         run: pip install ruff
 
@@ -35,7 +35,15 @@ jobs:
           cat reports/ruff-report.json
         continue-on-error: true # The workflow continues even if linting finds issues
 
-      # Step 3: Generate the SonarQube project properties
+      # Apply Coding Best Practices for Open Source Software
+      - name: Coding Best Practices for OSS
+        uses: EOEPCA/coding-best-practices-for-oss-action@main
+        with:
+          path_to_check: 'backend'
+          output_file: 'reports/coding-best-practices-report.json'
+          output_format: 'generic'
+
+      # Generate the SonarQube project properties
       - name: SonarQube Project properties
         env:
           # Contains the name of the branch that triggered the workflow execution
@@ -55,18 +63,18 @@ jobs:
           # --- Extra reports
           echo "sonar.python.ruff.reportPaths=reports/ruff-report.json" >> sonar-project.properties
           # --- Custom reports
-          echo "#sonar.externalIssuesReportPaths=reports/reports/test-report-1.json" >> sonar-project.properties
+          echo "sonar.externalIssuesReportPaths=reports/coding-best-practices-report.json" >> sonar-project.properties
 
           cat sonar-project.properties
 
-      # Step 4: Run SonarQube Analysis (using the properties file generated above)
+      # Run SonarQube Analysis (using the properties file generated above)
       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.EOEPCA_SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ vars.EOEPCA_SONAR_HOST_URL }}
 
-      # Step 5: Wait for Quality Gate and Fetch Report
+      # Wait for Quality Gate and Fetch Report
       - name: Fetch SonarQube Quality Gate Result
         shell: bash
         run: |
