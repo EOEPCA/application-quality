@@ -42,6 +42,7 @@ jobs:
           path-to-check: 'backend'
           output-file: 'reports/coding-best-practices-report.json'
           output-format: 'generic'
+          default-anchor-file: 'backend/coding-best-practices-issues.md'
 
       # Generate the SonarQube project properties
       - name: SonarQube Project properties
