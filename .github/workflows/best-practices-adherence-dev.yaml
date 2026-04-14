@@ -52,6 +52,7 @@ jobs:
         run: |
           echo "Generating the Sonar project properties file ..."
           echo "# Sonar Project Properties" > sonar-project.properties
+          echo "sonar.scanner.metadataFilePath=/github/workspace/.scannerwork/report-task.txt" >> sonar-project.properties
           echo "sonar.projectKey=${{ vars.EOEPCA_SONAR_PROJECT_KEY }}-$BRANCH_NAME" >> sonar-project.properties
           echo "sonar.projectName=${{ vars.EOEPCA_SONAR_PROJECT_NAME }} ($BRANCH_NAME)" >> sonar-project.properties
           echo "sonar.projectVersion=$GITHUB_SHA" >> sonar-project.properties
@@ -81,6 +82,8 @@ jobs:
         run: |
           # The scan action creates a metadata file we use to find the task URL
           METADATA_FILE=".scannerwork/report-task.txt"
+          echo "SonarQube scanner metadata file:"
+          cat $METADATA_FILE
           TASK_URL=$(grep "ceTaskUrl=" $METADATA_FILE | cut -d'=' -f2)
 
           echo "Waiting for SonarQube background task to finish..."
