@@ -52,7 +52,6 @@ jobs:
         run: |
           echo "Generating the Sonar project properties file ..."
           echo "# Sonar Project Properties" > sonar-project.properties
-          echo "sonar.scanner.metadataFilePath=/github/workspace/.scannerwork/report-task.txt" >> sonar-project.properties
           echo "sonar.projectKey=${{ vars.EOEPCA_SONAR_PROJECT_KEY }}-$BRANCH_NAME" >> sonar-project.properties
           echo "sonar.projectName=${{ vars.EOEPCA_SONAR_PROJECT_NAME }} ($BRANCH_NAME)" >> sonar-project.properties
           echo "sonar.projectVersion=$GITHUB_SHA" >> sonar-project.properties
@@ -84,13 +83,13 @@ jobs:
           METADATA_FILE=".scannerwork/report-task.txt"
           echo "SonarQube scanner metadata file:"
           cat $METADATA_FILE
-          TASK_URL=$(grep "ceTaskUrl=" $METADATA_FILE | cut -d'=' -f2)
+          TASK_URL=$(grep "ceTaskUrl=" $METADATA_FILE | cut -d'=' -f2-)
 
           echo "Waiting for SonarQube background task to finish..."
 
           # Poll the API until the task is SUCCESS or FAILED
           STATUS="PENDING"
-          while [ "$STATUS" == "PENDING" ] || [ "$STATUS" == "IN_PROGRESS" ]; do
+          while [ "$STATUS" == "" ] || [ "$STATUS" == "PENDING" ] || [ "$STATUS" == "IN_PROGRESS" ]; do
             sleep 5
             RESPONSE=$(curl -s -u ${{ secrets.EOEPCA_SONAR_TOKEN }}: "$TASK_URL")
             STATUS=$(echo $RESPONSE | jq -r '.task.status')
@@ -99,9 +98,11 @@ jobs:
 
           # Fetch the final status of the Quality Gate
           ANALYSIS_ID=$(echo $RESPONSE | jq -r '.task.analysisId')
+          echo "Analysis ID: $ANALYSIS_ID"
           GATE_URL="${{ vars.EOEPCA_SONAR_HOST_URL }}/api/qualitygates/project_status?analysisId=$ANALYSIS_ID"
+          echo "Quality Gate URL: $GATE_URL"
 
           curl -s -u ${{ secrets.EOEPCA_SONAR_TOKEN }}: "$GATE_URL" > reports/sonarqube-gate-report.json
 
-          echo "Final report saved to reports/sonarqube-gate-report.json"
-          cat reports/sonarqube-gate-report.json
+          echo "Final report saved in reports/sonarqube-gate-report.json"
+          cat reports/sonarqube-gate-report.json | jq
