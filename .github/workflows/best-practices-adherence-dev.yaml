@@ -17,7 +17,7 @@ jobs:
     steps:
       # Clone the repository
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0 # Helps SonarQube to calculate "New Code"
 
@@ -101,3 +101,4 @@ jobs:
           curl -s -u ${{ secrets.EOEPCA_SONAR_TOKEN }}: "$GATE_URL" > reports/sonarqube-gate-report.json
 
           echo "Final report saved to reports/sonarqube-gate-report.json"
+          cat reports/sonarqube-gate-report.json
