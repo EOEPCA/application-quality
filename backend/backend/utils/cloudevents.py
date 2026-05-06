@@ -3,9 +3,6 @@ import logging
 
 from cloudevents.conversion import to_structured
 from cloudevents.http import CloudEvent
-# Used to apply CQL2-JSON filters on the cloudevent content
-from pygeofilter.parsers.cql2_json import parse as parse_cql2_json
-from pygeofilter.backends.native.evaluate import handle
 
 
 logger = logging.getLogger(__name__)
@@ -60,34 +57,47 @@ def encode(attributes: dict, data: dict):
     return payload, headers_dict
 
 
-def is_match(filter: dict, payload: dict) -> bool:
+def is_match(filter_node: dict, payload: dict) -> bool:
     """
-    Determine if the dictionnary 'doc' matches the given filter.
-    The filter must be encoded using the CQL2-JSON format.
-    For example:
-    ```python
-    filter_json = {
+    Evaluates a CQL2-JSON filter against a Python dictionary.
+    Supports 'and', 'or', and '=' operators with nested property access.
+    Example filter:
+    ```json
+    {
       "op": "and",
       "args": [
         {"op": "=", "args": [{"property": "repository.full_name"}, "SpaceApplications/eoepca-aqbb-test-files"]},
         {"op": "=", "args": [{"property": "ref"}, "refs/heads/main"]}
       ]
     }
+    ```
     """
-    added_files = set()
-    deleted_files = set()
-    modified_files = set()
-    for commit in payload.get("commits", []):
-        added_files.update(commit.get("added", []))
-        deleted_files.update(commit.get("deleted", []))
-        modified_files.update(commit.get("modified", []))
-    payload["added_files"] = list(added_files)
-    payload["deleted_files"] = list(deleted_files)
-    payload["modified_files"] = list(modified_files)
-    logger.debug(
-        "Files in commit: added=%s, deleted=%s, modified=%s", added_files, deleted_files, modified_files
-    )
-    # ---
-    _is_match = bool(handle(parse_cql2_json(filter), payload))
-    logger.debug("Filter matched: %s", _is_match)
-    return _is_match
+    logger.debug("Filter node: %s", filter_node)
+    op = filter_node.get("op", "").lower()
+    args = filter_node.get("args", [])
+    # Handle Logical Operators
+    if op == "and":
+        return all(is_match(arg, payload) for arg in args)
+    if op == "or":
+        return any(is_match(arg, payload) for arg in args)
+    # Handle Comparison Operators
+    if op == "=":
+        left_raw = args[0]
+        right = args[1] # The constant value
+        # Resolve the property value (e.g., "repository.full_name")
+        left_val = None
+        if isinstance(left_raw, dict) and "property" in left_raw:
+            path = left_raw["property"].split('.')
+            left_val = payload
+            for part in path:
+                if isinstance(left_val, dict):
+                    left_val = left_val.get(part)
+                else:
+                    left_val = None
+                    break
+        else:
+            left_val = left_raw
+
+        return left_val == right
+    # Default to False for unknown operators
+    return False
