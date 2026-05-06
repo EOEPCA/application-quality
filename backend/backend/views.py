@@ -60,14 +60,17 @@ RESPONSE_TYPE_PREFIX = os.getenv(
 class EventsView(APIView):
 
     @staticmethod
-    def _get_matching_user(event_user):
-        user = None
+    def _get_matching_user(event_user, event_sender):
         if event_user:
             user = User.objects.get(username=event_user)
-            logger.debug("User: %s", user)
-        else:
-            logger.debug("No user identified in the event")
-        return user
+            logger.debug("User (%s): %s", event_user, user)
+            return user
+        if event_sender:
+            user = User.objects.get(username=event_sender)
+            logger.debug("User (%s): %s", event_sender, user)
+            return user
+        logger.debug("No user identified in the event")
+        return None
 
     @staticmethod
     def _get_pipeline_id(event_subject):
@@ -116,12 +119,14 @@ class EventsView(APIView):
             event_source = headers.get('Ce-Source', None)
             # event_webhook_source = headers.get('Ce-Webhooksource', None)
             event_user = headers.get('Ce-User', None)
+            # In GitHub events, if "sender.type" is "User", then "sender.login" is the user ID
+            event_sender = payload.get("sender", {}).get("login", None)
             event_type = headers.get('Ce-Type', None)
             event_subject = headers.get('Ce-Subject', None)
             event_time = headers.get('Ce-Time', None)
             event_source = headers.get('Ce-Source', None)
 
-            user = self._get_matching_user(event_user)
+            user = self._get_matching_user(event_user, event_sender)
             pipeline_id = self._get_pipeline_id(event_subject)
 
             # Default response data
