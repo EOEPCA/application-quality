@@ -14,16 +14,12 @@ class Migration(migrations.Migration):
             name='TriggerType',
             fields=[
                 ('slug', models.SlugField(primary_key=True, serialize=False)),
-                ('description', models.TextField()),
+                ('description', models.TextField(null=False)),
                 ('name', models.CharField(max_length=100)),
                 ('event_type_prefix', models.CharField(max_length=100)),
                 ('data', models.JSONField(blank=True, default=dict)),
                 ('status', models.CharField(choices=[('Disabled', 'Disabled'), ('Testing', 'Testing'), ('Restricted', 'Restricted'), ('Enabled', 'Enabled'), ('Deleted', 'Deleted')], default='Enabled', max_length=20)),
                 ('available', models.BooleanField(default=True)),
             ],
-            options={
-                'verbose_name': 'Trigger Type',
-                'verbose_name_plural': 'Trigger Types',
-            },
         ),
     ]

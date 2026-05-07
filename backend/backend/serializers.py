@@ -93,7 +93,7 @@ class TriggerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Trigger
-        fields = ["slug", "owner", "description", "status", "cql2_filter", "params", "trigger_type", "trigger_type_name", "pipeline_id", "pipeline_name", "pipeline_version"]
+        fields = ["slug", "owner", "description", "status", "cql2_filter", "params_default", "params_mapping", "trigger_type", "trigger_type_name", "pipeline_id", "pipeline_name", "pipeline_version"]
         #read_only_fields = ["..."]
 
 

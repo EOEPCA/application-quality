@@ -108,7 +108,7 @@ class TriggerType(models.Model):
         DELETED = 'Deleted'
 
     slug              = models.SlugField(primary_key=True, max_length=50)
-    description       = models.TextField(null=False, blank=False)
+    description       = models.TextField(null=False)
     name              = models.CharField(max_length=100, null=False, blank=False)
     event_type_prefix = models.CharField(max_length=100, null=False, blank=False)
     data              = models.JSONField(default=dict, blank=True)
@@ -129,9 +129,10 @@ class Trigger(models.Model):
         DELETED = 'Deleted'
     
     slug              = models.SlugField(primary_key=True, max_length=50)
-    description       = models.TextField(null=True, blank=True)
-    cql2_filter       = models.JSONField(default=dict, blank=True, help_text="Filter expressed in CQL2-JSON")
-    params            = models.JSONField(default=dict, blank=True)
+    description       = models.TextField(null=True)
+    cql2_filter       = models.JSONField(default=dict, blank=True, help_text="Filter expressed in CQL2-JSON", verbose_name="CQL2-JSON filter")
+    params_default    = models.JSONField(default=dict, blank=True)
+    params_mapping    = models.JSONField(default=dict, blank=True)
     trigger_type      = models.ForeignKey(TriggerType, related_name="triggers", on_delete=models.CASCADE)
     pipeline          = models.ForeignKey(Pipeline, related_name="triggers", on_delete=models.CASCADE)
     owner             = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name="triggers")
