@@ -13,7 +13,16 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag, TriggerType, Trigger, TriggerEvent
+from backend.models import (
+    Pipeline,
+    PipelineRun,
+    JobReport,
+    Subworkflow,
+    Tag,
+    TriggerType,
+    Trigger,
+    TriggerEvent
+)
 from backend.tasks import run_workflow_task
 from backend.utils.cloudevents import encode as ce_encode, decode as ce_decode, is_match
 from . import serializers
@@ -42,8 +51,8 @@ class SettingsView(APIView):
         settings_file = os.path.abspath("settings.yaml")
         try:
             logger.info("Loading %s", settings_file)
-            with open(settings_file, "r", encoding="utf-8") as f:
-                settings = yaml.safe_load(f)
+            with open(settings_file, "r", encoding="utf-8") as file:
+                settings = yaml.safe_load(file)
         except FileNotFoundError:
             logger.info("Not found: %s", settings_file)
             settings = None
@@ -60,7 +69,7 @@ RESPONSE_TYPE_PREFIX = os.getenv(
 class EventsView(APIView):
 
     @staticmethod
-    def _get_matching_user(event_user, event_sender):
+    def _get_matching_user(event_user, event_sender=None):
         logger.debug("Possible users: %s, %s", event_user, event_sender)
         user = None
         if event_user:
@@ -85,7 +94,7 @@ class EventsView(APIView):
 
     @staticmethod
     def _get_matching_triggers(event_type, event_payload):
-        triggers = []
+        matching_triggers = []
         # Check if the event_type matches one (or more?) active TriggerType
         _trigger_types = TriggerType.objects.filter(
             available=True,
@@ -103,14 +112,14 @@ class EventsView(APIView):
                 user = trigger.owner
                 logger.debug("Trigger owner: %s", user)
                 # Verify if the event matches the filter configured in the trigger
-                filter_json = trigger.filter
+                filter_json = trigger.cql2_filter
                 logger.debug("CQL2-JSON Filter: %s", filter_json)
                 ce_is_match = is_match(filter_json, event_payload)
                 logger.debug("CloudEvent is %smatching!", "" if ce_is_match else "not ")
 
                 if ce_is_match:
-                    triggers.append(trigger)
-        return triggers
+                    matching_triggers.append(trigger)
+        return matching_triggers
 
     def post(self, request, *args, **kwargs):
         try:
@@ -156,14 +165,17 @@ class EventsView(APIView):
                     event_body=payload,
                 )
                 logger.info("Trigger event created with id %s", trigger_event.id)
+                if user is None:
+                    user = self._get_matching_user(trigger.owner)
+                logger.info("Will execute a pipeline for user %s", user)
                 try:
                     pipeline_id = trigger.pipeline.id
-                    params = trigger.params
+                    params = trigger.params_default
                     pipeline_run = PipelineRunViewSet._create(user, pipeline_id, params)
                     logger.debug("Pipeline run: %s", pipeline_run)
                     trigger_event.pipeline_run = pipeline_run
-                except Exception as e:
-                    logger.error("Exception: %s", e)
+                except Exception as exception:
+                    logger.error("Exception: %s", exception)
                 trigger_event.save()
                 # ---
 
@@ -207,10 +219,10 @@ class EventsView(APIView):
             logger.debug("Response Body: %s", res_body)
             return Response(res_body, status=202, headers=res_headers)
 
-        except Exception as e:
-            logger.error("Exception: %s", e)
+        except Exception as exception:
+            logger.error("Exception: %s", exception)
             return Response(
-                {"error": str(e)},
+                {"error": str(exception)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -236,13 +248,13 @@ class PipelineViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         try:
             serializer.save(owner=self.request.user, template=pipeline_cwl_template)
-        except IntegrityError as ie:
-            logger.error(ie)
+        except IntegrityError as error:
+            logger.error(error)
             raise ValidationError(
                 {
                     "detail": "A pipeline with this name, version, and owner already exists."
                 }
-            ) from ie
+            ) from error
 
     def get_permissions(self):
         if self.action in ["create", "list", "retrieve"]:
@@ -364,10 +376,11 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             logger.debug("Rendering subworkflow '%s'", subworkflow)
             subtemplate = Template(subworkflow.definition)
             subcontext = {"tools": list(subworkflow.tools.all())}
+            defaults = pipeline.default_inputs
             subtool = {
                 "definition": subtemplate.render(subcontext),
                 "slug": subworkflow.pk,
-                "user_params": PipelineRunViewSet._merge_params(subworkflow, pipeline.default_inputs),
+                "user_params": PipelineRunViewSet._merge_params(subworkflow, defaults),
                 "pipeline_step": subworkflow.pipeline_step,
             }
             rendered_subworkflows.append(subtool)
@@ -409,7 +422,7 @@ class JobReportViewSet(
         tool_name = request.query_params.get("name")
         if not tool_name:
             raise ValidationError("Tool 'name' is required as a query parameter.")
-        
+
         # The (optional) instance parameter allows to distinguish reports from scattered steps
         instance = request.query_params.get("instance", "")
 
@@ -428,7 +441,7 @@ class JobReportViewSet(
 
         if JobReport.objects.filter(run=run, name=tool_name, instance=instance).exists():
             logger.warning(
-                "Could not create a job report: A job report for '%s'/'%s' already exists in run %s",
+                "Could not create a job report: A report for '%s'/'%s' already exists in run %s",
                 tool_name,
                 instance,
                 run_id
@@ -461,11 +474,11 @@ class SubworkflowViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user:
-            logger.info(f"User {user} is requesting the tools information")
+            logger.info("User %s is requesting the tools information", user)
         else:
             logger.info("Anonymous user is requesting the tools information")
         if user and user.is_staff:
-            logger.info(f"User {user} is staff / admin")
+            logger.info("User %s is staff / admin", user)
             # Admins may get all the tools, whatever their status or availability flag
             return Subworkflow.objects.all()
         return Subworkflow.objects.filter(available=True)
@@ -482,11 +495,11 @@ class TriggerTypeViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user:
-            logger.info(f"User {user} is requesting the trigger types information")
+            logger.info("User %s is requesting the trigger types information", user)
         else:
             logger.info("Anonymous user is requesting the trigger types information")
         if user and user.is_staff:
-            logger.info(f"User {user} is staff / admin")
+            logger.info("User %s is staff / admin", user)
             # Admins may get all the tools, whatever their status or availability flag
             return TriggerType.objects.all()
         return TriggerType.objects.filter(available=True)
@@ -530,18 +543,23 @@ class TriggerEventViewSet(viewsets.ReadOnlyModelViewSet):
         trigger_slug = self.kwargs["trigger_slug"]
         user = self.request.user
         if user:
-            logger.info(f"User {user} is requesting trigger events information for trigger {trigger_slug}")
+            logger.info(
+                "User %s is requesting trigger events information for trigger %s",
+                user,
+                trigger_slug
+            )
         else:
-            logger.info(f"Anonymous user is requesting trigger events information for trigger {trigger_slug}")
+            logger.info(
+                "Anonymous user is requesting trigger events information for trigger %s",
+                trigger_slug
+            )
         if user and user.is_staff:
-            logger.info(f"User {user} is staff / admin")
+            logger.info("User %s is staff / admin", user)
             # Admins may get all the tools, whatever their status or availability flag
             if trigger_slug in ["_", "-"]:
                 return TriggerEvent.objects.all()
-            else:
-                return TriggerEvent.objects.filter(trigger__slug=trigger_slug)
+            return TriggerEvent.objects.filter(trigger__slug=trigger_slug)
         # Return only the trigger events owned by the requesting user
         if trigger_slug in ["_", "-"]:
             return TriggerEvent.objects.filter(pipeline_run__user=user)
-        else:
-            return TriggerEvent.objects.filter(pipeline_run__user=user, trigger__slug=trigger_slug)
+        return TriggerEvent.objects.filter(pipeline_run__user=user, trigger__slug=trigger_slug)
