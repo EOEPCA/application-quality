@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import time
@@ -125,6 +126,13 @@ class EventsView(APIView):
         try:
             logger.info("Event received %s", request)
             payload, headers = ce_decode(request.body, request.META.items())
+        except json.JSONDecodeError as error:
+            logger.error("JSONDecodeError: %s", error)
+            return Response(
+                {"error": "Invalid JSON payload in event body"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        try:
             event_id = headers.get('Ce-Id')
             event_source = headers.get('Ce-Source', None)
             # event_webhook_source = headers.get('Ce-Webhooksource', None)

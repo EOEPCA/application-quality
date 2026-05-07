@@ -34,12 +34,9 @@ def decode(body: str, headers: dict) -> tuple[dict, dict]:
         logger.debug("Event Headers:\n%s", json.dumps(headers_dict, indent=2))
         logger.debug("Event Data:\n%s", json.dumps(payload_dict, indent=2))
 
-    except json.JSONDecodeError:
-        logger.error("JSONDecodeError")
-        return Response(
-            {"error": "Invalid JSON payload in event body"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    except json.JSONDecodeError as error:
+        logger.error("JSONDecodeError: %s", error)
+        raise error
 
     return payload_dict, headers_dict
 
