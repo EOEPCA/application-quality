@@ -40,8 +40,8 @@ pipeline_cwl_template_path = os.path.join(os.path.dirname(__file__), "pipeline_t
 
 try:
     logger.info("Loading %s", pipeline_cwl_template_path)
-    with open(pipeline_cwl_template_path, "r", encoding="utf-8") as file:
-        pipeline_cwl_template = file.read()
+    with open(pipeline_cwl_template_path, "r", encoding="utf-8") as tpl:
+        pipeline_cwl_template = tpl.read()
 except Exception as ex:
     logger.error("Error loading %s: %s", pipeline_cwl_template_path, str(ex))
     pipeline_cwl_template = f"Failed to load pipeline CWL template: {ex}"
