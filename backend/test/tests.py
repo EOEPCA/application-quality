@@ -37,14 +37,17 @@ class PipelineViewTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             username="testuser",
-            password="pass"
+            password="pass",  # noqa
         )
         self.client = APIClient()
         self.token = self.get_token()
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
 
     def get_token(self):
-        response = self.client.post("/api/token/",{"username": "testuser", "password": "pass"})
+        response = self.client.post(
+            "/api/token/",
+            {"username": "testuser", "password": "pass"},  # noqa
+        )
         return response.data["access"]
 
     def test_pipeline_create_unauthenticated_fail(self):
@@ -97,7 +100,7 @@ class PipelineRunViewTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             username="runner",
-            password="pass"
+            password="pass",  # noqa
         )
         self.pipeline = Pipeline.objects.create(
             name="PipelineTest",
