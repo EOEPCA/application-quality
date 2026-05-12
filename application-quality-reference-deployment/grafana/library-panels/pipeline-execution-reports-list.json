@@ -91,7 +91,7 @@
         "format": "table",
         "hide": false,
         "rawQuery": true,
-        "rawSql": "SELECT name AS \"Tool\", created_at AS \"Created\", id AS \"Report\" FROM reports_admin WHERE run_id = ${execution_id:int}",
+        "rawSql": "SELECT name AS \"Tool\", instance AS \"Instance\", created_at AS \"Created\", id AS \"Report\" FROM reports_admin WHERE run_id = ${execution_id:int}",
         "refId": "A",
         "sql": {
           "columns": [

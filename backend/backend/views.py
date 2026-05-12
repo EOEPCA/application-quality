@@ -430,6 +430,9 @@ class JobReportViewSet(
         tool_name = request.query_params.get("name")
         if not tool_name:
             raise ValidationError("Tool 'name' is required as a query parameter.")
+        
+        # The (optional) instance parameter allows to distinguish reports from scattered steps
+        instance = request.query_params.get("instance", "")
 
         # The (optional) instance parameter allows to distinguish reports from scattered steps
         instance = request.query_params.get("instance", "")

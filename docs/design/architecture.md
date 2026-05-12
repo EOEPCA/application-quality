@@ -53,7 +53,7 @@ The analysis tools are independent from each other: the failure of one tool does
 
 The tool-specific workfllows are pre-defined in the service. Adding more tools is possible but requires creating Docker images and editing the service database manually.
 
-The current release of the Application Quality Building Block (2025 Q1, 2.0.0-rc1), proposes pre-defined analysis pipelines that may be executed by any authenticated user (see [Analysis Tools](../usage/analysis-tools.md)). It also integrates a pipeline editor that allows users creating and configuring user-defined (private) pipelines (see [User Manual](../usage/user-manual.md#user-defined-pipelines)).
+The Application Quality Building Block proposes pre-defined analysis pipelines that may be executed by any authenticated user (see [Analysis Tools](../usage/analysis-tools.md)). It also integrates a pipeline editor that allows users creating and configuring user-defined (private) pipelines (see [User Manual](../usage/user-manual.md#user-defined-pipelines)).
 
 ![Static Analysis Pipeline Execution](../img/static-analysis-pipeline-execution.png)
 

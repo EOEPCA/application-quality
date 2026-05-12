@@ -1,0 +1,94 @@
+# This workflow is triggered by pushes the "backend" or "frontend" branch.
+# It analyses the content of the "backend" or "frontent" folder, accordingly.
+
+name: Best Practices Adherence
+
+on:
+  push:
+    branches:
+      - backend
+      - frontend
+  workflow_dispatch:
+
+jobs:
+  analyze-and-report:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Clone the repository
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Helps SonarQube to calculate "New Code"
+
+      # Step 2: Apply Ruff and store report
+      - name: Install Ruff
+        run: pip install ruff
+
+      - name: Run Ruff Linting
+        env:
+          # GITHUB_REF_NAME contains the name of the branch that triggered the workflow execution
+          BRANCH_NAME: ${{ env.GITHUB_REF_NAME }}
+        run: |
+          mkdir -p reports
+          ruff check --no-cache --exit-zero --verbose --output-format json --output-file reports/ruff-report.json $BRANCH_NAME
+          cat reports/ruff-report.json
+        continue-on-error: true # The workflow continues even if linting finds issues
+
+      # Step 3: Generate the SonarQube project properties
+      - name: SonarQube Project properties
+        env:
+          # GITHUB_REF_NAME contains the name of the branch that triggered the workflow execution
+          BRANCH_NAME: ${{ env.GITHUB_REF_NAME }}
+        run: |
+          echo "Generating the Sonar project properties file ..."
+          echo "# Sonar Project Properties" > sonar-project.properties
+          echo "sonar.projectKey=${{ vars.EOEPCA_SONAR_PROJECT_KEY }}-$BRANCH_NAME" >> sonar-project.properties
+          echo "sonar.projectName=${{ vars.EOEPCA_SONAR_PROJECT_NAME }} ($BRANCH_NAME)" >> sonar-project.properties
+          echo "sonar.projectVersion=$GITHUB_SHA" >> sonar-project.properties
+          echo "sonar.sourceEncoding=UTF-8" >> sonar-project.properties
+          echo "sonar.projectBaseDir=." >> sonar-project.properties
+          echo "sonar.sources=$BRANCH_NAME" >> sonar-project.properties
+          echo "sonar.inclusions=${{ vars.EOEPCA_SONAR_INCLUSIONS }}" >> sonar-project.properties
+          echo "sonar.exclusions=${{ vars.EOEPCA_SONAR_EXCLUSIONS }}" >> sonar-project.properties
+          echo "sonar.python.version=3.11" >> sonar-project.properties
+          # --- Extra reports
+          echo "sonar.python.ruff.reportPaths=reports/ruff-report.json" >> sonar-project.properties
+          # --- Custom reports
+          echo "#sonar.externalIssuesReportPaths=reports/reports/test-report-1.json" >> sonar-project.properties
+
+          cat sonar-project.properties
+
+      # Step 4: Run SonarQube Analysis (using the properties file generated above)
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.EOEPCA_SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.EOEPCA_SONAR_HOST_URL }}
+
+      # Step 5: Wait for Quality Gate and Fetch Report
+      - name: Fetch SonarQube Quality Gate Result
+        shell: bash
+        run: |
+          # The scan action creates a metadata file we use to find the task URL
+          METADATA_FILE=".scannerwork/report-task.txt"
+          TASK_URL=$(grep "ceTaskUrl=" $METADATA_FILE | cut -d'=' -f2)
+
+          echo "Waiting for SonarQube background task to finish..."
+
+          # Poll the API until the task is SUCCESS or FAILED
+          STATUS="PENDING"
+          while [ "$STATUS" == "PENDING" ] || [ "$STATUS" == "IN_PROGRESS" ]; do
+            sleep 5
+            RESPONSE=$(curl -s -u ${{ secrets.EOEPCA_SONAR_TOKEN }}: "$TASK_URL")
+            STATUS=$(echo $RESPONSE | jq -r '.task.status')
+            echo "Current Status: $STATUS"
+          done
+
+          # Fetch the final status of the Quality Gate
+          ANALYSIS_ID=$(echo $RESPONSE | jq -r '.task.analysisId')
+          GATE_URL="${{ vars.EOEPCA_SONAR_HOST_URL }}/api/qualitygates/project_status?analysisId=$ANALYSIS_ID"
+
+          curl -s -u ${{ secrets.EOEPCA_SONAR_TOKEN }}: "$GATE_URL" > reports/sonarqube-gate-report.json
+
+          echo "Final report saved to reports/sonarqube-gate-report.json"

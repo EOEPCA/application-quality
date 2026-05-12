@@ -101,14 +101,15 @@
               '-'
             }}
           </td>
-          <td>
+          <!-- <td>
             {{
               store.pipelineById(store.executionById(item.run).pipeline)
                 .version || '-'
             }}
-          </td>
-          <td>{{ formatDate(store.executionById(item.run).start_time) }}</td>
+          </td> -->
+          <!-- <td>{{ formatDate(store.executionById(item.run).start_time) }}</td> -->
           <td>{{ item.name || 'No name' }}</td>
+          <td>{{ item.instance || '' }}</td>
           <td>{{ formatDate(item.created_at) }}</td>
           <td class="text-right nowrap">
             <v-btn
@@ -196,30 +197,36 @@ export default {
         {
           title: 'Pipeline',
           key: 'pipeline',
-          sortable: true,
+          sortable: false,
           align: 'start',
         },
-        {
-          title: 'Version',
-          key: 'version',
-          sortable: true,
-          align: 'start',
-        },
-        {
-          title: 'Pipeline Start Time',
-          key: 'pipeline_start_time',
-          sortable: true,
-          align: 'start',
-        },
+        // {
+        //   title: 'Version',
+        //   key: 'version',
+        //   sortable: true,
+        //   align: 'start',
+        // },
+        // {
+        //   title: 'Pipeline Start Time',
+        //   key: 'pipeline_start_time',
+        //   sortable: true,
+        //   align: 'start',
+        // },
         {
           title: 'Tool',
-          key: 'tool_name',
+          key: 'name',
+          sortable: true,
+          align: 'start',
+        },
+        {
+          title: 'Instance',
+          key: 'instance',
           sortable: true,
           align: 'start',
         },
         {
           title: 'Report Time',
-          key: 'report_time',
+          key: 'created_at',
           sortable: true,
         },
         {
@@ -296,7 +303,7 @@ export default {
           this.store.selectedExecutionId,
         );
       } else {
-        console.debug('No execution selected for fetching reports');
+        console.warn('No execution selected for fetching reports');
       }
     },
 

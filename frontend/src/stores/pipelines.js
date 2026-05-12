@@ -72,6 +72,7 @@ export const usePipelineStore = defineStore('pipeline', {
       this.error = null;
       try {
         this.executions = await pipelineService.getPipelineExecutions(id);
+        // console.log('Executions:', this.executions);
       } catch (error) {
         const msg_prefix = 'Error fetching pipeline executions: ';
         if (error.response?.data?.detail) {
@@ -94,6 +95,7 @@ export const usePipelineStore = defineStore('pipeline', {
           pipelineId,
           runId,
         );
+        // console.log('Reports:', this.reports);
       } catch (error) {
         const msg_prefix = 'Error fetching pipeline execution reports: ';
         if (error.response?.data?.detail) {
@@ -186,22 +188,22 @@ export const usePipelineStore = defineStore('pipeline', {
       const executions = this.executions.filter((execution) => {
         return execution.id == id;
       });
-      console.log(executions);
+      // console.debug('Executions with id:', id, executions);
       if (executions) return executions[0];
       return null;
     },
 
     pipelineById(id) {
-      // console.log('Pipelines in store:', this.pipelines);
+      // console.debug('Pipelines in store:', this.pipelines);
       if (id == null || id == undefined) id = this.selectedPipelineId;
       if (id == null || id == undefined) {
-        console.log('Bad request: not pipeline Id provided');
+        console.warn('Bad request: not pipeline Id provided');
         return null;
       }
       const pipelines = this.pipelines.filter((pipeline) => {
         return pipeline.id == id;
       });
-      // console.log('Pipelines with id:', id, pipelines);
+      // console.debug('Pipelines with id:', id, pipelines);
       if (pipelines.length != 0) {
         return pipelines[0];
       }

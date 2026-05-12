@@ -23,17 +23,22 @@
         size="small"
         class="mx-2"
         @click="refreshTools"
-        :loading="store.loading"
+        :loading="toolStore.loading"
       />
     </v-card-title>
 
-    <v-alert v-if="store.error" type="error" :text="store.error" closable />
+    <v-alert
+      v-if="toolStore.error"
+      type="error"
+      :text="toolStore.error"
+      closable
+    />
 
     <v-data-table
-      v-if="store.tools.length"
+      v-if="toolStore.tools.length"
       v-model:items-per-page="itemsPerPage"
       v-model:sort-by="sortBy"
-      :headers="headers"
+      :headers="filteredHeaders"
       :items="filteredTools"
       :search="search"
       class="elevation-1"
@@ -51,7 +56,7 @@
             <v-btn
               color="primary"
               @click="openExecutionDialog"
-              :disabled="!store.tools.length"
+              :disabled="!toolStore.tools.length"
             >
               New Execution
             </v-btn>
@@ -65,6 +70,8 @@
             <div class="font-weight-light">{{ item.description }}</div>
           </td>
           <td>{{ item.version || 'N/A' }}</td>
+          <td _v-if="this.authStore.isAdmin">{{ item.status }}</td>
+          <td v-if="this.authStore.isAdmin">{{ item.available }}</td>
           <td class="nowrap">
             <v-chip
               v-for="tag_name in item.tags"
@@ -112,7 +119,7 @@
     </v-data-table>
 
     <v-alert
-      v-else-if="!store.loading"
+      v-else-if="!toolStore.loading"
       type="info"
       text="No analysis tools found"
     />
@@ -147,6 +154,7 @@
 </template>
 
 <script>
+import { useAuthStore } from '@/stores/auth';
 import { useToolStore } from '@/stores/tools';
 import JsonToHtmlTable from '@/components/JsonToHtmlTable.vue';
 //import VueJsonToHtmlTable from 'vue-json-to-html-table'
@@ -178,6 +186,18 @@ export default {
           sortable: true,
         },
         {
+          title: 'Status',
+          key: 'status',
+          sortable: true,
+          // admins_only: true,
+        },
+        {
+          title: 'Available',
+          key: 'available',
+          sortable: true,
+          admins_only: true,
+        },
+        {
           title: 'Purposes',
           key: 'tags',
           sortable: true,
@@ -196,16 +216,16 @@ export default {
   },
 
   setup() {
-    const store = useToolStore();
-    return { store };
+    const authStore = useAuthStore();
+    const toolStore = useToolStore();
+    return { authStore, toolStore };
   },
 
   computed: {
     filteredTools() {
-      if (!this.search) return this.store.tools;
-
+      if (!this.search) return this.toolStore.tools;
       const searchTerm = this.search.toLowerCase();
-      return this.store.tools.filter((tool) => {
+      return this.toolStore.tools.filter((tool) => {
         return (
           //(tool.name && tool.name.toLowerCase().includes(searchTerm)) ||
           (tool.description &&
@@ -215,6 +235,13 @@ export default {
         );
       });
     },
+
+    filteredHeaders() {
+      // Do not display tool properties restricted to admin users
+      return this.headers.filter(
+        (x) => !x.admins_only || this.authStore.isAdmin,
+      );
+    },
   },
 
   mounted() {
@@ -223,7 +250,7 @@ export default {
 
   methods: {
     async refreshTools() {
-      await this.store.fetchTools();
+      await this.toolStore.fetchTools();
     },
 
     formatDate(date) {
