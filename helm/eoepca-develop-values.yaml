@@ -20,7 +20,7 @@ persistence:
   storageClassName: managed-nfs-storage-retain
   createStorageClass: false
   accessMode:
-  - ReadWriteOnce
+    - ReadWriteOnce
   size: 2Gi
 
 calrissian:
