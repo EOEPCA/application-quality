@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import time
@@ -13,9 +14,18 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag
+from backend.models import (
+    Pipeline,
+    PipelineRun,
+    JobReport,
+    Subworkflow,
+    Tag,
+    TriggerType,
+    Trigger,
+    TriggerEvent
+)
 from backend.tasks import run_workflow_task
-from backend.utils.cloudevents import encode, decode
+from backend.utils.cloudevents import encode as ce_encode, decode as ce_decode, is_match
 from . import serializers
 
 
@@ -30,8 +40,8 @@ pipeline_cwl_template_path = os.path.join(os.path.dirname(__file__), "pipeline_t
 
 try:
     logger.info("Loading %s", pipeline_cwl_template_path)
-    with open(pipeline_cwl_template_path, "r", encoding="utf-8") as file:
-        pipeline_cwl_template = file.read()
+    with open(pipeline_cwl_template_path, "r", encoding="utf-8") as tpl:
+        pipeline_cwl_template = tpl.read()
 except Exception as ex:
     logger.error("Error loading %s: %s", pipeline_cwl_template_path, str(ex))
     pipeline_cwl_template = f"Failed to load pipeline CWL template: {ex}"
@@ -42,8 +52,8 @@ class SettingsView(APIView):
         settings_file = os.path.abspath("settings.yaml")
         try:
             logger.info("Loading %s", settings_file)
-            with open(settings_file, "r", encoding="utf-8") as f:
-                settings = yaml.safe_load(f)
+            with open(settings_file, "r", encoding="utf-8") as file:
+                settings = yaml.safe_load(file)
         except FileNotFoundError:
             logger.info("Not found: %s", settings_file)
             settings = None
@@ -58,29 +68,83 @@ RESPONSE_TYPE_PREFIX = os.getenv(
 
 
 class EventsView(APIView):
+
+    @staticmethod
+    def _get_matching_user(event_user, event_sender=None):
+        logger.debug("Possible users: %s, %s", event_user, event_sender)
+        user = None
+        if event_user:
+            user = User.objects.filter(username=event_user).first()
+            logger.debug("User (%s): %s", event_user, user)
+        if not user and event_sender:
+            user = User.objects.filter(username=event_sender).first()
+            logger.debug("User (%s): %s", event_sender, user)
+        if not user:
+            logger.debug("No user identified in the event")
+        return user
+
+    @staticmethod
+    def _get_pipeline_id(event_subject):
+        pipeline_id = None
+        if event_subject and event_subject.startswith("pipelines/"):
+            pipeline_id = event_subject.split("/")[-1]
+            logger.debug("Pipeline: %s", pipeline_id)
+        else:
+            logger.debug("No pipeline identified in the event")
+        return pipeline_id
+
+    @staticmethod
+    def _get_matching_triggers(event_type, event_payload):
+        matching_triggers = []
+        # Check if the event_type matches one (or more?) active TriggerType
+        _trigger_types = TriggerType.objects.filter(
+            available=True,
+            status__in=["Testing", "Restricted", "Enabled"]
+        )
+        trigger_types = [
+            t for t in _trigger_types if event_type.startswith(t.event_type_prefix)
+        ]
+        logger.debug("The event matches these trigger types: %s", trigger_types)
+        # Retrieve active Triggers, if any
+        for trigger_type in trigger_types:
+            triggers = trigger_type.triggers.filter(enabled=True)
+            logger.debug("Enabled triggers of type '%s': %s", trigger_type, triggers)
+            for trigger in triggers:
+                user = trigger.owner
+                logger.debug("Trigger owner: %s", user)
+                # Verify if the event matches the filter configured in the trigger
+                filter_json = trigger.cql2_filter
+                logger.debug("CQL2-JSON Filter: %s", filter_json)
+                ce_is_match = is_match(filter_json, event_payload)
+                logger.debug("CloudEvent is %smatching!", "" if ce_is_match else "not ")
+
+                if ce_is_match:
+                    matching_triggers.append(trigger)
+        return matching_triggers
+
     def post(self, request, *args, **kwargs):
         try:
             logger.info("Event received %s", request)
-            payload, headers = decode(request.body, request.META.items())
+            payload, headers = ce_decode(request.body, request.META.items())
+        except json.JSONDecodeError as error:
+            logger.error("JSONDecodeError: %s", error)
+            return Response(
+                {"error": "Invalid JSON payload in event body"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        try:
             event_id = headers.get('Ce-Id')
+            event_source = headers.get('Ce-Source', None)
+            # event_webhook_source = headers.get('Ce-Webhooksource', None)
             event_user = headers.get('Ce-User', None)
+            # In GitHub events, if "sender.type" is "User", then "sender.login" is the user ID
+            event_sender = payload.get("sender", {}).get("login", None)
             event_type = headers.get('Ce-Type', None)
             event_subject = headers.get('Ce-Subject', None)
+            event_time = headers.get('Ce-Time', None)
 
-            user = None
-            pipeline_id = None
-
-            if event_user:
-                user = User.objects.get(username=event_user)
-                logger.debug("User: %s", user)
-            else:
-                logger.debug("No user identified in the event")
-
-            if event_subject and event_subject.startswith("pipelines/"):
-                pipeline_id = event_subject.split("/")[-1]
-                logger.debug("Pipeline: %s", pipeline_id)
-            else:
-                logger.debug("No pipeline identified in the event")
+            user = self._get_matching_user(event_user, event_sender)
+            pipeline_id = self._get_pipeline_id(event_subject)
 
             # Default response data
             res_data = {
@@ -97,7 +161,39 @@ class EventsView(APIView):
             }
 
             # React to the event
-            # Note: The Trigger must filter on the event type prefix
+            # Note: The Knative Trigger filters on the event type prefix
+            for trigger in self._get_matching_triggers(event_type, payload):
+                # Create a TriggerEvent record and start a pipeline execution
+                trigger_event = TriggerEvent.objects.create(
+                    trigger=trigger,
+                    source=event_source,
+                    event_time=event_time,
+                    event_type=event_type,
+                    event_headers=headers,
+                    event_body=payload,
+                )
+                logger.info("Trigger event created with id %s", trigger_event.id)
+                if user is None:
+                    user = self._get_matching_user(trigger.owner)
+                logger.info("Will execute a pipeline for user %s", user)
+                try:
+                    pipeline_id = trigger.pipeline.id
+                    params = trigger.params_default
+                    pipeline_run = PipelineRunViewSet._create(user, pipeline_id, params)
+                    logger.debug("Pipeline run: %s", pipeline_run)
+                    trigger_event.pipeline_run = pipeline_run
+                except Exception as exception:
+                    logger.error("Exception: %s", exception)
+                trigger_event.save()
+                # ---
+
+            # if event_type == "org.eoepca.webhook.github.ping":
+            #     logger.debug("Received a ping event from GitHub")
+            #     logger.debug("Originating GitHub repository: %s", event_source)
+
+            # elif event_type == "org.eoepca.webhook.gitlab.ping":
+            #     logger.debug("Received a ping event from GitLab")
+            #     logger.debug("Originating GitLab repository: %s", event_source)
 
             if event_type.endswith(".probes.health"):
                 logger.debug("Received a health check event")
@@ -111,30 +207,30 @@ class EventsView(APIView):
                     "type": RESPONSE_TYPE_PREFIX + ".ok"
                 })
 
-            if user and pipeline_id and event_type.endswith(".event.pipeline.execute"):
-                pipeline_run = PipelineRunViewSet._create(user, pipeline_id, payload)
-                logger.debug("Pipeline run: %s", pipeline_run)
+            # if user and pipeline_id and event_type.endswith(".event.pipeline.execute"):
+            #     pipeline_run = PipelineRunViewSet._create(user, pipeline_id, payload)
+            #     logger.debug("Pipeline run: %s", pipeline_run)
 
-                res_data.update({
-                    "status": "accepted",
-                    # "processed_id": event_id,
-                    "timestamp": int(time.time()),
-                    "message": "Pipeline execution created.",
-                })
-                res_attrs.update({
-                    "type": RESPONSE_TYPE_PREFIX + ".accepted",
-                    "subject": pipeline_run.id,
-                })
+            #     res_data.update({
+            #         "status": "accepted",
+            #         # "processed_id": event_id,
+            #         "timestamp": int(time.time()),
+            #         "message": "Pipeline execution created.",
+            #     })
+            #     res_attrs.update({
+            #         "type": RESPONSE_TYPE_PREFIX + ".accepted",
+            #         "subject": pipeline_run.id,
+            #     })
 
-            res_body, res_headers = encode(res_attrs, res_data)
+            res_body, res_headers = ce_encode(res_attrs, res_data)
             logger.debug("Response Headers: %s", res_headers)
             logger.debug("Response Body: %s", res_body)
             return Response(res_body, status=202, headers=res_headers)
 
-        except Exception as e:
-            logger.error("Exception: %s", e)
+        except Exception as exception:
+            logger.error("Exception: %s", exception)
             return Response(
-                {"error": str(e)},
+                {"error": str(exception)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -160,13 +256,13 @@ class PipelineViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         try:
             serializer.save(owner=self.request.user, template=pipeline_cwl_template)
-        except IntegrityError as ie:
-            logger.error(ie)
+        except IntegrityError as error:
+            logger.error(error)
             raise ValidationError(
                 {
                     "detail": "A pipeline with this name, version, and owner already exists."
                 }
-            ) from ie
+            ) from error
 
     def get_permissions(self):
         if self.action in ["create", "list", "retrieve"]:
@@ -185,10 +281,10 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         logger.info("User %s is requesting pipeline runs (admin=%s)", user, user.is_staff)
         p_id = self.kwargs["pipeline_id"]
         if user.is_staff:
-            if p_id == "_":
+            if p_id in ["_", "-"]:
                 return PipelineRun.objects
             return PipelineRun.objects.filter(pipeline_id=p_id)
-        if p_id == "_":
+        if p_id in ["_", "-"]:
             return PipelineRun.objects.filter(started_by=self.request.user)
         return PipelineRun.objects.filter(pipeline_id=p_id, started_by=self.request.user)
 
@@ -259,13 +355,24 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         merged_params = subworkflow.user_params.copy()
         defaults = default_inputs[subworkflow.slug]
 
+        # for key, value in merged_params.items():
+        #     if isinstance(value, dict) and key in defaults:
+        #         for sub_key, sub_value in value.items():
+        #             if isinstance(sub_value, dict) and "default" in sub_value:
+        #                 if sub_key in defaults[key] and "default" in defaults[key][sub_key]:
+        #                     merged_params[key][sub_key]["default"] = defaults[key][sub_key]["default"]
         for key, value in merged_params.items():
-            if isinstance(value, dict) and key in defaults:
-                for sub_key, sub_value in value.items():
-                    if isinstance(sub_value, dict) and "default" in sub_value:
-                        if sub_key in defaults[key] and "default" in defaults[key][sub_key]:
-                            merged_params[key][sub_key]["default"] = defaults[key][sub_key]["default"]
-
+            if not isinstance(value, dict):
+                continue
+            if key not in defaults:
+                continue
+            for sub_key, sub_value in value.items():
+                if not isinstance(sub_value, dict):
+                    continue
+                if "default" not in sub_value:
+                    continue
+                if sub_key in defaults[key] and "default" in defaults[key][sub_key]:
+                    merged_params[key][sub_key]["default"] = defaults[key][sub_key]["default"]
         return merged_params
 
     @staticmethod
@@ -277,10 +384,11 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             logger.debug("Rendering subworkflow '%s'", subworkflow)
             subtemplate = Template(subworkflow.definition)
             subcontext = {"tools": list(subworkflow.tools.all())}
+            defaults = pipeline.default_inputs
             subtool = {
                 "definition": subtemplate.render(subcontext),
                 "slug": subworkflow.pk,
-                "user_params": PipelineRunViewSet._merge_params(subworkflow, pipeline.default_inputs),
+                "user_params": PipelineRunViewSet._merge_params(subworkflow, defaults),
                 "pipeline_step": subworkflow.pipeline_step,
             }
             rendered_subworkflows.append(subtool)
@@ -326,6 +434,9 @@ class JobReportViewSet(
         # The (optional) instance parameter allows to distinguish reports from scattered steps
         instance = request.query_params.get("instance", "")
 
+        # The (optional) instance parameter allows to distinguish reports from scattered steps
+        instance = request.query_params.get("instance", "")
+
         try:
             run = PipelineRun.objects.get(pipeline__id=pipeline_id, id=run_id)
         except PipelineRun.DoesNotExist:
@@ -341,7 +452,7 @@ class JobReportViewSet(
 
         if JobReport.objects.filter(run=run, name=tool_name, instance=instance).exists():
             logger.warning(
-                "Could not create a job report: A job report for '%s'/'%s' already exists in run %s",
+                "Could not create a job report: A report for '%s'/'%s' already exists in run %s",
                 tool_name,
                 instance,
                 run_id
@@ -374,11 +485,11 @@ class SubworkflowViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user:
-            logger.info(f"User {user} is requesting the tools information")
+            logger.info("User %s is requesting the tools information", user)
         else:
-            logger.info(f"Anonymous user is requesting the tools information")
+            logger.info("Anonymous user is requesting the tools information")
         if user and user.is_staff:
-            logger.info(f"User {user} is staff / admin")
+            logger.info("User %s is staff / admin", user)
             # Admins may get all the tools, whatever their status or availability flag
             return Subworkflow.objects.all()
         return Subworkflow.objects.filter(available=True)
@@ -387,3 +498,79 @@ class SubworkflowViewSet(viewsets.ReadOnlyModelViewSet):
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = serializers.TagSerializer
+
+
+class TriggerTypeViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = serializers.TriggerTypeSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if user:
+            logger.info("User %s is requesting the trigger types information", user)
+        else:
+            logger.info("Anonymous user is requesting the trigger types information")
+        if user and user.is_staff:
+            logger.info("User %s is staff / admin", user)
+            # Admins may get all the tools, whatever their status or availability flag
+            return TriggerType.objects.all()
+        return TriggerType.objects.filter(available=True)
+
+
+class TriggerViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.TriggerSerializer
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return Trigger.objects.all()
+        return (
+            Trigger.objects.filter(owner=self.request.user)
+            | Trigger.objects.filter(owner__isnull=True)
+        )
+
+    def perform_create(self, serializer):
+        pass
+        # try:
+        #     serializer.save(owner=self.request.user, template=pipeline_cwl_template)
+        # except IntegrityError as ie:
+        #     logger.error(ie)
+        #     raise ValidationError(
+        #         {
+        #             "detail": "A pipeline with this name, version, and owner already exists."
+        #         }
+        #     ) from ie
+
+    def get_permissions(self):
+        if self.action in ["create", "list", "retrieve"]:
+            return [permissions.IsAuthenticated()]
+        if self.action in ["update", "partial_update", "destroy"]:
+            return [permissions.IsAuthenticated(), IsOwnerOrAdmin()]
+        return super().get_permissions()
+
+
+class TriggerEventViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = serializers.TriggerEventSerializer
+
+    def get_queryset(self):
+        trigger_slug = self.kwargs["trigger_slug"]
+        user = self.request.user
+        if user:
+            logger.info(
+                "User %s is requesting trigger events information for trigger %s",
+                user,
+                trigger_slug
+            )
+        else:
+            logger.info(
+                "Anonymous user is requesting trigger events information for trigger %s",
+                trigger_slug
+            )
+        if user and user.is_staff:
+            logger.info("User %s is staff / admin", user)
+            # Admins may get all the tools, whatever their status or availability flag
+            if trigger_slug in ["_", "-"]:
+                return TriggerEvent.objects.all()
+            return TriggerEvent.objects.filter(trigger__slug=trigger_slug)
+        # Return only the trigger events owned by the requesting user
+        if trigger_slug in ["_", "-"]:
+            return TriggerEvent.objects.filter(pipeline_run__user=user)
+        return TriggerEvent.objects.filter(pipeline_run__user=user, trigger__slug=trigger_slug)

@@ -35,7 +35,7 @@ As can be seen, a number of tools are readily available. Feedback and requiremen
 |                       |                                                          Best Practices                                                          | Application Quality |                        Application Performance                         |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------- | ---------------------------------------------------------------------- |
 | **Python scripts**    | [Pylint](#pylint), [Ruff](#ruff), [Flake8](#flake8),<br>[SonarQube](#sonarqube) <sup>1</sup>                                     | [Bandit](#bandit)   | [Pytest](#pytest) <sup>2</sup>                                         |
-| **Jupyter Notebooks** | [Ruff](#ruff), [SonarQube](#sonarqube) <sup>1</sup>,<br>[Notebook Best Practices Validator](#jupyter-notebook-best-practices-checker) |                     | [Papermill](#papermill)                                                |
+| **Jupyter Notebooks** | [Ruff](#ruff), [SonarQube](#sonarqube) <sup>1</sup>,<br>[Notebook Best Practices Validator](#jupyter-notebook-best-practices-validator) |                     | [Papermill](#papermill)                                                |
 | **AP CWL**            | [Application Package Validator](#application-package-validator)                                                                  |                     | [Calrissian](#calrissian) <sup>2</sup>                                 |
 | **Docker**            |                                                                                                                                  | [Trivy](#trivy)     | [Kaniko](https://docs.gitlab.com/ci/docker/using_kaniko/) <sup>2</sup> |
 | **openEO**            |                                                                                                                                  |                     |                                                                        |
@@ -50,7 +50,8 @@ As can be seen, a number of tools are readily available. Feedback and requiremen
 
 #### Pylint
 
-> Pylint is a static code analyser for Python 2 or 3. Pylint analyses your code without actually running it.  
+Pylint is a static code analyser for Python 2 or 3. Pylint analyses your code without actually running it.  
+
 It checks for errors, enforces a coding standard, looks for code smells, and can make suggestions about how the code could be refactored.
 
 [🔗 Documentation](https://pylint.readthedocs.io/en/latest/user_guide/installation/index.html)
@@ -65,7 +66,7 @@ It checks for errors, enforces a coding standard, looks for code smells, and can
 
 #### Ruff
 
-> An extremely fast Python linter and code formatter, written in Rust.
+An extremely fast Python linter and code formatter, written in Rust.
 
 [🔗 Documentation](https://docs.astral.sh/ruff/)
 
@@ -77,7 +78,7 @@ It checks for errors, enforces a coding standard, looks for code smells, and can
 
 #### Flake8
 
->Flake8 is a wrapper around these tools: *PyFlakes*, *pycodestyle*, *Ned Batchelder's McCabe script*.  
+Flake8 is a wrapper around these tools: *PyFlakes*, *pycodestyle*, *Ned Batchelder's McCabe script*.  
 Flake8 runs all the tools by launching the single `flake8` command. It displays the warnings in a per-file, merged output.
 
 [🔗 Documentation](https://flake8.pycqa.org/en/latest/)
@@ -90,7 +91,9 @@ Flake8 runs all the tools by launching the single `flake8` command. It displays 
 
 #### Application Package Validator
 
-> This tool verifies the compliance of CWL files for EOEPCA Application Packages (AP CWL) against the requirements specified in the [OGC Best Practice for Earth Observation Application Package](https://docs.ogc.org/bp/20-089r1.html) document.
+This tool verifies the compliance of CWL files for EOEPCA Application Packages (AP CWL) against the requirements specified in the [OGC Best Practice for Earth Observation Application Package](https://docs.ogc.org/bp/20-089r1.html) document.
+
+Each CWL file matching the filter is validated in a separate job, leading to the creation of individual analysis reports.
 
 [🔗 Documentation](https://github.com/EOEPCA/app-package-validation#readme)
 
@@ -98,12 +101,12 @@ Flake8 runs all the tools by launching the single `flake8` command. It displays 
 
 |     Name      |   Type   |                              Description                              |
 | ------------- | -------- | --------------------------------------------------------------------- |
-| `detail`      | *string* | Output detail (none&#124;errors&#124;hints&#124;all). Default: hints. |
+| `detail`      | *string* | Output detail (none&#124;errors&#124;hints&#124;all). Default: "hints". |
 | `entry_point` | *string* | Name of entry point (Workflow or CommandLineTool)                     |
 
 #### Jupyter Notebook Best Practices Validator
 
-> This tool aims at validating the notebooks against the [CEOS Jupyter Notebook Best Practice v1.1](https://ceos.org/document_management/Working_Groups/WGISS/Documents/WGISS%20Best%20Practices/CEOS_JupterNotebooks_Best%20Practice_v1.1.pdf) document.
+This tool aims at validating the notebooks against the [CEOS Jupyter Notebook Best Practice v1.1](https://ceos.org/document_management/Working_Groups/WGISS/Documents/WGISS%20Best%20Practices/CEOS_JupterNotebooks_Best%20Practice_v1.1.pdf) document.
 
 [🔗 Documentation](https://github.com/EOEPCA/notebook-bp-validator#readme)
 
@@ -116,7 +119,7 @@ Flake8 runs all the tools by launching the single `flake8` command. It displays 
 
 #### SonarQube
 
-> SonarQube Server is an on-premise analysis tool designed to detect coding issues in 30+ languages, frameworks, and IaC platforms.
+SonarQube Server is an on-premise analysis tool designed to detect coding issues in 30+ languages, frameworks, and IaC platforms.
 
 [🔗 Documentation](https://docs.sonarsource.com/sonarqube-server/latest/)
 
@@ -131,7 +134,7 @@ Flake8 runs all the tools by launching the single `flake8` command. It displays 
 
 [🔗 Documentation](https://bandit.readthedocs.io/en/latest/)
 
-> Bandit is a tool designed to find common security issues in Python code. To do this, Bandit processes each file, builds an AST from it, and runs appropriate plugins against the AST nodes. Once Bandit has finished scanning all the files, it generates a report.
+Bandit is a tool designed to find common security issues in Python code. To do this, Bandit processes each file, builds an AST from it, and runs appropriate plugins against the AST nodes. Once Bandit has finished scanning all the files, it generates a report.
 
 **Exposed parameters**
 
@@ -141,8 +144,11 @@ Flake8 runs all the tools by launching the single `flake8` command. It displays 
 
 #### Trivy
 
->  The all-in-one open source security scanner  
-Use Trivy to find vulnerabilities (CVE) & misconfigurations (IaC) across code repositories, binary artifacts, container images, Kubernetes clusters, and more. All in one tool! 
+The all-in-one open source security scanner.
+
+Trivy is used to find vulnerabilities (CVE) & misconfigurations (IaC) in container images.
+
+Note: Trivy may also be applied to code repositories, binary artifacts, Kubernetes clusters, and more. This is not yet possible in the Application Quality BB.
 
 [🔗 Documentation](https://trivy.dev/latest/docs/)
 
@@ -156,7 +162,9 @@ Use Trivy to find vulnerabilities (CVE) & misconfigurations (IaC) across code re
 
 #### Papermill
 
-> Papermill is a tool for parameterizing and executing Jupyter Notebooks.
+Papermill is a tool for parameterizing and executing Jupyter Notebooks.
+
+Each Jupyter notebook maching the filter is executed in a separate job, leading to the generation of individual reports.
 
 [🔗 Documentation](https://papermill.readthedocs.io/en/latest/)
 
@@ -164,6 +172,9 @@ Use Trivy to find vulnerabilities (CVE) & misconfigurations (IaC) across code re
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| `extract_requirements` | *boolean* | Tell the tool to extract Python requirements from the notebook content |
+| `extra_requirements` | *string* | Python libraries to install before executing the notebook |
+| `execution_parameters` | *string* | Parameter values required to execute the notebook |
 
 #### Pytest
 
@@ -176,7 +187,7 @@ Use Trivy to find vulnerabilities (CVE) & misconfigurations (IaC) across code re
 
 #### Calrissian
 
-> Calrissian is a CWL implementation designed to run inside a Kubernetes cluster. Its goal is to be highly efficient and scalable, taking advantage of high capacity clusters to run many steps in parallel.
+Calrissian allows executing a CWL runner inside a Kubernetes cluster. Its goal is to be highly efficient and scalable, taking advantage of high capacity clusters to run many steps in parallel.
 
 [🔗 Documentation](https://github.com/Duke-GCB/calrissian#readme)
 

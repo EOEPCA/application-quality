@@ -1,0 +1,289 @@
+{
+  "folderUid": "application-quality-service-reports",
+  "uid": "papermill-report-notebook",
+  "name": "Papermill Notebook Outputs",
+  "kind": 1,
+  "type": "table",
+  "description": "",
+  "model": {
+    "datasource": {
+      "type": "grafana-postgresql-datasource",
+      "uid": "application-quality-db"
+    },
+    "description": "",
+    "fieldConfig": {
+      "defaults": {
+        "color": {
+          "fixedColor": "transparent",
+          "mode": "fixed"
+        },
+        "custom": {
+          "align": "auto",
+          "cellOptions": {
+            "type": "auto",
+            "wrapText": false
+          },
+          "filterable": false,
+          "inspect": false,
+          "minWidth": 80
+        },
+        "fieldMinMax": false,
+        "mappings": [],
+        "noValue": "-",
+        "thresholds": {
+          "mode": "percentage",
+          "steps": [
+            {
+              "color": "transparent",
+              "value": null
+            }
+          ]
+        }
+      },
+      "overrides": [
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Cell Type"
+          },
+          "properties": [
+            {
+              "id": "custom.filterable",
+              "value": true
+            },
+            {
+              "id": "custom.width",
+              "value": 125
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Status"
+          },
+          "properties": [
+            {
+              "id": "custom.filterable",
+              "value": true
+            },
+            {
+              "id": "custom.width",
+              "value": 107
+            },
+            {
+              "id": "custom.cellOptions",
+              "value": {
+                "applyToRow": false,
+                "mode": "basic",
+                "type": "color-background",
+                "wrapText": false
+              }
+            },
+            {
+              "id": "mappings",
+              "value": [
+                {
+                  "options": {
+                    "completed": {
+                      "color": "green",
+                      "index": 0,
+                      "text": "Completed"
+                    },
+                    "failed": {
+                      "color": "semi-dark-red",
+                      "index": 1,
+                      "text": "Failed"
+                    },
+                    "pending": {
+                      "color": "transparent",
+                      "index": 2,
+                      "text": "Pending"
+                    }
+                  },
+                  "type": "value"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Error"
+          },
+          "properties": [
+            {
+              "id": "custom.filterable",
+              "value": true
+            },
+            {
+              "id": "custom.width",
+              "value": 104
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Duration [s]"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 121
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Start time"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 106
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "End time"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 98
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Exec Count"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 100
+            },
+            {
+              "id": "noValue"
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Outputs"
+          },
+          "properties": [
+            {
+              "id": "custom.inspect",
+              "value": true
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Output Type"
+          },
+          "properties": [
+            {
+              "id": "custom.width",
+              "value": 133
+            },
+            {
+              "id": "custom.filterable",
+              "value": true
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Cell Content"
+          },
+          "properties": [
+            {
+              "id": "custom.inspect",
+              "value": true
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byName",
+            "options": "Output Data"
+          },
+          "properties": [
+            {
+              "id": "custom.inspect",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    "options": {
+      "cellHeight": "sm",
+      "footer": {
+        "countRows": false,
+        "enablePagination": false,
+        "fields": "",
+        "reducer": [
+          "sum"
+        ],
+        "show": false
+      },
+      "showHeader": true,
+      "sortBy": []
+    },
+    "pluginVersion": "12.0.1",
+    "targets": [
+      {
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "application-quality-db"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "hide": false,
+        "rawQuery": true,
+        "rawSql": "SELECT\n  cell ->> 'cell_type' AS \"Cell Type\",\n  cell ->> 'execution_count' AS \"Exec Count\",\n  -- cell -> 'metadata' -> 'papermill' ->> 'start_time' AS \"Start\",\n  TO_CHAR(\n    TO_TIMESTAMP(\n        (cell -> 'metadata' -> 'papermill' ->> 'start_time'),\n        'YYYY-MM-DD\"T\"HH24:MI:SS'\n      ),\n      'HH24:MI:SS'\n    ) AS \"Start time\",\n  -- cell -> 'metadata' -> 'papermill' ->> 'end_time' AS \"End\",\n  TO_CHAR(\n    TO_TIMESTAMP(\n        (cell -> 'metadata' -> 'papermill' ->> 'end_time'),\n        'YYYY-MM-DD\"T\"HH24:MI:SS'\n      ),\n      'HH24:MI:SS'\n    ) AS \"End time\",\n\n  cell -> 'metadata' -> 'papermill' ->> 'duration' AS \"Duration [s]\",\n  cell -> 'metadata' -> 'papermill' ->> 'status' AS \"Status\",\n  -- cell -> 'metadata' -> 'papermill' ->> 'exception' AS \"Error\",\n  -- cell -> 'source' AS \"Cell Content\",\n  array_to_string(ARRAY(SELECT jsonb_array_elements_text(cell -> 'source')), '') AS \"Cell Content\",\n  CONCAT (cell -> 'outputs' -> 0 ->> 'output_type', ' ', cell -> 'outputs' -> 0 ->> 'name') AS \"Output Type\",\n  -- cell -> 'outputs' -> 0 -> 'data' AS \"Output Data\",\n  -- cell -> 'outputs' -> 0 -> 'text' ->> 0 AS \"Output Text\",\n  -- Remove ANSI color codes (at least required for displaying tracebacks)\n  regexp_replace(\n    CONCAT(\n      array_to_string(ARRAY(SELECT jsonb_array_elements_text(cell -> 'outputs' -> 0 -> 'text')), ''),\n      array_to_string(ARRAY(SELECT jsonb_array_elements_text(cell -> 'outputs' -> 0 -> 'data' -> 'text/html')), ''),\n      array_to_string(ARRAY(SELECT jsonb_array_elements_text(cell -> 'outputs' -> 0 -> 'data' -> 'text/plain')), ''),\n      array_to_string(ARRAY(SELECT jsonb_array_elements_text(cell -> 'outputs' -> 0 -> 'traceback')), E'\\n')\n    ),\n    E'\\\\x1b\\\\[[0-9;]*[a-zA-Z]', '', 'g') AS \"Outputs\"\n  -- CONCAT(cell -> 'outputs' -> 0 ->> 'data', cell -> 'outputs' -> 0 ->> 'text') AS \"Outputs\"\n  -- cell ->> 'outputs' AS \"Outputs\"\nFROM\n  (\n    SELECT\n      jsonb_array_elements(output :: jsonb -> 'cells') AS cell\n    FROM\n      reports_admin\n    WHERE\n      id = ${report_id}\n  ) AS sub;",
+        "refId": "A",
+        "sql": {
+          "columns": [
+            {
+              "parameters": [],
+              "type": "function"
+            }
+          ],
+          "groupBy": [
+            {
+              "property": {
+                "type": "string"
+              },
+              "type": "groupBy"
+            }
+          ],
+          "limit": 50
+        }
+      }
+    ],
+    "title": "Notebook Details",
+    "transformations": [
+      {
+        "id": "formatString",
+        "options": {
+          "outputFormat": "Sentence Case",
+          "stringField": "Cell Type"
+        }
+      }
+    ],
+    "type": "table"
+  }
+}

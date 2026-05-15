@@ -35,6 +35,7 @@ class CustomOIDCAuthenticationBackend(OIDCAuthenticationBackend):
 
 
 def logout_next_url(request):
+    logger.info("Received logout request: %s", request)
     url = (
         f"{settings.OIDC_OP_USER_ENDPOINT.replace('userinfo', 'logout')}"
         "?response_type=code"
