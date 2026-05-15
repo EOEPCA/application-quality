@@ -113,6 +113,7 @@ export default {
         { title: 'Pipelines', path: '/pipelines', icon: 'mdi-pipe' },
         { title: 'Monitoring', path: '/executions', icon: 'mdi-monitor-eye' },
         { title: 'Reports', path: '/reports', icon: 'mdi-note-text-outline' },
+        { title: 'Triggers', path: '/triggers', icon: 'mdi-animation-play-outline' },
         { title: 'Settings', path: '/settings', icon: 'mdi-cog' },
       ],
       userDetails: null,
