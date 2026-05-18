@@ -148,7 +148,8 @@
               <json-editor
                 height="400"
                 mode="tree"
-                v-model="localModelValue.cql2Filter" 
+                v-model="localModelValue.cql2Filter"
+                @change="(content, previousContent, status) => handleJsonEditorChange('cql2_filter', status)"
               />
 
               <!-- Default Input Parameters (JSON) -->
@@ -163,7 +164,8 @@
               <json-editor
                 height="400"
                 mode="tree"
-                v-model="localModelValue.paramsDefault" 
+                v-model="localModelValue.paramsDefault"
+                @change="(content, previousContent, status) => handleJsonEditorChange('params_default', status)"
               />
 
               <!-- Parameters Mapping (JSON) -->
@@ -178,7 +180,8 @@
               <json-editor
                 height="400"
                 mode="tree"
-                v-model="localModelValue.paramsMapping" 
+                v-model="localModelValue.paramsMapping"
+                @change="(content, previousContent, status) => handleJsonEditorChange('params_mapping', status)"
               />
 
             </v-card-text>
@@ -195,7 +198,7 @@
           color="primary"
           @click="submit"
           :loading="isBusy"
-          :disabled="!isValid"
+          :disabled="!isValid || isJsonInvalid"
         >
           {{ modelValue.creation ? 'Create' : 'Submit Changes' }}
         </v-btn>
@@ -228,6 +231,11 @@ export default {
       localModelValue: null,
       localTrigger: null,
       localVisible: false,
+      editorErrors: {
+        cql2_filter: false,
+        params_default: false,
+        params_mapping: false
+      },
     };
   },
 
@@ -259,11 +267,7 @@ export default {
   //setup(props, { emit }) {
   setup() {
     const triggerStore = useTriggerStore();
-    //const pipelineStore = usePipelineStore();
-    return {
-      triggerStore,
-    //  pipelineStore,
-    };
+    return { triggerStore };
   },
 
   mounted() {
@@ -273,6 +277,11 @@ export default {
   computed: {
     isVisible() {
       return this.visible;
+    },
+
+    isJsonInvalid() {
+      console.debug("Editor errors:", Object.values(this.editorErrors));
+      return Object.values(this.editorErrors).some(hasError => hasError === true);
     },
   },
 
@@ -299,7 +308,7 @@ export default {
         console.debug('Params mapping:', this.localModelValue.paramsMapping);
         console.debug('Trigger type:', this.localModelValue.triggerType);
         console.debug('Selected type:', this.localModelValue.selectedType);
-        console.debug('Trigger types:', this.localModelValue.triggerTypes);
+        console.debug('Trigger types:', this.localModelValue.availableTypes);
         console.debug('Pipeline:', this.localModelValue.pipeline);
         console.debug('Selected pipeline:', this.localModelValue.selectedPipeline);
         console.debug('Available pipelines:', this.localModelValue.availablePipelines);
@@ -334,6 +343,12 @@ export default {
 
     onTriggerNameChange() {
       this.triggerName = this.localModelValue.name;
+    },
+
+    handleJsonEditorChange(editorKey, status) {
+      console.debug("Editor content change:", editorKey, status);
+      this.editorErrors[editorKey] = (status.contentErrors != undefined);
+      console.debug("Editor errors:", Object.values(this.editorErrors));
     },
 
     cancel() {
