@@ -185,19 +185,18 @@
     <!-- Pipeline Details Dialog -->
     <v-dialog v-model="showDetailsDialog" max-width="1200px">
       <v-card v-if="selectedPipeline">
-        <!-- v-card-title>
-            {{ selectedPipeline.name || selectedPipeline.id }}
-            <v-spacer />
-            <v-btn icon="mdi-close" variant="text" @click="showDetailsDialog = false" />
-        </v-card-title -->
         <v-card-text>
           <v-alert
             v-if="selectedPipeline.name"
             type="info"
-            :text="selectedPipeline.name"
+            :text="selectedPipeline.name + ' ' + selectedPipeline.version"
             class="mb-4"
           />
-          <JsonToHtmlTable :data="prunePipelineDetails(selectedPipeline)" />
+          <JSONTableViewer
+            :data="prunePipelineDetails(selectedPipeline)"
+            :dont-convert="['default_inputs']"
+            :key-order="['name', 'description', 'version', 'owner_name', 'created_at', 'edited_at', 'tools', 'default_inputs']"
+          />
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -297,7 +296,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useToolStore } from '@/stores/tools';
 import { usePipelineStore } from '@/stores/pipelines';
 import { useSettingsStore } from '@/stores/settings';
-import JsonToHtmlTable from '@/components/JsonToHtmlTable.vue';
+import JSONTableViewer from '@/components/JSONTableViewer.vue';
 import PipelineCreationPanel from './PipelineCreationPanel.vue';
 import PipelineExecutionPanel from './PipelineExecutionPanel.vue';
 import { formatDate } from '@/assets/tools';
@@ -306,7 +305,7 @@ export default {
   name: 'PipelineList',
 
   components: {
-    JsonToHtmlTable,
+    JSONTableViewer,
     PipelineCreationPanel,
     PipelineExecutionPanel,
   },

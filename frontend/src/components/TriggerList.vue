@@ -154,24 +154,18 @@
     <!-- Triggers Details Dialog -->
     <v-dialog v-model="showDetails" max-width="1200px">
       <v-card v-if="selectedTrigger">
-        <!-- v-card-title>
-          {{ selectedTrigger.name || selectedTrigger.id }}
-          <v-spacer />
-          <v-btn icon="mdi-close" variant="text" @click="showDetails = false" />
-        </v-card-title -->
         <v-card-text>
           <v-alert
-            v-if="selectedTrigger.name"
+            v-if="selectedTrigger.slug"
             type="info"
-            :text="selectedTrigger.name"
+            :text="selectedTrigger.slug"
             class="mb-4"
           />
-          <JsonToHtmlTable
+          <JSONTableViewer
             :data="pruneTriggerDetails(selectedTrigger)"
-            :showDataType="false"
-            :showKey="false"
+            :dont-convert="['cql2_filter', 'params_default', 'params_mapping']"
+            :key-order="['name', 'description', 'version', 'tools', 'tags', 'user_params']"
           />
-          <!-- pre class="trigger-json">{{ JSON.stringify(selectedTrigger, null, 2) }}</pre -->
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -193,14 +187,13 @@
 import { useAuthStore } from '@/stores/auth';
 import { usePipelineStore } from '@/stores/pipelines';
 import { useTriggerStore } from '@/stores/triggers';
-import JsonToHtmlTable from '@/components/JsonToHtmlTable.vue';
-import 'vue-json-to-html-table/dist/style.css';
+import JSONTableViewer from '@/components/JSONTableViewer.vue';
 import TriggerCreationPanel from './TriggerCreationPanel.vue';
 
 export default {
   name: 'TriggerList',
   components: {
-    JsonToHtmlTable,
+    JSONTableViewer,
     TriggerCreationPanel,
   },
   data() {

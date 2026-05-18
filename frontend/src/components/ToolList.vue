@@ -34,6 +34,7 @@
       closable
     />
 
+    <!-- eslint-disable vue/no-v-model-argument -->
     <v-data-table
       v-if="toolStore.tools.length"
       v-model:items-per-page="itemsPerPage"
@@ -44,6 +45,7 @@
       class="elevation-1"
       hover
     >
+    <!-- eslint-enable vue/no-v-model-argument -->
       <!-- template v-slot:top>
           <v-toolbar flat>
             <v-toolbar-title>Tools</v-toolbar-title>
@@ -129,24 +131,18 @@
     <!-- Tools Details Dialog -->
     <v-dialog v-model="showDetails" max-width="1200px">
       <v-card v-if="selectedTool">
-        <!-- v-card-title>
-          {{ selectedTool.name || selectedTool.id }}
-          <v-spacer />
-          <v-btn icon="mdi-close" variant="text" @click="showDetails = false" />
-        </v-card-title -->
         <v-card-text>
           <v-alert
             v-if="selectedTool.name"
             type="info"
-            :text="selectedTool.name"
+            :text="selectedTool.name + ' ' + selectedTool.version"
             class="mb-4"
           />
-          <JsonToHtmlTable
+          <JSONTableViewer
             :data="pruneToolDetails(selectedTool)"
-            :showDataType="false"
-            :showKey="false"
+            :dont-convert="['user_params']"
+            :key-order="['name', 'description', 'version', 'tools', 'tags', 'user_params']"
           />
-          <!-- pre class="tool-json">{{ JSON.stringify(selectedTool, null, 2) }}</pre -->
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -156,15 +152,12 @@
 <script>
 import { useAuthStore } from '@/stores/auth';
 import { useToolStore } from '@/stores/tools';
-import JsonToHtmlTable from '@/components/JsonToHtmlTable.vue';
-//import VueJsonToHtmlTable from 'vue-json-to-html-table'
-import 'vue-json-to-html-table/dist/style.css';
-// import { formatDate } from '@/assets/tools';
+import JSONTableViewer from '@/components/JSONTableViewer.vue';
 
 export default {
   name: 'ToolList',
   components: {
-    JsonToHtmlTable,
+    JSONTableViewer,
   },
   data() {
     return {

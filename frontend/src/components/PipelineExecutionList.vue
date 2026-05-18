@@ -57,6 +57,7 @@
 
     <v-alert v-if="store.error" type="error" :text="store.error" closable />
 
+    <!-- eslint-disable vue/no-v-model-argument -->
     <v-data-table
       v-model:items-per-page="itemsPerPage"
       v-model:sort-by="sortBy"
@@ -67,6 +68,7 @@
       class="elevation-1"
       hover
     >
+    <!-- eslint-enable vue/no-v-model-argument -->
       <template v-slot:top> </template>
 
       <template v-slot:item="{ item }">
@@ -155,28 +157,20 @@
         /> -->
 
     <!-- Pipeline Details Dialog -->
-    <v-dialog v-model="showDetails" max-width="800px">
+    <v-dialog v-model="showDetails" max-width="1200px">
       <v-card v-if="selectedExecution">
-        <!-- v-card-title>
-            {{ selectedExecution.pipeline}} / {{ selectedExecution.id }}
-            <v-spacer />
-            <v-btn icon="mdi-close" variant="text" @click="showDetails = false" />
-          </v-card-title -->
         <v-card-text>
           <v-alert
             v-if="selectedExecution.status"
             type="info"
-            :text="selectedExecution.status"
+            :text="store.pipelineById(selectedExecution.pipeline).name + ' executed on ' + formatDate(selectedExecution.start_time) + ': ' + selectedExecution.status"
             class="mb-4"
           />
-          <!-- JsonToHtmlTable :data="prunePipelineExecutionDetails(selectedExecution)" / -->
-          <pre class="execution-json">{{
-            JSON.stringify(
-              prunePipelineExecutionDetails(selectedExecution),
-              null,
-              2,
-            )
-          }}</pre>
+          <JSONTableViewer
+            :data="prunePipelineExecutionDetails(selectedExecution)"
+            :dont-convert="['usage_report', 'inputs']"
+            :key-order="['pipeline_name', 'started_by', 'start_time', 'completion_time', 'status', 'job_reports_count', 'user', 'inputs']"
+          />
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -189,13 +183,13 @@ import { useAuthStore } from '@/stores/auth';
 import { useToolStore } from '@/stores/tools';
 import { usePipelineStore } from '@/stores/pipelines';
 import { formatDate } from '@/assets/tools';
-// import JsonToHtmlTable from '@/components/JsonToHtmlTable.vue'
+import JSONTableViewer from '@/components/JSONTableViewer.vue';
 
 export default {
   name: 'PipelineExecutionList',
-  // components: {
-  //   JsonToHtmlTable
-  // },
+  components: {
+    JSONTableViewer,
+  },
 
   data() {
     return {
@@ -331,7 +325,8 @@ export default {
 
     prunePipelineExecutionDetails(execution) {
       const keysToKeep = [
-        'pipeline',
+        'pipeline_name', // Pipeline name (inserted in the execution details below)
+        // 'pipeline',
         'start_time',
         'completion_time',
         'job_reports_count',
@@ -351,6 +346,9 @@ export default {
           this.isUserInput(key),
         ),
       );
+      // Add the pipeline name
+      details.pipeline_name = this.store.pipelineById(execution.pipeline).name;
+      // Add all inputs values if the user is admin
       if (this.authStore.isAdmin) {
         // Display all inputs to admin users
         details.inputs = execution.inputs;

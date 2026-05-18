@@ -64,6 +64,7 @@
 
     <v-alert v-if="store.error" type="error" :text="store.error" closable />
 
+    <!-- eslint-disable vue/no-v-model-argument -->
     <v-data-table
       v-if="store.reports.length"
       v-model:items-per-page="itemsPerPage"
@@ -74,6 +75,7 @@
       class="elevation-1"
       hover
     >
+    <!-- eslint-enable vue/no-v-model-argument -->
       <!-- template v-slot:top>
           <v-toolbar flat>
             <v-toolbar-title>Reports</v-toolbar-title>
@@ -152,23 +154,20 @@
     <v-progress-circular v-else indeterminate class="ma-4" />
 
     <!-- Tools Details Dialog -->
-    <v-dialog v-model="showDetails" max-width="800px">
+    <v-dialog v-model="showDetails" max-width="1200px">
       <v-card v-if="selectedReport">
-        <!-- v-card-title>
-            {{ selectedReport.name || selectedReport.id }}
-            <v-spacer />
-            <v-btn icon="mdi-close" variant="text" @click="showDetails = false" />
-          </v-card-title -->
         <v-card-text>
           <v-alert
             v-if="selectedReport.name"
             type="info"
-            :text="selectedReport.name"
+            :text="selectedReport.name + ' report generated at ' + formatDate(selectedReport.created_at)"
             class="mb-4"
           />
-          <pre class="report-json">{{
-            JSON.stringify(selectedReport, null, 2)
-          }}</pre>
+          <JSONTableViewer
+            :data="pruneReportDetails(selectedReport)"
+            :dont-convert="['output']"
+            :key-order="['tool_name', 'run_id', 'report_id', 'created_at', 'user_params']"
+          />
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -178,11 +177,14 @@
 <script>
 import { useSettingsStore } from '@/stores/settings';
 import { usePipelineStore } from '@/stores/pipelines';
+import JSONTableViewer from '@/components/JSONTableViewer.vue';
 import { formatDate } from '@/assets/tools';
 
 export default {
   name: 'ReportList',
-
+  components: {
+    JSONTableViewer,
+  },
   data() {
     return {
       search: '',
@@ -311,8 +313,28 @@ export default {
       return formatDate(date);
     },
 
+    pruneReportDetails(report) {
+      const keysToKeep = [
+        'name',
+        'run_id',
+        'report_id',
+        'tool_name',
+        'created_at',
+        //'id',
+        //'run',
+        //'instance',
+        'output',
+      ];
+      return Object.fromEntries(
+        Object.entries(report).filter(([key]) => keysToKeep.includes(key)),
+      );
+    },
+
     viewReport(report) {
       this.selectedReport = report;
+      this.selectedReport.run_id = this.selectedReport.run;
+      this.selectedReport.report_id = this.selectedReport.id;
+      this.selectedReport.tool_name = this.selectedReport.name;
       this.showDetails = true;
     },
 
