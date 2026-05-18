@@ -52,4 +52,33 @@ export const triggerService = {
       throw error;
     }
   },
+
+  async createTrigger(trigger) {
+    try {
+      console.log('Create trigger data:', trigger);
+      const response = await triggerApi.post(`/`, trigger);
+      return response.data;
+    } catch (error) {
+      console.error(`Error creating trigger ${trigger.name}:`, error);
+      throw error;
+    }
+  },
+
+  async updateTrigger(trigger) {
+    try {
+      console.log('Update trigger data:', trigger);
+      const response = await triggerApi.put(`/${trigger.id}/`, trigger);
+      return response.data;
+    } catch (error) {
+      console.error(
+        `Error updating trigger ${trigger.name} (Id: ${trigger.id}):`,
+        error,
+      );
+      throw error;
+    }
+  },
+
+  async deleteTrigger(trigger) {
+    // TODO: Change the trigger status to "Deleted"
+  },
 };

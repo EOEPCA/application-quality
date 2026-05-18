@@ -159,6 +159,7 @@ import { useToolStore } from '@/stores/tools';
 import JsonToHtmlTable from '@/components/JsonToHtmlTable.vue';
 //import VueJsonToHtmlTable from 'vue-json-to-html-table'
 import 'vue-json-to-html-table/dist/style.css';
+// import { formatDate } from '@/assets/tools';
 
 export default {
   name: 'ToolList',
@@ -253,17 +254,9 @@ export default {
       await this.toolStore.fetchTools();
     },
 
-    formatDate(date) {
-      if (!date) return 'N/A';
-      return new Date(date).toLocaleDateString('en-UK', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        second: 'numeric',
-      });
-    },
+    // formatDate(date) {
+    //   return formatDate(date);
+    // },
 
     tagChipColor(tagName) {
       // Determine color based on tag name prefix

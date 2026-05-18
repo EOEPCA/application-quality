@@ -25,6 +25,16 @@
         @click="refreshTriggers"
         :loading="triggerStore.loading"
       />
+      <v-btn
+        icon="mdi-pencil"
+        size="small"
+        class="mx-2"
+        color="warning"
+        :disabled="!canCreateTrigger()"
+        v-tooltip:bottom-end="'Create a new trigger'"
+        @click="createTrigger"
+        :loading="triggerStore.loadingTriggers"
+      />
     </v-card-title>
 
     <v-alert
@@ -33,7 +43,7 @@
       :text="triggerStore.error"
       closable
     />
-
+    <!-- eslint-disable vue/no-v-model-argument -->
     <v-data-table
       v-if="triggerStore.triggers.length"
       v-model:items-per-page="itemsPerPage"
@@ -44,7 +54,7 @@
       class="elevation-1"
       hover
     >
-
+    <!-- eslint-enable vue/no-v-model-argument -->
       <template v-slot:item="{ item }">
         <tr>
           <td>
@@ -69,22 +79,61 @@
             >
               <v-icon size="26px"> mdi-information </v-icon>
             </v-btn>
-            <!-- <v-btn
-              icon="mdi-pencil"
-              variant="text"
-              disabled
-              v-tooltip:bottom-end="'Edit this trigger'"
-              :__title="'Edit this trigger'"
-              @click="editTrigger(item)"
-            />
-            <v-btn
-              icon="mdi-delete"
-              variant="text"
-              disabled
-              v-tooltip:bottom-end="'Delete the trigger'"
-              :__title="'Delete the trigger'"
-              @click="deleteTrigger(item)"
-            /> -->
+
+            <!-- Dropdown menu with extra actions: edit, delete -->
+            <v-menu location="bottom end" :disabled="!canEditTrigger(item)">
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  variant="text"
+                  :disabled="!canEditTrigger(item)"
+                >
+                  <v-icon> mdi-dots-vertical </v-icon>
+                </v-btn>
+              </template>
+
+              <v-list>
+                <v-list-item
+                  @click="editTrigger(item)"
+                  :disabled="!canEditTrigger(item)"
+                >
+                  <template v-slot:prepend>
+                    <v-icon color="warning" icon="mdi-pencil" />
+                  </template>
+                  <v-list-item-title
+                    v-tooltip:bottom-end="'Edit trigger ' + item.name"
+                    >Edit</v-list-item-title
+                  >
+                </v-list-item>
+
+                <v-list-item
+                  v-if="this.authStore.isAdmin"
+                  @click="changeTriggerOwner(item)"
+                  :disabled="true"
+                >
+                  <template v-slot:prepend>
+                    <v-icon color="warning" icon="mdi-account-edit" />
+                  </template>
+                  <v-list-item-title
+                    v-tooltip:bottom-end="'Change the trigger owner'"
+                    >Change Owner</v-list-item-title
+                  >
+                </v-list-item>
+
+                <v-list-item
+                  @click="deleteTrigger(item)"
+                  :disabled="!canDeleteTrigger(item)"
+                >
+                  <template v-slot:prepend>
+                    <v-icon color="error" icon="mdi-delete" />
+                  </template>
+                  <v-list-item-title
+                    v-tooltip:bottom-end="'Delete this trigger'"
+                    >Delete</v-list-item-title
+                  >
+                </v-list-item>
+              </v-list>
+            </v-menu>
           </td>
         </tr>
       </template>
@@ -126,25 +175,47 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+
+    <!-- Trigger creation drawer component -->
+    <trigger-creation-panel
+      v-model="creationParameters"
+      :visible="this.creationPanelVisible"
+      @creation-submitted="handleCreationSubmitted"
+      @creation-cancelled="hideCreationPanel"
+      @edition-submitted="handleEditionSubmitted"
+      @edition-cancelled="hideCreationPanel"
+    />
+
   </v-card>
 </template>
 
 <script>
 import { useAuthStore } from '@/stores/auth';
+import { usePipelineStore } from '@/stores/pipelines';
 import { useTriggerStore } from '@/stores/triggers';
 import JsonToHtmlTable from '@/components/JsonToHtmlTable.vue';
 import 'vue-json-to-html-table/dist/style.css';
+import TriggerCreationPanel from './TriggerCreationPanel.vue';
 
 export default {
   name: 'TriggerList',
   components: {
     JsonToHtmlTable,
+    TriggerCreationPanel,
   },
   data() {
     return {
       search: '',
       showDetails: false,
       selectedTrigger: null,
+      creationPanelVisible: false,
+      creationParameters: {},
+      successMessage: null,
+      editionPanelVisible: false,
+      editionParameters: {},
+      executionPanelVisible: false,
+      showDeleteDialog: false,
+      deletingPipeline: false,
       itemsPerPage: 10,
       sortBy: [{ key: 'description', order: 'asc' }],
 
@@ -198,8 +269,9 @@ export default {
 
   setup() {
     const authStore = useAuthStore();
+    const pipelineStore = usePipelineStore();
     const triggerStore = useTriggerStore();
-    return { authStore, triggerStore };
+    return { authStore, pipelineStore, triggerStore };
   },
 
   computed: {
@@ -231,19 +303,31 @@ export default {
 
   methods: {
     async refreshTriggers() {
+      await this.pipelineStore.fetchPipelines();
       await this.triggerStore.fetchTriggers();
     },
 
-    formatDate(date) {
-      if (!date) return 'N/A';
-      return new Date(date).toLocaleDateString('en-UK', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        second: 'numeric',
-      });
+    canCreateTrigger() {
+      // Any authenticated user has the right to create triggers
+      return this.authStore.username != undefined;
+    },
+
+    canEditTrigger(trigger) {
+      // Check if the user is either an admin or the owner of the trigger
+      return (
+        this.authStore.username != null &&
+        (this.authStore.isAdmin ||
+          this.authStore.username == trigger.owner)
+      );
+    },
+
+    canDeleteTrigger(trigger) {
+      // Check if the user is either an admin or the owner of the trigger
+      return (
+        this.authStore.username != null &&
+        (this.authStore.isAdmin ||
+          this.authStore.username == trigger.owner)
+      );
     },
 
     pruneTriggerDetails(trigger) {
@@ -269,9 +353,88 @@ export default {
       this.showDetails = true;
     },
 
+    createTrigger() {
+      console.log('Create a new trigger ...');
+      this.refreshTriggers();
+      console.debug('Trigger types', this.triggerStore.triggerTypes)
+      console.debug('Pipelines', this.pipelineStore.pipelines)
+      
+      this.creationParameters = {
+        // description: "",
+        cql2Filter: {},
+        paramsDefault: {},
+        paramsMapping: {},
+        availableTypes: this.triggerStore.triggerTypes,
+        availablePipelines: this.pipelineStore.pipelines,
+        // Statuses are enforced in the backend DB model (see the Trigger Model definition)
+        availableStatus: ['Disabled', 'Testing', 'Restricted', 'Enabled', 'Deleted'],
+        isCreation: true,
+      };
+      this.creationPanelVisible = true;
+    },
+
+    hideCreationPanel() {
+      console.log('Cancel trigger creation/edition');
+      this.creationPanelVisible = false;
+    },
+
+    handleCreationSubmitted(trigger) {
+      // Handle the creation of the new trigger
+      console.log('Trigger created:', trigger);
+      // Close the trigger creation panel
+      this.creationPanelVisible = false;
+      this.refreshTriggers();
+      // Display a success message
+      this.$notify({
+        title: `Created trigger "${trigger.name}"`,
+        type: 'success',
+      });
+      this.$emit('trigger-created', trigger);
+    },
+
     editTrigger(trigger) {
+      console.log('Edit trigger ...', trigger);
       this.selectedTrigger = trigger;
-      this.showDetails = true;
+
+      this.creationParameters = {
+        slug: trigger.slug,
+        description: trigger.description,
+        // By default, the owner is the current user.
+        // Only admins may change a trigger owner.
+        owner: trigger.owner,
+        status: trigger.status,
+        enabled: trigger.enabled,
+        triggerType: this.triggerStore.getTriggerTypeById(trigger.trigger_type),
+        availableTypes: this.triggerStore.triggerTypes,
+        pipeline: this.pipelineStore.pipelineById(trigger.pipeline_id),
+        availablePipelines: this.pipelineStore.pipelines,
+        cql2Filter: trigger.cql2_filter,
+        paramsDefault: trigger.params_default,
+        paramsMapping: trigger.params_mapping,
+        isCreation: false,
+        // Statuses are enforced in the backend DB model (see the Trigger Model definition)
+        availableStatus: ['Disabled', 'Testing', 'Restricted', 'Enabled', 'Deleted'],
+      };
+      this.creationPanelVisible = true;
+    },
+
+    handleEditionSubmitted(trigger) {
+      // Handle the creation of the new trigger
+      console.log('Trigger edited:', trigger);
+      // Close the trigger creation panel
+      this.creationPanelVisible = false;
+      this.refreshTriggers();
+      // Display a success message
+      this.$notify({
+        title: `Saved trigger "${trigger.name}"`,
+        type: 'success',
+      });
+      this.$emit('trigger-edited', trigger);
+    },
+
+    hideEditionPanel() {
+      console.log('Cancel trigger edition');
+      this.editionPanelVisible = false;
     },
 
     deleteTrigger(trigger) {
@@ -298,6 +461,11 @@ export default {
 .v-btn {
   padding: 5px;
   min-width: 0px;
+}
+
+.v-icon {
+  font-size: 26px;
+  min-width: 30px;
 }
 
 .nowrap {

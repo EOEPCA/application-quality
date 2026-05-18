@@ -84,5 +84,67 @@ export const useTriggerStore = defineStore('trigger', {
       const trigger = this.getTriggerById(id);
       return trigger ? Object.keys(trigger.user_params).length !== 0 : false;
     },
+
+    getTriggerTypeById(id) {
+      var index = this.triggerTypes.findIndex((p) => p.slug === id);
+      if (index == -1) {
+        // console.log("Trigger type not found in store => Fetching it", id)
+        // Note: there is not such "fetchTriggerTypeById(id)" function.
+        // await this.fetchTriggerTypeById(id)
+        //this.fetchTriggerTypeById(id);
+        this.fetchTriggers();
+      }
+      index = this.triggerTypes.findIndex((p) => p.slug === id);
+      if (index !== -1) {
+        return this.triggerTypes[index];
+      }
+      return null;
+    },
+
+    async createTrigger(trigger) {
+      console.log('Create trigger:', trigger.slug, trigger);
+      this.loading = true;
+      this.error = null;
+      try {
+        const response = await triggerService.createTrigger(trigger);
+        this.fetchTriggers();
+        this.loading = false;
+        return response;
+      } catch (error) {
+        const msg_prefix = 'Error creating trigger ' + trigger.slug + ': ';
+        if (error.response?.data?.detail) {
+          console.error(msg_prefix, error, error.response.data.detail);
+          this.error = msg_prefix + error.response.data.detail;
+        } else {
+          console.error(msg_prefix, error);
+          this.error = msg_prefix + error.message;
+        }
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async updateTrigger(trigger) {
+      console.log('Update trigger:', trigger.slug, trigger);
+      this.loading = true;
+      this.error = null;
+      try {
+        const response = await triggerService.updateTrigger(trigger);
+        this.fetchTriggers();
+        this.loading = false;
+        return response;
+      } catch (error) {
+        const msg_prefix = 'Error updating trigger ' + trigger.slug + ': ';
+        if (error.response?.data?.detail) {
+          console.error(msg_prefix, error, error.response.data.detail);
+          this.error = msg_prefix + error.response.data.detail;
+        } else {
+          console.error(msg_prefix, error);
+          this.error = msg_prefix + error.message;
+        }
+      } finally {
+        this.loading = false;
+      }
+    },
   },
 });

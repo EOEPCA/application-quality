@@ -55,6 +55,7 @@
       closable
     />
 
+    <!-- eslint-disable vue/no-v-model-argument -->
     <v-data-table
       v-if="pipelineStore.pipelines.length"
       v-model:items-per-page="itemsPerPage"
@@ -65,6 +66,7 @@
       class="elevation-1"
       hover
     >
+    <!-- eslint-enable vue/no-v-model-argument -->
       <template v-slot:item="{ item }">
         <tr>
           <td>
