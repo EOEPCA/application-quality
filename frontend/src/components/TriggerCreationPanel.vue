@@ -12,7 +12,7 @@
         <span v-if="modelValue.isCreation"
           >New trigger: {{ triggerSlug }}</span
         >
-        <span v-else>Edit trigger: {{ triggerSlug }}</span>
+        <span v-else>Edit trigger: {{ localModelValue.name }}</span>
         <v-spacer />
         <v-btn
           icon="mdi-close"
@@ -46,7 +46,7 @@
               </div>
               <!-- Owner (editable only by admins) -->
               <v-text-field
-                v-model="localModelValue.owner"
+                v-model="localModelValue.owner_name"
                 label="User"
                 required
                 :disabled="!localModelValue.isUserAdmin"
@@ -236,9 +236,8 @@ export default {
     modelValue: {
       type: Object,
       // default: () => ({
-      //   availableTools: [],
-      //   selectedTools: null,
-      //   defaultInputs: {},
+      //   availablePipelines: [],
+      //   selectedPipeline: null,
       // }),
       required: true,
     },
@@ -304,7 +303,6 @@ export default {
         console.debug('Pipeline:', this.localModelValue.pipeline);
         console.debug('Selected pipeline:', this.localModelValue.selectedPipeline);
         console.debug('Available pipelines:', this.localModelValue.availablePipelines);
-        console.debug('Default inputs:', this.localModelValue.defaultInputs);
         this.updateCreationPanel();
       },
       deep: true,
@@ -365,42 +363,19 @@ export default {
           params_default: this.localModelValue.params_default || {},
           params_mapping: this.localModelValue.params_mapping || {},
           cql2_filter: this.localModelValue.cql2Filter || {},
-          pipeline_id: this.localModelValue.selectedPipeline.id,
-          pipeline_name: this.localModelValue.selectedPipeline.name,
-          pipeline_version: this.localModelValue.selectedPipeline.version,
+          pipeline: this.localModelValue.selectedPipeline.id,
           trigger_type: this.localModelValue.selectedType.slug,
-          trigger_type_name: this.localModelValue.selectedType.name,
         };
-
-
-// 
-// A trigger with this name (slug) and owner already exists:
-//   null value in column \"pipeline_id\" of relation \"backend_trigger\" violates not-null constraint
-// DETAIL:  Failing row contains (nameee, desc, {}, {}, Testing, t, null, null, null, {})."
-// 
-// => In the backend view, select the user, the trigger type and the pipeline objects before saving the trigger definition.
-
-
         const response = await this.triggerStore.createTrigger(data);
         // The panel is closed when the parent component receives this signal
         this.$emit('creation-submitted', response);
       } catch (err) {
         console.log('Error:', err);
         if (err.response == undefined) {
-          this.error = err.message || 'Failed to submit creation';
+          this.error = err.message || 'Failed to submit creation request';
         } else {
-          if (err.response.data['name'] != undefined) {
-            this.error = 'Name: ' + err.response.data['name'];
-          } else if (err.response.data['version'] != undefined) {
-            this.error = 'Version: ' + err.response.data['version'];
-          } else if (err.response.data['tools'] != undefined) {
-            this.error = 'Selected tools: ' + err.response.data['tools'];
-          } else {
-            this.error =
-              err.response.data['detail'] ||
-              err.message ||
-              'Failed to submit creation';
-          }
+          this.error =
+            err.response.data['detail'] || err.message || 'Failed to submit creation request';
         }
       } finally {
         this.isBusy = false;
@@ -411,9 +386,34 @@ export default {
       if (!this.isValid) return;
       this.isBusy = true;
       this.error = null;
-
-      // TODO
-
+      try {
+        console.log('Trigger to update:', this.localModelValue.name);
+        const data = {
+          slug: slugify(this.localModelValue.name),
+          description: this.localModelValue.description,
+          status: this.localModelValue.status,
+          enabled: this.localModelValue.enabled,
+          owner: this.localModelValue.owner,  // Cannot be changed by non-admin
+          params_default: this.localModelValue.params_default || {},
+          params_mapping: this.localModelValue.params_mapping || {},
+          cql2_filter: this.localModelValue.cql2Filter || {},
+          pipeline: this.localModelValue.selectedPipeline.id,
+          trigger_type: this.localModelValue.selectedType.slug,
+        };
+        const response = await this.triggerStore.updateTrigger(data);
+        // The panel is closed when the parent component receives this signal
+        this.$emit('edition-submitted', response);
+      } catch (err) {
+        console.log('Error:', err);
+        if (err.response == undefined) {
+          this.error = err.message || 'Failed to submit update request';
+        } else {
+          this.error =
+            err.response.data['detail'] || err.message || 'Failed to submit update request';
+        }
+      } finally {
+        this.isBusy = false;
+      }
     },
 
     async submit() {

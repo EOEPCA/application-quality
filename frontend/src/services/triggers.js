@@ -67,11 +67,12 @@ export const triggerService = {
   async updateTrigger(trigger) {
     try {
       console.log('Update trigger data:', trigger);
-      const response = await triggerApi.put(`/${trigger.id}/`, trigger);
+      const response = await triggerApi.put(`/${trigger.slug}/`, trigger);
       return response.data;
     } catch (error) {
       console.error(
-        `Error updating trigger ${trigger.name} (Id: ${trigger.id}):`,
+        // `Error updating trigger ${trigger.name} (Id: ${trigger.slug}):`,
+        `Error updating trigger ${trigger.slug}:`,
         error,
       );
       throw error;

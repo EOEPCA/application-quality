@@ -65,7 +65,7 @@
             </div>
             <div class="font-weight-light">{{ item.description }}</div>
           </td>
-          <td v-if="this.authStore.isAdmin">{{ item.owner }}</td>
+          <td v-if="this.authStore.isAdmin">{{ item.owner_name }}</td>
           <!-- <td>{{ item.trigger_type_name || 'N/A' }}</td> -->
           <!-- <td>{{ item.pipeline_name || 'N/A' }}</td> -->
           <td _v-if="this.authStore.isAdmin">{{ item.status }}</td>
@@ -362,7 +362,8 @@ export default {
       this.creationParameters = {
         isUserAdmin: this.authStore.isAdmin,
         description: "",
-        owner: this.authStore.username,  // The current user. Only admins may change the value.
+        owner: this.authStore.details.id,  // The current user. Only admins may change the value.
+        owner_name: this.authStore.username,
         status: "Testing",
         enabled: true,
         cql2Filter: {},
@@ -401,16 +402,18 @@ export default {
       this.selectedTrigger = trigger;
 
       this.creationParameters = {
-        slug: trigger.slug,
+        isUserAdmin: this.authStore.isAdmin,
+        name: trigger.slug,
         description: trigger.description,
         // By default, the owner is the current user.
         // Only admins may change a trigger owner.
         owner: trigger.owner,
+        owner_name: trigger.owner_name,
         status: trigger.status,
         enabled: trigger.enabled,
         triggerType: this.triggerStore.getTriggerTypeById(trigger.trigger_type),
         availableTypes: this.triggerStore.triggerTypes,
-        pipeline: this.pipelineStore.pipelineById(trigger.pipeline_id),
+        pipeline: this.pipelineStore.pipelineById(trigger.pipeline),
         availablePipelines: this.pipelineStore.pipelines,
         cql2Filter: trigger.cql2_filter,
         paramsDefault: trigger.params_default,
@@ -430,7 +433,7 @@ export default {
       this.refreshTriggers();
       // Display a success message
       this.$notify({
-        title: `Saved trigger "${trigger.name}"`,
+        title: `Saved trigger "${trigger.slug}"`,
         type: 'success',
       });
       this.$emit('trigger-edited', trigger);
