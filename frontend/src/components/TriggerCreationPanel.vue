@@ -44,6 +44,14 @@
                   hide-details
                 ></v-switch>
               </div>
+              <!-- Owner (editable only by admins) -->
+              <v-text-field
+                v-model="localModelValue.owner"
+                label="User"
+                required
+                :disabled="!localModelValue.isUserAdmin"
+                :rules="[(v) => !!v || 'The user may not be empty']"
+              />
               <!-- Trigger name / slug -->
               <v-text-field
                 v-model="localModelValue.name"
@@ -131,7 +139,7 @@
               <!-- CQL2 Filter (JSON) -->
               <v-divider
                 :thickness="3"
-                class="border-opacity-25"
+                class="border-opacity-50 my-4"
                 color="info"
                 opacity=".7"
                 gradient
@@ -146,7 +154,7 @@
               <!-- Default Input Parameters (JSON) -->
               <v-divider
                 :thickness="3"
-                class="border-opacity-25"
+                class="border-opacity-50 my-4"
                 color="info"
                 opacity=".7"
                 gradient
@@ -161,7 +169,7 @@
               <!-- Parameters Mapping (JSON) -->
               <v-divider
                 :thickness="3"
-                class="border-opacity-25"
+                class="border-opacity-50 my-4"
                 color="info"
                 opacity=".7"
                 gradient
@@ -354,15 +362,25 @@ export default {
           status: this.localModelValue.status,
           enabled: this.localModelValue.enabled,
           owner: this.localModelValue.owner,  // Cannot be changed by non-admin
-          params_default: this.localModelValue.params_default,
-          params_mapping: this.localModelValue.params_mapping,
-          cql2_filter: this.localModelValue.cql2Filter,
+          params_default: this.localModelValue.params_default || {},
+          params_mapping: this.localModelValue.params_mapping || {},
+          cql2_filter: this.localModelValue.cql2Filter || {},
           pipeline_id: this.localModelValue.selectedPipeline.id,
           pipeline_name: this.localModelValue.selectedPipeline.name,
           pipeline_version: this.localModelValue.selectedPipeline.version,
-          trigger_type: this.localModelValue.selectedType.id,
+          trigger_type: this.localModelValue.selectedType.slug,
           trigger_type_name: this.localModelValue.selectedType.name,
         };
+
+
+// 
+// A trigger with this name (slug) and owner already exists:
+//   null value in column \"pipeline_id\" of relation \"backend_trigger\" violates not-null constraint
+// DETAIL:  Failing row contains (nameee, desc, {}, {}, Testing, t, null, null, null, {})."
+// 
+// => In the backend view, select the user, the trigger type and the pipeline objects before saving the trigger definition.
+
+
         const response = await this.triggerStore.createTrigger(data);
         // The panel is closed when the parent component receives this signal
         this.$emit('creation-submitted', response);

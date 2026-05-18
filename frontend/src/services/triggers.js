@@ -78,7 +78,8 @@ export const triggerService = {
     }
   },
 
-  async deleteTrigger(trigger) {
-    // TODO: Change the trigger status to "Deleted"
-  },
+  // TODO
+  // async deleteTrigger(trigger) {
+  //
+  // },
 };

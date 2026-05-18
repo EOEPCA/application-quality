@@ -360,7 +360,11 @@ export default {
       console.debug('Pipelines', this.pipelineStore.pipelines)
       
       this.creationParameters = {
-        // description: "",
+        isUserAdmin: this.authStore.isAdmin,
+        description: "",
+        owner: this.authStore.username,  // The current user. Only admins may change the value.
+        status: "Testing",
+        enabled: true,
         cql2Filter: {},
         paramsDefault: {},
         paramsMapping: {},
