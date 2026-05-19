@@ -135,7 +135,7 @@
                 :items="localModelValue.availableStatus"
                 :rules="[(v) => !!v || 'A status must be selected']"
               ></v-select>
-
+              <!-- eslint-disable vue/no-v-model-argument -->
               <!-- CQL2 Filter (JSON) -->
               <v-divider
                 :thickness="3"
@@ -146,9 +146,11 @@
               >CQL2 Filter (JSON)</v-divider>
 
               <json-editor
+                ref="cql2FilterEditor"
                 height="400"
                 mode="tree"
-                v-model="localModelValue.cql2Filter"
+                :expandedOnStart="true"
+                v-model:json="localModelValue.cql2Filter"
                 @change="(content, previousContent, status) => handleJsonEditorChange('cql2_filter', status)"
               />
 
@@ -162,9 +164,10 @@
               >Default Input Parameters (JSON)</v-divider>
 
               <json-editor
+                ref="paramsDefaultEditor"
                 height="400"
                 mode="tree"
-                v-model="localModelValue.paramsDefault"
+                v-model:json="localModelValue.paramsDefault"
                 @change="(content, previousContent, status) => handleJsonEditorChange('params_default', status)"
               />
 
@@ -178,9 +181,10 @@
               >Parameters Mapping (JSON)</v-divider>
 
               <json-editor
+                ref="paramsMappingEditor"
                 height="400"
                 mode="tree"
-                v-model="localModelValue.paramsMapping"
+                v-model:json="localModelValue.paramsMapping"
                 @change="(content, previousContent, status) => handleJsonEditorChange('params_mapping', status)"
               />
 
@@ -307,6 +311,25 @@ export default {
   },
 
   methods: {
+
+    expandAllJsonEditors() {
+      this.$nextTick(() => {
+        const ed1 = this.$refs.cql2FilterEditor;
+        // console.log("CQL2 Editor: ", ed1);
+        if (ed1 && typeof ed1.$expand === 'function') {
+          ed1.$expand([], (path) => true);
+        }
+        const ed2 = this.$refs.paramsDefaultEditor;
+        if (ed2 && typeof ed2.$expand === 'function') {
+          ed2.$expand([], (path) => true);
+        }
+        const ed3 = this.$refs.paramsMappingEditor;
+        if (ed3 && typeof ed3.$expand === 'function') {
+          ed3.$expand([], (path) => true);
+        }
+      });
+    },
+
     resetForm() {
       // console.log('Re-initialising the trigger creation form');
       console.debug("Reset Form: Model value:", this.modelValue);
@@ -328,6 +351,8 @@ export default {
       this.localModelValue.selectedPipeline = this.localModelValue.pipeline;
       this.localTrigger = this.trigger;
       this.localVisible = this.visible;
+      // Expand the contents of the JSON editors
+      this.expandAllJsonEditors();
       return true;
     },
 
