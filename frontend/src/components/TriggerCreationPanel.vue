@@ -210,7 +210,7 @@
 <script>
 import { useTriggerStore } from '@/stores/triggers';
 import JsonEditor from 'vue3-ts-jsoneditor';
-import { slugify } from '@/assets/tools';
+import { slugify, jsonParse } from '@/assets/tools';
 
 export default {
   name: 'TriggerCreationPanel',
@@ -300,19 +300,7 @@ export default {
     },
     localModelValue: {
       handler() {
-        console.log('local model value...');
-        console.debug('Enabled:', this.localModelValue.enabled);
-        console.debug('Status:', this.localModelValue.status);
-        console.debug('CQL2 filter:', this.localModelValue.cql2Filter);
-        console.debug('Params default:', this.localModelValue.paramsDefault);
-        console.debug('Params mapping:', this.localModelValue.paramsMapping);
-        console.debug('Trigger type:', this.localModelValue.triggerType);
-        console.debug('Selected type:', this.localModelValue.selectedType);
-        console.debug('Trigger types:', this.localModelValue.availableTypes);
-        console.debug('Pipeline:', this.localModelValue.pipeline);
-        console.debug('Selected pipeline:', this.localModelValue.selectedPipeline);
-        console.debug('Available pipelines:', this.localModelValue.availablePipelines);
-        this.updateCreationPanel();
+        console.log('Watch: Local model value: ', this.localModelValue);
       },
       deep: true,
     },
@@ -321,12 +309,15 @@ export default {
   methods: {
     resetForm() {
       // console.log('Re-initialising the trigger creation form');
-      console.debug("this.modelValue", this.modelValue);
-      console.debug("this.localModelValue", this.localModelValue);
+      console.debug("Reset Form: Model value:", this.modelValue);
+      console.debug("Reset Form: Local model value", this.localModelValue);
       this.error = null;
       this.localModelValue = this.modelValue
         ? JSON.parse(JSON.stringify(this.modelValue))
         : null;
+      if (this.localModelValue.cql2Filter === undefined) {
+        this.localModelValue.cql2Filter = {};
+      }
       if (this.localModelValue.paramsDefault === undefined) {
         this.localModelValue.paramsDefault = {};
       }
@@ -337,7 +328,6 @@ export default {
       this.localModelValue.selectedPipeline = this.localModelValue.pipeline;
       this.localTrigger = this.trigger;
       this.localVisible = this.visible;
-      this.updateCreationPanel();
       return true;
     },
 
@@ -359,10 +349,6 @@ export default {
         : this.$emit('edition-cancelled');
     },
 
-    updateCreationPanel() {
-      return;
-    },
-
     async submitCreation() {
       if (!this.isValid) return;
       this.isBusy = true;
@@ -375,9 +361,9 @@ export default {
           status: this.localModelValue.status,
           enabled: this.localModelValue.enabled,
           owner: this.localModelValue.owner,  // Cannot be changed by non-admin
-          params_default: this.localModelValue.params_default || {},
-          params_mapping: this.localModelValue.params_mapping || {},
-          cql2_filter: this.localModelValue.cql2Filter || {},
+          params_default: jsonParse(this.localModelValue.paramsDefault) || {},
+          params_mapping: jsonParse(this.localModelValue.paramsMapping) || {},
+          cql2_filter: jsonParse(this.localModelValue.cql2Filter) || {},
           pipeline: this.localModelValue.selectedPipeline.id,
           trigger_type: this.localModelValue.selectedType.slug,
         };
@@ -410,9 +396,9 @@ export default {
           status: this.localModelValue.status,
           enabled: this.localModelValue.enabled,
           owner: this.localModelValue.owner,  // Cannot be changed by non-admin
-          params_default: this.localModelValue.params_default || {},
-          params_mapping: this.localModelValue.params_mapping || {},
-          cql2_filter: this.localModelValue.cql2Filter || {},
+          cql2_filter: jsonParse(this.localModelValue.cql2Filter) || {},
+          params_default: jsonParse(this.localModelValue.paramsDefault) || {},
+          params_mapping: jsonParse(this.localModelValue.paramsMapping) || {},
           pipeline: this.localModelValue.selectedPipeline.id,
           trigger_type: this.localModelValue.selectedType.slug,
         };

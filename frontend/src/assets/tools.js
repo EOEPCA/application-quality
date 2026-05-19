@@ -46,3 +46,14 @@ export function removeTrailingSlashes(str) {
   }
   return str.replace(/\/+$/, '');
 }
+
+export function jsonParse(value) {
+  if (typeof value !== 'string') {
+    return value;
+  }
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    return value; // Returns the raw string if parsing fails
+  }
+}
