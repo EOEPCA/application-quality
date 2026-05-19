@@ -317,15 +317,15 @@ export default {
         const ed1 = this.$refs.cql2FilterEditor;
         // console.log("CQL2 Editor: ", ed1);
         if (ed1 && typeof ed1.$expand === 'function') {
-          ed1.$expand([], (path) => true);
+          ed1.$expand([], (_path) => true);
         }
         const ed2 = this.$refs.paramsDefaultEditor;
         if (ed2 && typeof ed2.$expand === 'function') {
-          ed2.$expand([], (path) => true);
+          ed2.$expand([], (_path) => true);
         }
         const ed3 = this.$refs.paramsMappingEditor;
         if (ed3 && typeof ed3.$expand === 'function') {
-          ed3.$expand([], (path) => true);
+          ed3.$expand([], (_path) => true);
         }
       });
     },
