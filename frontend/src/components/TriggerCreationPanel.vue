@@ -404,7 +404,8 @@ export default {
       try {
         console.log('Trigger to update:', this.localModelValue.name);
         const data = {
-          slug: slugify(this.localModelValue.name),
+          // The name is not editable after creation and is already a slug
+          slug: this.localModelValue.name,
           description: this.localModelValue.description,
           status: this.localModelValue.status,
           enabled: this.localModelValue.enabled,
