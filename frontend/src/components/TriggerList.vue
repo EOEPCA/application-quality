@@ -210,14 +210,16 @@ export default {
       showDeleteDialog: false,
       deletingPipeline: false,
       itemsPerPage: 10,
-      sortBy: [{ key: 'description', order: 'asc' }],
+      // Contains the default/current sorting parameters
+      sortBy: [{ key: 'slug', order: 'asc' }],
 
       headers: [
         {
           title: 'Trigger',
-          key: 'description',
+          key: 'slug',
           sortable: true,
           align: 'start',
+          sort: this.customTriggerSort,
         },
         {
           title: 'Owner',
@@ -254,9 +256,6 @@ export default {
           align: 'center',
         },
       ],
-      jsonData: {
-        test: 123,
-      },
     };
   },
 
@@ -298,6 +297,20 @@ export default {
     async refreshTriggers() {
       await this.pipelineStore.fetchPipelines();
       await this.triggerStore.fetchTriggers();
+    },
+
+    customTriggerSort(slugA, slugB) {
+      // The function receives values, not rows, so searching for the rows ...
+      const rowA = this.triggerStore.triggers.find(item => item.slug === slugA);
+      const rowB = this.triggerStore.triggers.find(item => item.slug === slugB);
+      // console.debug("Custom trigger sort:", slugA, slugB, rowA, rowB);
+      if (!rowA || !rowB) return 0
+      const typeComp = (rowA.trigger_type_name || '').localeCompare(rowB.trigger_type_name || '');
+      if (typeComp != 0) return typeComp;
+      const pipelineComp = (rowA.pipeline_name || '').localeCompare(rowB.pipeline_name || '');
+      if (pipelineComp != 0) return pipelineComp;
+      const descComp = (rowA.description || '').localeCompare(rowB.description || '');
+      return descComp;
     },
 
     canCreateTrigger() {

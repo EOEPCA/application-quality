@@ -165,12 +165,12 @@ export default {
       showDetails: false,
       selectedTool: null,
       itemsPerPage: 10,
-      sortBy: [{ key: 'description', order: 'asc' }],
+      sortBy: [{ key: 'name', order: 'asc' }],
 
       headers: [
         {
           title: 'Tool',
-          key: 'description',
+          key: 'name',
           sortable: true,
           align: 'start',
         },
@@ -203,9 +203,6 @@ export default {
           align: 'center',
         },
       ],
-      jsonData: {
-        test: 123,
-      },
     };
   },
 

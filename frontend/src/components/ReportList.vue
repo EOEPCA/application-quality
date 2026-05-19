@@ -193,7 +193,7 @@ export default {
       //selectedExecutionId: null,
       selectedReport: null,
       itemsPerPage: 10,
-      sortBy: [{ key: 'execution_time', order: 'asc' }],
+      sortBy: [{ key: 'created_at', order: 'desc' }],
 
       headers: [
         {
