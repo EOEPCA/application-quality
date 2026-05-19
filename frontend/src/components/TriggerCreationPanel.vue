@@ -88,13 +88,15 @@
                   </v-list-item>
                 </template>
                 <!-- Template for the selected entry -->
-                <template v-slot:chip="{ props, item }">
-                  <div
-                    v-bind="props"
-                    :prepend-icon="item.icon || 'mdi-tools'"
-                  >
-                    {{ item.raw.name || item }}
-                  </div>
+                <template v-slot:selection="{ item }">
+                  <v-icon 
+                    color="primary"
+                    class="me-2 pe-none" 
+                    :icon="item.raw.icon || 'mdi-flash'"
+                  ></v-icon>
+                  <span class="pe-none">
+                    {{ item.raw.name || item.raw }}
+                  </span>
                 </template>
               </v-select>
               <!-- Pipeline drop-down list -->
@@ -119,13 +121,15 @@
                   </v-list-item>
                 </template>
                 <!-- Template for the selected entry -->
-                <template v-slot:chip="{ props, item }">
-                  <div
-                    v-bind="props"
-                    :prepend-icon="item.icon || 'mdi-tools'"
-                  >
-                    {{ item.raw.name || item }}
-                  </div>
+                <template v-slot:selection="{ item }">
+                  <v-icon 
+                    color="primary"
+                    class="me-2 pe-none" 
+                    :icon="item.raw.icon || 'mdi-pipe'"
+                  ></v-icon>
+                  <span class="pe-none">
+                    {{ item.raw.name || item.raw }}
+                  </span>
                 </template>
               </v-select>
 
