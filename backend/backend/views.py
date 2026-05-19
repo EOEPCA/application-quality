@@ -527,18 +527,6 @@ class TriggerViewSet(viewsets.ModelViewSet):
             | Trigger.objects.filter(owner__isnull=True)
         )
 
-    def perform_create(self, serializer):
-        pass
-        # try:
-        #     serializer.save(owner=self.request.user, template=pipeline_cwl_template)
-        # except IntegrityError as ie:
-        #     logger.error(ie)
-        #     raise ValidationError(
-        #         {
-        #             "detail": "A pipeline with this name, version, and owner already exists."
-        #         }
-        #     ) from ie
-
     def get_permissions(self):
         if self.action in ["create", "list", "retrieve"]:
             return [permissions.IsAuthenticated()]

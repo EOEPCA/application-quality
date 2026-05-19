@@ -84,17 +84,30 @@ class TriggerTypeSerializer(serializers.ModelSerializer):
 
 
 class TriggerSerializer(serializers.ModelSerializer):
-    trigger_type = serializers.ReadOnlyField(source="trigger_type.slug")
+    # DRF automatically removes read-only fields from incoming POST data during validation.
+    owner_name = serializers.ReadOnlyField(source="owner.username")
     trigger_type_name = serializers.ReadOnlyField(source="trigger_type.name")
-    pipeline_id = serializers.ReadOnlyField(source="pipeline.id")
     pipeline_name = serializers.ReadOnlyField(source="pipeline.name")
     pipeline_version = serializers.ReadOnlyField(source="pipeline.version")
-    owner = serializers.ReadOnlyField(source="owner.username")
 
     class Meta:
         model = Trigger
-        fields = ["slug", "owner", "description", "status", "cql2_filter", "params_default", "params_mapping", "trigger_type", "trigger_type_name", "pipeline_id", "pipeline_name", "pipeline_version"]
-        #read_only_fields = ["..."]
+        fields = [
+            "slug",
+            "owner",
+            "owner_name",
+            "description",
+            "status",
+            "cql2_filter",
+            "params_default",
+            "params_mapping",
+            "trigger_type",
+            "pipeline",
+            "enabled",
+            "pipeline_name",
+            "pipeline_version",
+            "trigger_type_name",
+        ]
 
 
 class TriggerEventSerializer(serializers.ModelSerializer):
@@ -109,5 +122,18 @@ class TriggerEventSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TriggerEvent
-        fields = ["id", "source", "event_time", "event_type", "user", "trigger", "trigger_type", "trigger_type_name", "pipeline_run_id", "pipeline_id", "pipeline_name", "pipeline_version"]
+        fields = [
+            "id",
+            "source",
+            "event_time",
+            "event_type",
+            "user",
+            "trigger",
+            "trigger_type",
+            "trigger_type_name",
+            "pipeline_run_id",
+            "pipeline_id",
+            "pipeline_name",
+            "pipeline_version"
+        ]
         #read_only_fields = ["..."]
