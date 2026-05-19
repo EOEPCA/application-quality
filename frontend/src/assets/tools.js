@@ -54,6 +54,7 @@ export function jsonParse(value) {
   try {
     return JSON.parse(value);
   } catch (error) {
+    console.error('Failed to JSON parse value:', error);
     return value; // Returns the raw string if parsing fails
   }
 }
