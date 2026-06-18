@@ -507,7 +507,7 @@ export default {
         enabled: trigger.enabled,
         triggerType: this.triggerStore.getTriggerTypeById(trigger.trigger_type),
         availableTypes: this.triggerStore.triggerTypes,
-        pipeline: this.pipelineStore.pipelineById(trigger.pipeline),
+        pipeline: this.pipelineStore.pipelineById(trigger.pipeline_id),
         availablePipelines: this.pipelineStore.pipelines,
         cql2Filter: trigger.cql2_filter,
         paramsDefault: trigger.params_default,

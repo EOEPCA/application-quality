@@ -448,7 +448,7 @@ export default {
           cql2_filter: jsonParse(this.localModelValue.cql2Filter) || {},
           params_default: jsonParse(this.localModelValue.paramsDefault) || {},
           params_mapping: jsonParse(this.localModelValue.paramsMapping) || {},
-          pipeline: this.localModelValue.selectedPipeline.id,
+          pipeline_id: this.localModelValue.selectedPipeline.id,
           trigger_type: this.localModelValue.selectedType.slug,
         };
         const response = await this.triggerStore.updateTrigger(data);
