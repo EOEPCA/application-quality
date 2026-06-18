@@ -80,7 +80,18 @@
           <!-- <td>{{ item.trigger_type_name || 'N/A' }}</td> -->
           <!-- <td>{{ item.pipeline_name || 'N/A' }}</td> -->
           <td _v-if="this.authStore.isAdmin">{{ item.status }}</td>
-          <td _v-if="this.authStore.isAdmin">{{ item.enabled }}</td>
+          <td _v-if="this.authStore.isAdmin">
+            <div class="d-flex align-center">
+              <span 
+                :class="item.enabled ? 'bg-success' : 'bg-error'" 
+                class="d-inline-block rounded-circle mr-2"
+                style="width: 10px; height: 10px;"
+              ></span>
+              <span class="text-body-2">
+                {{ item.enabled ? 'Yes' : 'No' }}
+              </span>
+            </div>
+          </td>
           <td>{{ item.event_count }}</td>
           <td class="text-right nowrap">
             <v-btn

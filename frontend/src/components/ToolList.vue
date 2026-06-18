@@ -73,7 +73,18 @@
           </td>
           <td>{{ item.version || 'N/A' }}</td>
           <td _v-if="this.authStore.isAdmin">{{ item.status }}</td>
-          <td v-if="this.authStore.isAdmin">{{ item.available }}</td>
+          <td v-if="this.authStore.isAdmin">
+            <div class="d-flex align-center">
+              <span
+                :class="item.available ? 'bg-success' : 'bg-error'" 
+                class="d-inline-block rounded-circle mr-2"
+                style="width: 10px; height: 10px;"
+              ></span>
+              <span class="text-body-2">
+                {{ item.available ? 'Yes' : 'No' }}
+              </span>
+            </div>
+          </td>
           <td class="nowrap">
             <v-chip
               v-for="tag_name in item.tags"

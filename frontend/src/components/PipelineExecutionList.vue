@@ -82,7 +82,16 @@
           <td v-if="this.authStore.isAdmin">{{ item.started_by }}</td>
           <td>{{ formatDate(item.start_time) }}</td>
           <td>{{ formatDate(item.completion_time) }}</td>
-          <td class="first-letter">{{ item.status || 'Unknown' }}</td>
+          <td>
+            <div class="d-flex align-center">
+              <span 
+                :class="statusColors[item.status] || 'bg-grey'" 
+                class="d-inline-block rounded-circle mr-2"
+                style="width: 10px; height: 10px;"
+              ></span>
+              <span class="text-capitalize">{{ item.status }}</span>
+            </div>
+          </td>
           <td>
             <v-progress-linear
               :model-value="progress(item)"
@@ -253,6 +262,13 @@ export default {
       lastPollTime: null,
       errorCount: 0,
       maxErrors: 3, // Stop polling after 3 consecutive errors
+      statusColors: {
+        "failed": "bg-error",
+        "running": "bg-warning",
+        "starting": "bg-info",
+        "active": "bg-warning",
+        "succeeded": "bg-success",
+      },
     };
   },
 
@@ -466,10 +482,6 @@ export default {
   border-radius: 4px;
   overflow-x: auto;
   font-family: monospace;
-}
-
-.first-letter {
-  text-transform: capitalize;
 }
 
 .nowrap {
