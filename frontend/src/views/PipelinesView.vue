@@ -2,7 +2,7 @@
   <div>
     <h2 class="text-h4 mb-4">
       <v-icon icon="mdi-pipe" size="x-small" class="mr-2" />
-      Application Quality Pipelines
+      Analysis Pipelines
     </h2>
     <pipeline-list />
   </div>

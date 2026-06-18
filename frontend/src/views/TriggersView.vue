@@ -2,7 +2,7 @@
   <div>
     <h2 class="text-h4 mb-4">
       <v-icon icon="mdi-animation-play" size="x-small" class="mr-2" />
-      Triggers
+      Analysis Pipelines Triggers
     </h2>
     <trigger-list />
   </div>
