@@ -4,9 +4,9 @@
       <v-spacer />
 
       <v-select
-        v-model="store.selectedPipelineId"
+        v-model="selectedPipeline"
         label="Pipeline"
-        :items="store.pipelines"
+        :items="pipelineStore.pipelines"
         item-title="name"
         item-value="id"
         variant="solo"
@@ -43,7 +43,7 @@
         icon="mdi-backspace-outline"
         size="small"
         class="mx-2"
-        @click="search = ''; store.selectedPipelineId = null"
+        @click="search = ''; pipelineStore.selectedPipelineId = null"
       /> -->
       <!-- Instant refresh button -->
       <!-- <v-btn
@@ -51,18 +51,18 @@
           size="small"
           class="mx-2"
           @click="refreshPipelineExecutions"
-          :loading="store.loadingExecutions"
+          :loading="pipelineStore.loadingExecutions"
         /> -->
     </v-card-title>
 
-    <v-alert v-if="store.error" type="error" :text="store.error" closable />
+    <v-alert v-if="pipelineStore.error" type="error" :text="pipelineStore.error" closable />
 
     <!-- eslint-disable vue/no-v-model-argument -->
     <v-data-table
       v-model:items-per-page="itemsPerPage"
       v-model:sort-by="sortBy"
       :headers="filteredHeaders"
-      :items="store.executions"
+      :items="pipelineStore.executions"
       :filter-keys="['pipeline']"
       :custom-filter="filterOnPipelineId"
       class="elevation-1"
@@ -74,10 +74,10 @@
       <template v-slot:item="{ item }">
         <tr>
           <td>
-            {{ item.pipeline && store.pipelineById(item.pipeline).name }}
+            {{ item.pipeline && pipelineStore.pipelineById(item.pipeline).name }}
           </td>
           <td>
-            {{ item.pipeline && store.pipelineById(item.pipeline).version }}
+            {{ item.pipeline && pipelineStore.pipelineById(item.pipeline).version }}
           </td>
           <td v-if="this.authStore.isAdmin">{{ item.started_by }}</td>
           <td>{{ formatDate(item.start_time) }}</td>
@@ -130,7 +130,7 @@
 
       <template v-slot:no-data>
         <v-alert
-          v-if="store.selectedPipelineId"
+          v-if="pipelineStore.selectedPipelineId"
           type="info"
           text="No execution found for the selected pipeline"
           class="ma-2"
@@ -145,7 +145,7 @@
     </v-data-table>
 
     <!-- <v-alert
-          v-else-if="!store.loadingExecutions"
+          v-else-if="!pipelineStore.loadingExecutions"
           type="info"
           text="No pipeline executions found"
         />
@@ -163,7 +163,7 @@
           <v-alert
             v-if="selectedExecution.status"
             type="info"
-            :text="store.pipelineById(selectedExecution.pipeline).name + ' executed on ' + formatDate(selectedExecution.start_time) + ': ' + selectedExecution.status"
+            :text="pipelineStore.pipelineById(selectedExecution.pipeline).name + ' executed on ' + formatDate(selectedExecution.start_time) + ': ' + selectedExecution.status"
             class="mb-4"
           />
           <JSONTableViewer
@@ -182,6 +182,7 @@ import { useSettingsStore } from '@/stores/settings';
 import { useAuthStore } from '@/stores/auth';
 import { useToolStore } from '@/stores/tools';
 import { usePipelineStore } from '@/stores/pipelines';
+import { useTriggerStore } from '@/stores/triggers';
 import { formatDate } from '@/assets/tools';
 import JSONTableViewer from '@/components/JSONTableViewer.vue';
 
@@ -194,6 +195,8 @@ export default {
   data() {
     return {
       showDetails: false,
+      selectedPipeline: null,
+      selectedTrigger: null,
       selectedExecution: null,
       itemsPerPage: 10,
       sortBy: [{ key: 'start_time', order: 'desc' }],
@@ -255,10 +258,11 @@ export default {
 
   setup() {
     const settings = useSettingsStore();
-    const store = usePipelineStore();
+    const pipelineStore = usePipelineStore();
+    const triggerStore = useTriggerStore();
     const toolStore = useToolStore();
     const authStore = useAuthStore();
-    return { settings, store, toolStore, authStore };
+    return { settings, pipelineStore, triggerStore, toolStore, authStore };
   },
 
   computed: {
@@ -277,7 +281,22 @@ export default {
   },
 
   mounted() {
+    // Called each time the Pipeline Executions page is navigated to
     this.refreshTools();
+    this.pipelineStore.selectedPipelineId = this.$route.query['pipeline'];
+    this.triggerStore.selectedTriggerId = this.$route.query['trigger'];
+    if (this.pipelineStore.selectedPipelineId) {
+      this.selectedPipeline = this.pipelineStore.pipelineById();
+      console.log("Selected pipeline:", this.selectedPipeline);
+    } else {
+      this.selectedPipeline = undefined;
+    }
+    if (this.pipelineStore.selectedTriggerId) {
+      this.selectedTrigger = this.triggerStore.triggerById();
+      console.log("Selected trigger:", this.selectedTrigger);
+    } else {
+      this.selectedTrigger = undefined;
+    }
     this.refreshPipelineExecutions();
     // this.isPolling = false
     // this.togglePolling()
@@ -286,19 +305,19 @@ export default {
   methods: {
     progress(execution) {
       // console.log("Progress of", execution.id, execution.job_reports_count)
-      // console.log("Max progress:", this.store.pipelineById(execution.pipeline).tools.length)
+      // console.log("Max progress:", this.pipelineStore.pipelineById(execution.pipeline).tools.length)
       return execution.job_reports_count;
     },
 
     progressMax(execution) {
-      // console.log("Max progress:", this.store.pipelineById(execution.pipeline).tools.length)
-      const pipeline = this.store.pipelineById(execution.pipeline);
+      // console.log("Max progress:", this.pipelineStore.pipelineById(execution.pipeline).tools.length)
+      const pipeline = this.pipelineStore.pipelineById(execution.pipeline);
       // Do not include init tools as they don't generate reports
-      console.log('Pipeline tools:', pipeline.tools);
+      // console.debug('Pipeline tools:', pipeline.tools);
       const analysisTools = pipeline.tools.filter(
         (tool) => !this.toolStore.isInitTool(tool),
       );
-      console.log('Analysis tools:', analysisTools);
+      // console.debug('Analysis tools:', analysisTools);
       return analysisTools.length;
     },
 
@@ -307,15 +326,28 @@ export default {
       return value == query;
     },
 
+    filterOnTriggerId(value, query, item) {
+      console.info('filterOnTriggerId:', value, query, item);
+      return value == query;
+    },
+
     async refreshTools() {
       await this.toolStore.fetchTools();
     },
 
     async refreshPipelineExecutions() {
-      console.info('Retrieving pipelines');
-      await this.store.fetchPipelines();
-      console.info('Retrieving pipeline executions');
-      await this.store.fetchPipelineExecutions(this.store.selectedPipelineId);
+      this.pipelineStore.selectedPipelineId = this.selectedPipeline?.id || this.selectedPipeline;
+      await this.pipelineStore.fetchPipelines();
+      if (this.pipelineStore.selectedPipelineId) {
+        console.info('Retrieving executions of pipeline', this.pipelineStore.selectedPipelineId);
+        await this.pipelineStore.fetchPipelineExecutions(this.pipelineStore.selectedPipelineId);
+      } else if (this.triggerStore.selectedTriggerId) {
+        console.info('Retrieving executions triggered by', this.triggerStore.selectedTriggerId);
+        await this.triggerStore.fetchPipelineExecutions(this.triggerStore.selectedTriggerId);
+      } else {
+        console.info('Retrieving all pipeline executions');
+        await this.pipelineStore.fetchPipelineExecutions();
+      }
     },
 
     isUserInput(key) {
@@ -347,7 +379,7 @@ export default {
         ),
       );
       // Add the pipeline name
-      details.pipeline_name = this.store.pipelineById(execution.pipeline).name;
+      details.pipeline_name = this.pipelineStore.pipelineById(execution.pipeline).name;
       // Add all inputs values if the user is admin
       if (this.authStore.isAdmin) {
         // Display all inputs to admin users
@@ -367,8 +399,8 @@ export default {
     viewPipelineExecutionReports(execution) {
       console.log('Selected execution:', execution);
       this.selectedExecution = execution;
-      this.store.selectedPipelineId = execution.pipeline;
-      this.store.selectedExecutionId = execution.id;
+      this.pipelineStore.selectedPipelineId = execution.pipeline;
+      this.pipelineStore.selectedExecutionId = execution.id;
       this.$router.push('/reports');
     },
 

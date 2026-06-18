@@ -41,11 +41,11 @@
 
     <v-alert
       icon="mdi-check-bold"
-      v-if="pipelineSuccessMessage"
-      :text="pipelineSuccessMessage"
+      v-if="successMessage"
+      :text="successMessage"
       type="success"
       closable
-      @click:close="pipelineSuccessMessage = null"
+      @click:close="successMessage = null"
     />
 
     <v-alert
@@ -137,7 +137,7 @@
                   >
                 </v-list-item>
 
-                <v-list-item
+                <!-- <v-list-item
                   v-if="this.authStore.isAdmin"
                   @click="changePipelineOwner(item)"
                   :disabled="true"
@@ -149,7 +149,7 @@
                     v-tooltip:bottom-end="'Change the pipeline owner'"
                     >Change Owner</v-list-item-title
                   >
-                </v-list-item>
+                </v-list-item> -->
 
                 <v-list-item
                   @click="deletePipeline(item)"
@@ -318,7 +318,7 @@ export default {
       selectedPipeline: null,
       creationPanelVisible: false,
       creationParameters: {},
-      pipelineSuccessMessage: null,
+      successMessage: null,
       editionPanelVisible: false,
       editionParameters: {},
       executionPanelVisible: false,
@@ -476,10 +476,10 @@ export default {
     },
 
     viewPipelineExecutions(pipeline) {
-      // Store the selected pipeline in the store so it accessible by the executions page
+      // Store the selected pipeline in the store so it is accessible by the executions page
       // Navigate to the executions page
       this.pipelineStore.selectedPipelineId = pipeline.id;
-      this.$router.push('/executions');
+      this.$router.push('/executions?pipeline=' + pipeline.id);
     },
 
     createPipeline() {
@@ -578,12 +578,6 @@ export default {
       return pipeline_params;
     },
 
-    openDeleteDialog(pipeline) {
-      console.log('Delete pipeline:', pipeline);
-      this.selectedPipeline = pipeline;
-      this.showDeleteDialog = true;
-    },
-
     showExecutionPanel(pipeline) {
       console.log('Selected pipeline:', pipeline);
       this.refreshTools();
@@ -619,7 +613,7 @@ export default {
     },
 
     deletePipeline(pipeline) {
-      console.log('Delete pipeline ...');
+      console.log('Delete pipeline:', pipeline);
       this.selectedPipeline = pipeline;
       this.showDeleteDialog = true;
     },
@@ -651,7 +645,7 @@ export default {
     handleExecutionSubmitted(execution) {
       // Handle the new execution
       console.log('New execution created:', execution);
-      // Navigate to the Monitoring page
+      // Navigate to the Executions page
       this.viewPipelineExecutions(execution.pipeline);
       // Show a success message
       this.$notify({
