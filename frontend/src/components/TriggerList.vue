@@ -23,7 +23,7 @@
         size="small"
         class="mx-2"
         @click="refreshTriggers"
-        :loading="triggerStore.loading"
+        :loading="triggerStore.loadingTriggers"
       />
       <v-btn
         icon="mdi-pencil"
@@ -38,11 +38,22 @@
     </v-card-title>
 
     <v-alert
-      v-if="triggerStore.error"
-      type="error"
-      :text="triggerStore.error"
+      icon="mdi-check-bold"
+      v-if="successMessage"
+      :text="successMessage"
+      type="success"
       closable
+      @click:close="successMessage = null"
     />
+
+    <v-alert
+      v-if="triggerStore.listError"
+      type="error"
+      closable
+    >
+      <div class="text-pre-line">{{ triggerStore.listError }}</div>
+    </v-alert>
+
     <!-- eslint-disable vue/no-v-model-argument -->
     <v-data-table
       v-if="triggerStore.triggers.length"
@@ -70,6 +81,7 @@
           <!-- <td>{{ item.pipeline_name || 'N/A' }}</td> -->
           <td _v-if="this.authStore.isAdmin">{{ item.status }}</td>
           <td _v-if="this.authStore.isAdmin">{{ item.enabled }}</td>
+          <td>{{ item.event_count }}</td>
           <td class="text-right nowrap">
             <v-btn
               color="primary"
@@ -79,7 +91,15 @@
             >
               <v-icon size="26px"> mdi-information </v-icon>
             </v-btn>
-
+            <v-btn
+              color="primary"
+              variant="text"
+              v-tooltip:bottom-end="'Pipeline executions'"
+              :disabled="item.event_count == 0"
+              @click="viewPipelineExecutions(item)"
+            >
+              <v-icon> mdi-monitor-eye </v-icon>
+            </v-btn>
             <!-- Dropdown menu with extra actions: edit, delete -->
             <v-menu location="bottom end" :disabled="!canEditTrigger(item)">
               <template v-slot:activator="{ props }">
@@ -106,7 +126,7 @@
                   >
                 </v-list-item>
 
-                <v-list-item
+                <!-- <v-list-item
                   v-if="this.authStore.isAdmin"
                   @click="changeTriggerOwner(item)"
                   :disabled="true"
@@ -118,7 +138,7 @@
                     v-tooltip:bottom-end="'Change the trigger owner'"
                     >Change Owner</v-list-item-title
                   >
-                </v-list-item>
+                </v-list-item> -->
 
                 <v-list-item
                   @click="deleteTrigger(item)"
@@ -144,7 +164,7 @@
     </v-data-table>
 
     <v-alert
-      v-else-if="!triggerStore.loading"
+      v-else-if="!triggerStore.loadingTriggers"
       type="info"
       text="No triggers defined"
     />
@@ -164,7 +184,7 @@
           <JSONTableViewer
             :data="pruneTriggerDetails(selectedTrigger)"
             :dont-convert="['cql2_filter', 'params_default', 'params_mapping']"
-            :key-order="['name', 'description', 'version', 'tools', 'tags', 'user_params']"
+            :key-order="['name', 'description', 'owner_name', 'status', 'enabled', 'pipeline_name', 'trigger_type_name', 'event_count']"
           />
         </v-card-text>
       </v-card>
@@ -176,10 +196,52 @@
       :visible="this.creationPanelVisible"
       @creation-submitted="handleCreationSubmitted"
       @creation-cancelled="hideCreationPanel"
-      @edition-submitted="handleEditionSubmitted"
+      @edition-submitted="handleEditSubmitted"
       @edition-cancelled="hideCreationPanel"
     />
 
+    <!-- Trigger Delete Dialog -->
+    <v-dialog v-model="showDeleteDialog" max-width="800px">
+      <v-card v-if="selectedTrigger">
+        <v-card-text>
+          <v-alert
+            type="warning"
+            icon="mdi-delete"
+            text="Delete Trigger"
+            class="mb-4"
+            style="font-size: 1.25rem"
+          />
+          Are you sure you want to delete the trigger definition "<span
+            class="font-weight-bold"
+            >{{ selectedTrigger?.slug }}</span
+          >"?
+          <div class="font-weight-light">
+            {{ selectedTrigger?.description }}
+          </div>
+          <v-alert type="warning" variant="outlined" class="mt-4">
+            This action cannot be undone.
+          </v-alert>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="primary"
+            variant="text"
+            @click="showDeleteDialog = false"
+          >
+            Cancel
+          </v-btn>
+          <v-btn
+            color="error"
+            variant="flat"
+            :loading="deletingTrigger"
+            @click="confirmDeleteTrigger(selectedTrigger)"
+          >
+            Delete
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-card>
 </template>
 
@@ -204,11 +266,8 @@ export default {
       creationPanelVisible: false,
       creationParameters: {},
       successMessage: null,
-      editionPanelVisible: false,
-      editionParameters: {},
-      executionPanelVisible: false,
       showDeleteDialog: false,
-      deletingPipeline: false,
+      deletingTrigger: false,
       itemsPerPage: 10,
       // Contains the default/current sorting parameters
       sortBy: [{ key: 'slug', order: 'asc' }],
@@ -245,6 +304,12 @@ export default {
         },
         {
           title: 'Enabled',
+          key: 'enabled',
+          sortable: true,
+          admins_only: false,
+        },
+        {
+          title: 'Events',
           key: 'enabled',
           sortable: true,
           admins_only: false,
@@ -340,8 +405,9 @@ export default {
       const keysToKeep = [
         'slug',
         'description',
-        'owner',
+        'owner_name',
         'status',
+        'event_count',
         'enabled',
         'trigger_type_name',
         'pipeline_name',
@@ -357,6 +423,13 @@ export default {
     viewTriggerDetails(trigger) {
       this.selectedTrigger = trigger;
       this.showDetails = true;
+    },
+
+    viewPipelineExecutions(trigger) {
+      // Store the selected trigger in the store so it is accessible by the executions page
+      // Navigate to the executions page
+      this.triggerStore.selectedTriggerId = trigger.slug;
+      this.$router.push('/executions?trigger=' + trigger.slug);
     },
 
     createTrigger() {
@@ -378,26 +451,30 @@ export default {
         availableTypes: this.triggerStore.triggerTypes,
         availablePipelines: this.pipelineStore.pipelines,
         // Statuses are enforced in the backend DB model (see the Trigger Model definition)
-        availableStatus: ['Disabled', 'Testing', 'Restricted', 'Enabled', 'Deleted'],
+        availableStatus: ['Disabled', 'Testing', 'Restricted', 'Enabled'],  // 'Deleted'
         isCreation: true,
       };
       this.creationPanelVisible = true;
     },
 
     hideCreationPanel() {
-      console.log('Cancel trigger creation/edition');
+      console.log('Cancel trigger creation/edit');
       this.creationPanelVisible = false;
     },
 
     handleCreationSubmitted(trigger) {
       // Handle the creation of the new trigger
+      if (trigger == undefined) {
+        console.error('Failed to create the trigger:', trigger);
+
+      }
       console.log('Trigger created:', trigger);
       // Close the trigger creation panel
       this.creationPanelVisible = false;
       this.refreshTriggers();
       // Display a success message
       this.$notify({
-        title: `Created trigger "${trigger.name}"`,
+        title: `Created trigger "${trigger.slug}"`,
         type: 'success',
       });
       this.$emit('trigger-created', trigger);
@@ -426,12 +503,12 @@ export default {
         paramsMapping: trigger.params_mapping,
         isCreation: false,
         // Statuses are enforced in the backend DB model (see the Trigger Model definition)
-        availableStatus: ['Disabled', 'Testing', 'Restricted', 'Enabled', 'Deleted'],
+        availableStatus: ['Disabled', 'Testing', 'Restricted', 'Enabled'],  // 'Deleted'
       };
       this.creationPanelVisible = true;
     },
 
-    handleEditionSubmitted(trigger) {
+    handleEditSubmitted(trigger) {
       // Handle the creation of the new trigger
       console.log('Trigger edited:', trigger);
       // Close the trigger creation panel
@@ -445,14 +522,39 @@ export default {
       this.$emit('trigger-edited', trigger);
     },
 
-    hideEditionPanel() {
-      console.log('Cancel trigger edition');
-      this.editionPanelVisible = false;
+    hideEditingPanel() {
+      console.log('Cancel trigger editing');
+      this.creationPanelVisible = false;
     },
 
     deleteTrigger(trigger) {
+      console.log('Delete trigger:', trigger);
       this.selectedTrigger = trigger;
-      this.showDetails = true;
+      this.showDeleteDialog = true;
+    },
+
+    async confirmDeleteTrigger(trigger) {
+      this.deletingTrigger = true;
+      try {
+        await this.triggerStore.deleteTrigger(this.selectedTrigger);
+        this.showDeleteDialog = false;
+        // Display a success message
+        this.$notify({
+          title: `Deleted trigger "${trigger.slug}"`,
+          type: 'success',
+        });
+        this.$emit('trigger-deleted', trigger);
+        await this.refreshTriggers();
+      } catch (error) {
+        this.$notify({
+          title: `Failed to delete trigger "${trigger.slug}"`,
+          text: error.message,
+          type: 'error',
+        });
+        console.log('Failed to delete the trigger: ', error.message);
+      } finally {
+        this.deletingTrigger = false;
+      }
     },
   },
 };

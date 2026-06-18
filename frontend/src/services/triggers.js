@@ -59,7 +59,7 @@ export const triggerService = {
       const response = await triggerApi.post(`/`, trigger);
       return response.data;
     } catch (error) {
-      console.error(`Error creating trigger ${trigger.name}:`, error);
+      console.error(`Error creating trigger ${trigger.slug}:`, error);
       throw error;
     }
   },
@@ -79,8 +79,39 @@ export const triggerService = {
     }
   },
 
-  // TODO
-  // async deleteTrigger(trigger) {
-  //
-  // },
+  async getTriggerEvents(trigger) {
+    const triggerId = trigger?.slug || trigger;
+    try {
+      const response = await triggerApi.get(`/${triggerId}/events/`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching events for trigger ${triggerId}:`, error);
+      throw error;
+    }
+  },
+
+  async getPipelineExecutions(trigger) {
+    const triggerId = trigger?.slug || trigger;
+    try {
+      const response = await triggerApi.get(`/${triggerId}/runs/`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching pipeline runs for trigger ${triggerId}:`, error);
+      throw error;
+    }
+  },
+
+  async deleteTrigger(trigger) {
+    const triggerId = trigger?.slug || trigger;
+    try {
+      console.log('Delete trigger:', triggerId);
+      // Note: In the backend, the trigger status is changed to "Deleted".
+      // Otherwise all the associated events and runs are delected as well due to cascading.
+      const response = await triggerApi.delete(`/${triggerId}/`);
+      return response?.data;
+    } catch (error) {
+      console.error(`Error deleting trigger ${triggerId}:`, error);
+      throw error;
+    }
+  },
 };

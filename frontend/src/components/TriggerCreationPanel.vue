@@ -22,6 +22,17 @@
         />
       </v-card-title>
 
+      <v-card-subtitle
+        v-if="triggerStore.error"
+      >
+        <v-alert
+          type="error"
+          closable
+        >
+          <div class="text-pre-line">{{ triggerStore.error }}</div>
+        </v-alert>
+      </v-card-subtitle>
+
       <v-divider></v-divider>
 
       <v-card-text class="flex-grow-1 overflow-y-auto">
@@ -66,7 +77,8 @@
               <!-- Description multi-line text -->
               <v-textarea
                 v-model="localModelValue.description"
-                label="Description (optional)"
+                label="Description"
+                required
               />
               <!-- Trigger Type drop-down list -->
               <v-select
@@ -401,6 +413,10 @@ export default {
           trigger_type: this.localModelValue.selectedType.slug,
         };
         const response = await this.triggerStore.createTrigger(data);
+        if (response == undefined) {
+          console.error("Could not create the trigger:", this.triggerStore.error);
+          return; 
+        }
         // The panel is closed when the parent component receives this signal
         this.$emit('creation-submitted', response);
       } catch (err) {
@@ -436,6 +452,10 @@ export default {
           trigger_type: this.localModelValue.selectedType.slug,
         };
         const response = await this.triggerStore.updateTrigger(data);
+        if (response == undefined) {
+          console.error("Could not update the trigger:", this.triggerStore.error);
+          return; 
+        }
         // The panel is closed when the parent component receives this signal
         this.$emit('edition-submitted', response);
       } catch (err) {
