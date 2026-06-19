@@ -1,5 +1,14 @@
 from rest_framework import serializers
-from backend.models import Pipeline, PipelineRun, JobReport, Subworkflow, Tag, TriggerType, Trigger, TriggerEvent
+from backend.models import (
+    Pipeline,
+    PipelineRun,
+    JobReport,
+    Subworkflow,
+    Tag,
+    TriggerType,
+    Trigger,
+    TriggerEvent,
+)
 
 
 class PipelineSerializer(serializers.ModelSerializer):
@@ -84,30 +93,42 @@ class TriggerTypeSerializer(serializers.ModelSerializer):
 
 
 class TriggerSerializer(serializers.ModelSerializer):
-    # DRF automatically removes read-only fields from incoming POST data during validation.
-    owner_name = serializers.ReadOnlyField(source="owner.username")
+    #trigger_type = serializers.ReadOnlyField(source="trigger_type.slug")
+    trigger_type = serializers.SlugRelatedField(
+        source="trigger_type",
+        slug_field="slug",
+        queryset=TriggerType.objects.all()
+    )
     trigger_type_name = serializers.ReadOnlyField(source="trigger_type.name")
+    #pipeline_id = serializers.ReadOnlyField(source="pipeline.id")
+    pipeline_id = serializers.PrimaryKeyRelatedField(
+        source="pipeline", 
+        queryset=Pipeline.objects.all()
+    )
     pipeline_name = serializers.ReadOnlyField(source="pipeline.name")
     pipeline_version = serializers.ReadOnlyField(source="pipeline.version")
+    owner_name = serializers.ReadOnlyField(source="owner.username")
+    event_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Trigger
         fields = [
             "slug",
-            "owner",
             "owner_name",
             "description",
+            "enabled",
             "status",
             "cql2_filter",
             "params_default",
             "params_mapping",
             "trigger_type",
-            "pipeline",
-            "enabled",
+            "trigger_type_name",
+            "pipeline_id",
             "pipeline_name",
             "pipeline_version",
-            "trigger_type_name",
+            "event_count",
         ]
+        #read_only_fields = ["..."]
 
 
 class TriggerEventSerializer(serializers.ModelSerializer):
@@ -134,6 +155,6 @@ class TriggerEventSerializer(serializers.ModelSerializer):
             "pipeline_run_id",
             "pipeline_id",
             "pipeline_name",
-            "pipeline_version"
+            "pipeline_version",
         ]
         #read_only_fields = ["..."]

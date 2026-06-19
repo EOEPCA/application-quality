@@ -5,6 +5,7 @@ import time
 import yaml
 
 from django.utils import timezone
+from django.db.models import Count, Q
 from django.db.utils import IntegrityError
 from django.contrib.auth.models import User
 from jinja2 import Template
@@ -521,10 +522,16 @@ class TriggerViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.request.user.is_staff:
-            return Trigger.objects.all()
+            # Return all the triggers, even the "Deleted" ones
+            return Trigger.objects.all().annotate(event_count=Count("trigger_events"))
         return (
-            Trigger.objects.filter(owner=self.request.user)
-            | Trigger.objects.filter(owner__isnull=True)
+            # Exclude the triggers with status "Deleted" (they cannot be undeleted via the WebUI)
+            Trigger.objects.filter(
+                ~Q(status="Deleted"), owner=self.request.user
+            ).annotate(event_count=Count("trigger_events"))
+            | Trigger.objects.filter(
+                ~Q(status="Deleted"), owner__isnull=True
+            ).annotate(event_count=Count("trigger_events"))
         )
 
     def get_permissions(self):
@@ -534,31 +541,71 @@ class TriggerViewSet(viewsets.ModelViewSet):
             return [permissions.IsAuthenticated(), IsOwnerOrAdmin()]
         return super().get_permissions()
 
+    # Override the destroy hook for the DELETE method
+    def perform_destroy(self, instance):
+        # Update the trigger status instead of deleting it.
+        # Otherwise all the associated events and pipeline runs are deleted as well due to cascading.
+        logger.info("Disabling and setting the trigger status to 'Deleted' instead of deleting the trigger %s", instance)
+        instance.status = "Deleted"
+        instance.enabled = False 
+        instance.save()
+
 
 class TriggerEventViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.TriggerEventSerializer
 
     def get_queryset(self):
-        trigger_slug = self.kwargs["trigger_slug"]
+        trigger_id = self.kwargs["trigger_id"]
         user = self.request.user
         if user:
             logger.info(
                 "User %s is requesting trigger events information for trigger %s",
                 user,
-                trigger_slug
+                trigger_id
             )
         else:
             logger.info(
                 "Anonymous user is requesting trigger events information for trigger %s",
-                trigger_slug
+                trigger_id
             )
         if user and user.is_staff:
             logger.info("User %s is staff / admin", user)
             # Admins may get all the tools, whatever their status or availability flag
-            if trigger_slug in ["_", "-"]:
+            if trigger_id in ["_", "-"]:
                 return TriggerEvent.objects.all()
-            return TriggerEvent.objects.filter(trigger__slug=trigger_slug)
+            return TriggerEvent.objects.filter(trigger__slug=trigger_id)
         # Return only the trigger events owned by the requesting user
-        if trigger_slug in ["_", "-"]:
+        if trigger_id in ["_", "-"]:
             return TriggerEvent.objects.filter(pipeline_run__user=user)
-        return TriggerEvent.objects.filter(pipeline_run__user=user, trigger__slug=trigger_slug)
+        return TriggerEvent.objects.filter(pipeline_run__user=user, trigger__slug=trigger_id)
+
+
+class TriggerRunViewSet(viewsets.ReadOnlyModelViewSet):
+    # This viewset returns serialized pipeline runs
+    # (same as PipelineRunViewSet but filtered differently)
+    serializer_class = serializers.PipelineRunSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def _get_matching_runs(trigger_events):
+        logger.debug("Trigger events: %s", trigger_events)
+        run_ids = [event.pipeline_run_id for event in trigger_events if event.pipeline_run_id]
+        logger.debug("Pipeline run IDs: %s", run_ids)
+        pipeline_runs = PipelineRun.objects.filter(id__in=run_ids)
+        logger.debug("Pipeline runs: %s", pipeline_runs)
+        return pipeline_runs
+
+    def get_queryset(self):
+        user = self.request.user
+        trigger_id = self.kwargs["trigger_id"]
+        logger.info("User '%s' is requesting pipeline runs for trigger '%s'", user, trigger_id)
+        trigger_events = None
+        if user.is_staff:
+            if trigger_id in ["_", "-"]:
+                trigger_events = TriggerEvent.objects.all()
+            else:
+                trigger_events = TriggerEvent.objects.filter(trigger__slug=trigger_id)
+            return self._get_matching_runs(trigger_events)
+        if trigger_id in ["_", "-"]:
+            return PipelineRun.objects.filter(started_by=self.request.user)
+        return PipelineRun.objects.filter(pipeline_id=p_id, started_by=self.request.user)
