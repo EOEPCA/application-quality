@@ -95,7 +95,6 @@ class TriggerTypeSerializer(serializers.ModelSerializer):
 class TriggerSerializer(serializers.ModelSerializer):
     #trigger_type = serializers.ReadOnlyField(source="trigger_type.slug")
     trigger_type = serializers.SlugRelatedField(
-        source="trigger_type",
         slug_field="slug",
         queryset=TriggerType.objects.all()
     )
@@ -128,7 +127,6 @@ class TriggerSerializer(serializers.ModelSerializer):
             "pipeline_version",
             "event_count",
         ]
-        #read_only_fields = ["..."]
 
 
 class TriggerEventSerializer(serializers.ModelSerializer):
@@ -157,4 +155,3 @@ class TriggerEventSerializer(serializers.ModelSerializer):
             "pipeline_name",
             "pipeline_version",
         ]
-        #read_only_fields = ["..."]
