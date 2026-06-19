@@ -190,7 +190,7 @@
               />
 
               <!-- Parameters Mapping (JSON) -->
-              <v-divider
+              <!-- <v-divider
                 :thickness="3"
                 class="border-opacity-50 my-4"
                 color="info"
@@ -204,7 +204,7 @@
                 mode="tree"
                 v-model:json="localModelValue.paramsMapping"
                 @change="(content, previousContent, status) => handleJsonEditorChange('params_mapping', status)"
-              />
+              /> -->
 
             </v-card-text>
           </v-card>
@@ -409,7 +409,7 @@ export default {
           params_default: jsonParse(this.localModelValue.paramsDefault) || {},
           params_mapping: jsonParse(this.localModelValue.paramsMapping) || {},
           cql2_filter: jsonParse(this.localModelValue.cql2Filter) || {},
-          pipeline: this.localModelValue.selectedPipeline.id,
+          pipeline_id: this.localModelValue.selectedPipeline.id,
           trigger_type: this.localModelValue.selectedType.slug,
         };
         const response = await this.triggerStore.createTrigger(data);
