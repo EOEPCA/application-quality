@@ -424,7 +424,7 @@ export default {
         'pipeline_name',
         'cql2_filter',
         'params_default',
-        'params_mapping',
+        // 'params_mapping',
       ];
       return Object.fromEntries(
         Object.entries(trigger).filter(([key]) => keysToKeep.includes(key)),
