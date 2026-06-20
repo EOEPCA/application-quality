@@ -401,7 +401,7 @@ export default {
       return (
         this.authStore.username != null &&
         (this.authStore.isAdmin ||
-          this.authStore.username == trigger.owner)
+          this.authStore.username == trigger.owner?.username)
       );
     },
 
@@ -410,15 +410,16 @@ export default {
       return (
         this.authStore.username != null &&
         (this.authStore.isAdmin ||
-          this.authStore.username == trigger.owner)
+          this.authStore.username == trigger.owner?.username)
       );
     },
 
     pruneTriggerDetails(trigger) {
+      trigger.owner_name = trigger.owner?.full_name;
       const keysToKeep = [
         'slug',
         'description',
-        'owner_name',
+        'full_name',
         'status',
         'event_count',
         'enabled',
