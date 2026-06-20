@@ -61,7 +61,6 @@
       v-model:sort-by="sortBy"
       :headers="filteredHeaders"
       :items="filteredTriggers"
-      :search="search"
       class="elevation-1"
       hover
     >
@@ -76,7 +75,7 @@
             </div>
             <div class="font-weight-light">{{ item.description }}</div>
           </td>
-          <td v-if="this.authStore.isAdmin">{{ item.owner_name }}</td>
+          <td v-if="this.authStore.isAdmin" class="nowrap">{{ item.owner?.full_name }}</td>
           <!-- <td>{{ item.trigger_type_name || 'N/A' }}</td> -->
           <!-- <td>{{ item.pipeline_name || 'N/A' }}</td> -->
           <td _v-if="this.authStore.isAdmin">{{ item.status }}</td>
@@ -260,6 +259,7 @@
 import { useAuthStore } from '@/stores/auth';
 import { usePipelineStore } from '@/stores/pipelines';
 import { useTriggerStore } from '@/stores/triggers';
+import { useSettingsStore } from '@/stores/settings';
 import JSONTableViewer from '@/components/JSONTableViewer.vue';
 import TriggerCreationPanel from './TriggerCreationPanel.vue';
 
@@ -339,21 +339,23 @@ export default {
     const authStore = useAuthStore();
     const pipelineStore = usePipelineStore();
     const triggerStore = useTriggerStore();
-    return { authStore, pipelineStore, triggerStore };
+    const settingsStore = useSettingsStore();
+    return { authStore, pipelineStore, triggerStore, settingsStore };
   },
 
   computed: {
     filteredTriggers() {
-      if (!this.search) return this.triggerStore.triggers;
+      if (this.settingsStore.showDeletedTriggers && this.search === "") {
+        // No need to filter the triggers
+        return this.triggerStore.triggers;
+      }
       const searchTerm = this.search.toLowerCase();
       return this.triggerStore.triggers.filter((trigger) => {
-        return (
-          //(trigger.name && trigger.name.toLowerCase().includes(searchTerm)) ||
-          (trigger.description &&
-            trigger.description.toLowerCase().includes(searchTerm)) ||
-          //trigger.id.toLowerCase().includes(searchTerm)
-          trigger.slug.toLowerCase().includes(searchTerm)
-        );
+        if (!this.settingsStore.showDeletedTriggers && trigger.status.toLowerCase() == "deleted")
+          return false;
+        const description = trigger.description ? String(trigger.description).toLowerCase() : "";
+        const slug = trigger.slug ? String(trigger.slug).toLowerCase() : "";
+        return description.includes(searchTerm) || slug.includes(searchTerm);
       });
     },
 
@@ -452,8 +454,7 @@ export default {
       this.creationParameters = {
         isUserAdmin: this.authStore.isAdmin,
         description: "",
-        owner: this.authStore.details.id,  // The current user. Only admins may change the value.
-        owner_name: this.authStore.username,
+        owner_name: this.authStore.username,  // The current user name
         status: "Testing",
         enabled: true,
         cql2Filter: {},
@@ -499,10 +500,7 @@ export default {
         isUserAdmin: this.authStore.isAdmin,
         name: trigger.slug,
         description: trigger.description,
-        // By default, the owner is the current user.
-        // Only admins may change a trigger owner.
-        owner: trigger.owner,
-        owner_name: trigger.owner_name,
+        owner_name: trigger.owner?.username,
         status: trigger.status,
         enabled: trigger.enabled,
         triggerType: this.triggerStore.getTriggerTypeById(trigger.trigger_type),

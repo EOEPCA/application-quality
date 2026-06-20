@@ -60,7 +60,7 @@
               <!-- Owner (editable only by admins) -->
               <v-text-field
                 v-model="localModelValue.owner_name"
-                label="User"
+                label="Owner"
                 required
                 :disabled="!localModelValue.isUserAdmin"
                 :rules="[(v) => !!v || 'The user may not be empty']"
@@ -79,6 +79,7 @@
                 v-model="localModelValue.description"
                 label="Description"
                 required
+                :rules="[(v) => !!v || 'The description may not be empty']"
               />
               <!-- Trigger Type drop-down list -->
               <v-select
@@ -405,7 +406,7 @@ export default {
           description: this.localModelValue.description,
           status: this.localModelValue.status,
           enabled: this.localModelValue.enabled,
-          owner: this.localModelValue.owner,  // Cannot be changed by non-admin
+          owner_name: this.localModelValue.owner_name,
           params_default: jsonParse(this.localModelValue.paramsDefault) || {},
           params_mapping: jsonParse(this.localModelValue.paramsMapping) || {},
           cql2_filter: jsonParse(this.localModelValue.cql2Filter) || {},
@@ -444,7 +445,7 @@ export default {
           description: this.localModelValue.description,
           status: this.localModelValue.status,
           enabled: this.localModelValue.enabled,
-          owner: this.localModelValue.owner,  // Cannot be changed by non-admin
+          owner_name: this.localModelValue.owner_name,
           cql2_filter: jsonParse(this.localModelValue.cql2Filter) || {},
           params_default: jsonParse(this.localModelValue.paramsDefault) || {},
           params_mapping: jsonParse(this.localModelValue.paramsMapping) || {},
