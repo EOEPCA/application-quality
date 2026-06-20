@@ -522,17 +522,11 @@ class TriggerViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.request.user.is_staff:
-            # Return all the triggers, even the "Deleted" ones
             return Trigger.objects.all().annotate(event_count=Count("trigger_events"))
-        return (
-            # Exclude the triggers with status "Deleted" (they cannot be undeleted via the WebUI)
-            Trigger.objects.filter(
-                ~Q(status="Deleted"), owner=self.request.user
-            ).annotate(event_count=Count("trigger_events"))
-            | Trigger.objects.filter(
-                ~Q(status="Deleted"), owner__isnull=True
-            ).annotate(event_count=Count("trigger_events"))
-        )
+        return Trigger.objects.filter(
+            ~Q(status="Deleted"),
+            Q(owner=self.request.user) | Q(owner__isnull=True)
+        ).annotate(event_count=Count("trigger_events"))
 
     def get_permissions(self):
         if self.action in ["create", "list", "retrieve"]:
@@ -541,7 +535,27 @@ class TriggerViewSet(viewsets.ModelViewSet):
             return [permissions.IsAuthenticated(), IsOwnerOrAdmin()]
         return super().get_permissions()
 
-    # Override the destroy hook for the DELETE method
+    # Intercept the POST (create) request
+    def perform_create(self, serializer):
+        # Look up owner since validation has already passed in the serializer
+        requested_owner = serializer.validated_data.get("owner")
+        if not requested_owner:
+            # No specific owner requested => Assign the trigger to the current user
+            serializer.save(owner=self.request.user)
+            return
+        if not self.request.user.is_staff:
+            # Current user is not staff => The trigger may only be assigned to himself
+            if requested_owner != self.request.user:
+                raise ValidationError({
+                    "owner": [f"You may not assign a trigger to user '{requested_owner.name}'."],
+                })
+        serializer.save(owner=requested_owner)
+
+    # Intercept the PUT and PATCH (update) requests
+    def perform_update(self, serializer):
+        return self.perform_create(serializer)
+
+    # Intercept the DELETE request
     def perform_destroy(self, instance):
         # Update the trigger status instead of deleting it.
         # Otherwise all the associated events and pipeline runs are deleted as well due to cascading.
