@@ -61,6 +61,7 @@ class PipelineRunSerializer(serializers.ModelSerializer):
             "user",
             "inputs",
             "output",
+            "digest",
             "executed_cwl",
             "started_by",
             "triggered_by",
@@ -74,7 +75,7 @@ class PipelineRunSerializer(serializers.ModelSerializer):
 class JobReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobReport
-        fields = ["id", "name", "instance", "created_at", "output", "run"]
+        fields = ["id", "name", "instance", "created_at", "output", "digest", "run"]
         read_only_fields = ["run"]
 
 

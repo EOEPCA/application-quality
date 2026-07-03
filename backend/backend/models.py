@@ -28,6 +28,7 @@ class Pipeline(models.Model):
 class PipelineRun(models.Model):
     pipeline        = models.ForeignKey(Pipeline, related_name="runs", on_delete=models.CASCADE)
     usage_report    = models.JSONField(blank=True)
+    digest          = models.JSONField(blank=True)
     start_time      = models.DateTimeField(blank=True)
     completion_time = models.DateTimeField(blank=True, null=True)
     status          = models.CharField(max_length=100, blank=True)
@@ -49,6 +50,7 @@ class JobReport(models.Model):
     run             = models.ForeignKey(PipelineRun, related_name="jobreports", on_delete=models.CASCADE)
     name            = models.SlugField(max_length=50)
     output          = models.JSONField()
+    digest          = models.JSONField()
     created_at      = models.DateTimeField(null=True)
     instance        = models.CharField(max_length=200, default="")
 

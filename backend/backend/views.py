@@ -306,6 +306,7 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         pipeline_run = PipelineRun.objects.create(
             pipeline=pipeline,
             usage_report="",
+            digest="",
             start_time=timezone.now(),
             status="starting",
             started_by=user,
@@ -463,11 +464,26 @@ class JobReportViewSet(
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        if request.FILES:
+            logger.info("The request contains files: %s", ", ".join(request.FILES.keys()))
+            report_file = request.FILES.get("report")
+            report_data = json.loads(report_file.read().decode("utf-8"))
+            digest_file = request.FILES.get("digest")
+            digest_data = json.loads(digest_file.read().decode("utf-8"))
+            #logger.info("Report: %s", json.dumps(report_data, indent=2))
+            logger.info("Report digest: %s", json.dumps(digest_data, indent=2))
+            logger.info("Successfully read both files from the request")
+        else:
+            logger.info("No FILES found in the request")
+            report_data = request.data
+            digest_data = {}
+
         job_report = JobReport.objects.create(
             name=tool_name,
             instance=instance,
             run=run,
-            output=request.data,
+            output=report_data,
+            digest=digest_data,
             created_at=timezone.now()
         )
 
