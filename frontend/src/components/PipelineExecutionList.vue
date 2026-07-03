@@ -113,6 +113,15 @@
             >
               <v-icon size="26px"> mdi-information </v-icon>
             </v-btn>
+            <!-- <v-btn
+              color="primary"
+              variant="text"
+              :disabled="item.trigger_event == undefined"
+              v-tooltip:bottom-end="'Trigger information'"
+              @click="viewTriggerEventDetails(item)"
+            >
+              <v-icon size="26px"> mdi-animation-play-outline </v-icon>
+            </v-btn> -->
             <v-btn
               color="primary"
               variant="text"
@@ -165,7 +174,7 @@
           class="ma-4"
         /> -->
 
-    <!-- Pipeline Details Dialog -->
+    <!-- Pipeline Execution Details Dialog -->
     <v-dialog v-model="showDetails" max-width="1200px">
       <v-card v-if="selectedExecution">
         <v-card-text>
@@ -177,12 +186,32 @@
           />
           <JSONTableViewer
             :data="prunePipelineExecutionDetails(selectedExecution)"
+            :dont-convert="['usage_report', 'inputs', 'digest']"
+            :key-order="['pipeline_name', 'started_by', 'start_time', 'completion_time', 'status', 'job_reports_count', 'user', 'inputs', 'digest']"
+          />
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <!-- Pipeline Execution Trigger Event Dialog -->
+    <v-dialog v-model="showTriggerEvent" max-width="1200px">
+      <v-card v-if="selectedExecution">
+        <v-card-text>
+          <v-alert
+            v-if="selectedExecution.status"
+            type="info"
+            :text="pipelineStore.pipelineById(selectedExecution.pipeline).name + ' executed on ' + formatDate(selectedExecution.start_time) + ': ' + selectedExecution.status"
+            class="mb-4"
+          />
+          <JSONTableViewer
+            :data="pruneTriggerEventDetails(selectedExecution)"
             :dont-convert="['usage_report', 'inputs']"
             :key-order="['pipeline_name', 'started_by', 'start_time', 'completion_time', 'status', 'job_reports_count', 'user', 'inputs']"
           />
         </v-card-text>
       </v-card>
     </v-dialog>
+
   </v-card>
 </template>
 
@@ -204,6 +233,7 @@ export default {
   data() {
     return {
       showDetails: false,
+      showTriggerEvent: false,
       selectedPipeline: null,
       selectedTrigger: null,
       selectedExecution: null,
@@ -382,6 +412,7 @@ export default {
         'user',
         'started_by',
         'usage_report',
+        'digest',
         // 'inputs' are filtered separately below
       ];
       const details = Object.fromEntries(
@@ -406,10 +437,23 @@ export default {
       return details;
     },
 
+    pruneTriggerEventDetails(execution) {
+      console.log("pruneTriggerEventDetails: TO BE IMPLEMENTED");
+      //return execution.trigger_event
+      return { "Status": "TO BE IMPLEMENTED" };
+    },
+
     viewPipelineExecutionDetails(execution) {
       console.log('Selected execution:', execution);
       this.selectedExecution = execution;
       this.showDetails = true;
+    },
+
+
+    viewTriggerEventDetails(execution) {
+      console.log('Selected execution:', execution);
+      this.selectedExecution = execution;
+      this.showTriggerEvent = true;
     },
 
     viewPipelineExecutionReports(execution) {

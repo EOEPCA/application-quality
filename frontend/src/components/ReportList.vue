@@ -153,7 +153,7 @@
 
     <v-progress-circular v-else indeterminate class="ma-4" />
 
-    <!-- Tools Details Dialog -->
+    <!-- Pipeline Report Dialog -->
     <v-dialog v-model="showDetails" max-width="1200px">
       <v-card v-if="selectedReport">
         <v-card-text>
@@ -165,8 +165,8 @@
           />
           <JSONTableViewer
             :data="pruneReportDetails(selectedReport)"
-            :dont-convert="['output']"
-            :key-order="['tool_name', 'run_id', 'report_id', 'created_at', 'user_params']"
+            :dont-convert="['output', 'digest']"
+            :key-order="['tool_name', 'run_id', 'report_id', 'created_at', 'name', 'digest']"
           />
         </v-card-text>
       </v-card>
@@ -315,11 +315,11 @@ export default {
 
     pruneReportDetails(report) {
       const keysToKeep = [
-        'name',
+        'tool_name',
         'run_id',
         'report_id',
-        'tool_name',
         'created_at',
+        'digest',
         //'id',
         //'run',
         //'instance',
