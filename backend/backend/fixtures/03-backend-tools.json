@@ -1,0 +1,443 @@
+[
+  {
+    "model": "backend.subworkflow",
+    "pk": "ap_validator_subworkflow",
+    "fields": {
+      "name": "Application Package Validator",
+      "description": "Validation tool for checking OGC compliance of CWL files for application packages.",
+      "pipeline_step": "ap_validator_subworkflow:\r\n  in:\r\n    ap_validator.detail: ap_validator_subworkflow.ap_validator.detail\r\n    ap_validator.entry_point: ap_validator_subworkflow.ap_validator.entry_point\r\n    filter.regex: ap_validator_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#ap_validator_subworkflow'\r\n  out: []",
+      "definition": "- class: Workflow\r\n\r\n  requirements:\r\n    ScatterFeatureRequirement: {}\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: ap_validator\r\n    ap_validator.detail: string\r\n    ap_validator.entry_point: string\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    []\r\n\r\n  steps:\r\n    filter_ap_validator_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    ap_validator_step:\r\n      in:\r\n        file_path: filter_ap_validator_step/file_list\r\n        source_directory: source_directory\r\n        detail: ap_validator.detail\r\n        entry_point: ap_validator.entry_point\r\n      scatter: file_path\r\n      run: '#ap_validator_tool'\r\n      out:\r\n      - ap_validator_report\r\n    save_ap_validator_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: ap_validator_step/ap_validator_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      scatter: report\r\n      run: '#save_tool'\r\n      out: []\r\n  id: ap_validator_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+      "user_params": {
+        "filter": {
+          "regex": {
+            "type": "string",
+            "label": "regex",
+            "default": ".*\\.cwl"
+          }
+        },
+        "ap_validator": {
+          "detail": {
+            "doc": "Output detail (none|errors|hints|all). Default: hints",
+            "type": "string",
+            "label": "Detail",
+            "default": "hints"
+          },
+          "entry_point": {
+            "doc": "Name of entry point (Workflow or CommandLineTool)",
+            "type": "string",
+            "label": "Entry point",
+            "default": "main"
+          }
+        }
+      },
+      "version": "0.1",
+      "tags": [
+        3,
+        5
+      ],
+      "tools": [
+        "filter",
+        "ap_validator",
+        "save"
+      ]
+    }
+  },
+  {
+    "model": "backend.subworkflow",
+    "pk": "bandit_subworkflow",
+    "fields": {
+      "name": "Bandit",
+      "description": "Bandit - Bandit is a tool designed to find common security issues in Python code",
+      "pipeline_step": "bandit_subworkflow:\r\n  in:\r\n    bandit.verbose: bandit_subworkflow.bandit.verbose\r\n    filter.regex: bandit_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#bandit_subworkflow'\r\n  out: []",
+      "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: bandit\r\n    bandit.verbose: boolean\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    bandit_report:\r\n      type: File\r\n      outputSource: bandit_step/bandit_report\r\n\r\n  steps:\r\n    bandit_step:\r\n      in:\r\n        file_list: filter_bandit_step/file_list\r\n        source_directory: source_directory\r\n        verbose: bandit.verbose\r\n      run: '#bandit_tool'\r\n      out:\r\n      - bandit_report\r\n    filter_bandit_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    save_bandit_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: bandit_step/bandit_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n  id: bandit_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+      "user_params": {
+        "bandit": {
+          "verbose": {
+            "doc": "Output extra information like excluded and included files.",
+            "type": "boolean",
+            "label": "Verbose",
+            "default": false
+          }
+        },
+        "filter": {
+          "regex": {
+            "type": "string",
+            "label": "regex",
+            "default": ".*\\.py"
+          }
+        }
+      },
+      "version": "0.1",
+      "tags": [
+        1,
+        6
+      ],
+      "tools": [
+        "filter",
+        "bandit",
+        "save"
+      ]
+    }
+  },
+  {
+    "model": "backend.subworkflow",
+    "pk": "clone_subworkflow",
+    "fields": {
+      "name": "Clone repo",
+      "description": "git-clone - Clone a repository into a new directory",
+      "pipeline_step": "clone_step:\r\n  in:\r\n    clone.repo_branch: clone_subworkflow.clone.repo_branch\r\n    clone.repo_url: clone_subworkflow.clone.repo_url\r\n  run: '#clone_subworkflow'\r\n  out:\r\n  - repo_directory",
+      "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    clone.repo_branch:\r\n      type: string\r\n      default: ''\r\n    clone.repo_url: string\r\n\r\n  outputs:\r\n    repo_directory:\r\n      type: Directory\r\n      outputSource: clone_tool_step/repo_directory\r\n\r\n  steps:\r\n    clone_tool_step:\r\n      in:\r\n        repo_branch: clone.repo_branch\r\n        repo_url: clone.repo_url\r\n      run: '#clone_tool'\r\n      out:\r\n      - repo_directory\r\n  id: clone_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+      "user_params": {
+        "clone": {
+          "repo_url": {
+            "doc": "URL to the repository to clone.",
+            "type": "string",
+            "label": "Repo URL",
+            "default": ""
+          },
+          "repo_branch": {
+            "doc": "Branch to checkout instead of the remote HEAD.",
+            "type": "string",
+            "label": "Repo branch",
+            "default": ""
+          }
+        }
+      },
+      "version": "0.1",
+      "tags": [
+        2,
+        8
+      ],
+      "tools": [
+        "clone"
+      ]
+    }
+  },
+  {
+    "model": "backend.subworkflow",
+    "pk": "flake8_subworkflow",
+    "fields": {
+      "name": "Flake8",
+      "description": "flake8 - Style guide enforcement tool for Python",
+      "pipeline_step": "flake8_subworkflow:\r\n  in:\r\n    filter.regex: flake8_subworkflow.filter.regex\r\n    flake8.verbose: flake8_subworkflow.flake8.verbose\r\n    pipeline_id: pipeline_id\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#flake8_subworkflow'\r\n  out: []",
+      "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: flake8\r\n    filter.regex: string\r\n    flake8.verbose: boolean\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    flake8_report:\r\n      type: File\r\n      outputSource: flake8_step/flake8_report\r\n\r\n  steps:\r\n    filter_step:\r\n      run: '#filter_tool'\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      out:\r\n      - file_list\r\n    flake8_step:\r\n      run: '#flake8_tool'\r\n      in:\r\n        file_list: filter_step/file_list\r\n        source_directory: source_directory\r\n        verbose: flake8.verbose\r\n      out:\r\n      - flake8_report\r\n    digest_step:\r\n      run: '#digest_generator'\r\n      in:\r\n        name: name\r\n        report_file: flake8_step/flake8_report\r\n      out:\r\n      - digest_file\r\n    save_step:\r\n      run: '#save_tool'\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report_file: flake8_step/flake8_report\r\n        digest_file: digest_step/digest_file\r\n        run_id: run_id\r\n        server_url: server_url\r\n      out: []\r\n  id: flake8_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+      "user_params": {
+        "filter": {
+          "regex": {
+            "type": "string",
+            "label": "regex",
+            "default": ".*\\.py"
+          }
+        },
+        "flake8": {
+          "verbose": {
+            "doc": "Increase the verbosity of Flake8’s output.",
+            "type": "boolean",
+            "label": "Verbose",
+            "default": false
+          }
+        }
+      },
+      "version": "0.1",
+      "status": "Stable",
+      "available": true,
+      "tags": [
+        1,
+        5
+      ],
+      "tools": [
+        "_digest",
+        "filter",
+        "flake8",
+        "save_report_and_digest"
+      ]
+    }
+  },
+  {
+    "model": "backend.subworkflow",
+    "pk": "notebook-bp-validator_subworkflow",
+    "fields": {
+      "name": "Jupyter Notebook Best Practices Validator",
+      "description": "This tool aims at validating the notebooks against the CEOS Jupyter Notebook Best Practice v1.1 document.",
+      "pipeline_step": "notebook-bp-validator_subworkflow:\r\n  in:\r\n    filter.regex: notebook-bp-validator_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    notebook-bp-validator.abspath: notebook-bp-validator_subworkflow.notebook-bp-validator.abspath\r\n    notebook-bp-validator.schema: notebook-bp-validator_subworkflow.notebook-bp-validator.schema\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#notebook-bp-validator_subworkflow'\r\n  out: []",
+      "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: notebook-bp-validator\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    notebook-bp-validator.abspath: boolean\r\n    notebook-bp-validator.schema: string\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    notebook-bp-validator_report:\r\n      type: File\r\n      outputSource: notebook-bp-validator_step/notebook-bp-validator_report\r\n\r\n  steps:\r\n    filter_notebook-bp-validator_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    notebook-bp-validator_step:\r\n      in:\r\n        abspath: notebook-bp-validator.abspath \r\n        file_list: filter_notebook-bp-validator_step/file_list\r\n        source_directory: source_directory\r\n        schema: notebook-bp-validator.schema\r\n      run: '#notebook-bp-validator_tool'\r\n      out:\r\n      - notebook-bp-validator_report\r\n    save_notebook-bp-validator_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: notebook-bp-validator_step/notebook-bp-validator_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n  id: notebook-bp-validator_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+      "user_params": {
+        "filter": {
+          "regex": {
+            "type": "string",
+            "label": "regex",
+            "default": ".*\\.ipynb"
+          }
+        },
+        "notebook-bp-validator": {
+          "schema": {
+            "doc": "Supported values: 'eumetsat' or 'schema.org'",
+            "type": "string",
+            "label": "Schema",
+            "default": "eumetsat"
+          },
+          "abspath": {
+            "doc": "Uses absolute paths in output.",
+            "type": "boolean",
+            "label": "Absolute path",
+            "default": false
+          }
+        }
+      },
+      "version": "0.1",
+      "tags": [
+        4,
+        5
+      ],
+      "tools": [
+        "filter",
+        "notebook-bp-validator",
+        "save"
+      ]
+    }
+  },
+  {
+    "model": "backend.subworkflow",
+    "pk": "papermill_subworkflow",
+    "fields": {
+      "name": "Papermill",
+      "description": "Papermill is a tool for parameterizing and executing Jupyter Notebooks.",
+      "pipeline_step": "papermill_subworkflow:\r\n  in:\r\n    filter.regex: papermill_subworkflow.filter.regex\r\n    papermill.extract_requirements: papermill_subworkflow.papermill.extract_requirements\r\n    papermill.extra_requirements: papermill_subworkflow.papermill.extra_requirements\r\n    papermill.execution_parameters: papermill_subworkflow.papermill.execution_parameters\r\n    pipeline_id: pipeline_id\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#papermill_subworkflow'\r\n  out: []",
+      "definition": "- class: Workflow\r\n\r\n  # --- This workflow runs Papermill on a single notebook and saves the result.\r\n\r\n  id: papermill_execution_subworkflow\r\n\r\n  inputs:\r\n    notebook_path: string # Single notebook file\r\n\r\n    # Inputs for papermill_tool\r\n    source_directory: Directory\r\n    extract_requirements: boolean?\r\n    extra_requirements: string?\r\n    execution_parameters: string?\r\n\r\n    # Inputs for save_tool\r\n    name: string\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    papermill_step:\r\n      in:\r\n        notebook_path: notebook_path\r\n        extract_requirements: extract_requirements\r\n        extra_requirements: extra_requirements\r\n        execution_parameters: execution_parameters\r\n        source_directory: source_directory\r\n      run: '#papermill_tool'\r\n      out:\r\n      - output_nb\r\n\r\n    save_papermill_step:\r\n      in:\r\n        name: name\r\n        instance: notebook_path\r\n        pipeline_id: pipeline_id\r\n        report: papermill_step/output_nb\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n\r\n- class: Workflow\r\n\r\n  # --- This workflow filters the input files then executes the above sub-workflow on each of them (scatter)\r\n\r\n  id: papermill_subworkflow\r\n\r\n  requirements:\r\n    ScatterFeatureRequirement: {}\r\n\r\n  inputs:\r\n    filter.regex: string\r\n    papermill.extract_requirements: boolean\r\n    papermill.extra_requirements: string\r\n    papermill.execution_parameters: string\r\n    name:\r\n      type: string\r\n      default: papermill\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    filter_papermill_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list # Array of strings (the input for scatter)\r\n\r\n    execute_notebooks_step:\r\n      # Run the subworkflow defined above\r\n      run: '#papermill_execution_subworkflow'\r\n      # Scatter the above sub-workflow [Papermill => Save] over the array of files\r\n      scatter: notebook_path\r\n      in:\r\n        # The list of notebooks filtered in the previous step\r\n        notebook_path: filter_papermill_step/file_list\r\n        # Other sub-workflow inputs\r\n        source_directory: source_directory\r\n        extract_requirements: papermill.extract_requirements\r\n        extra_requirements: papermill.extra_requirements\r\n        execution_parameters: papermill.execution_parameters\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        run_id: run_id\r\n        server_url: server_url\r\n\r\n      out: []\r\n\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+      "user_params": {
+        "filter": {
+          "regex": {
+            "type": "string",
+            "label": "regex",
+            "default": ".*\\.ipynb"
+          }
+        },
+        "papermill": {
+          "extra_requirements": {
+            "doc": "Python requirements",
+            "type": "string",
+            "label": "Python requirements",
+            "default": ""
+          },
+          "execution_parameters": {
+            "doc": "E.g. alpha=0.6, ratio=0.1",
+            "type": "string",
+            "label": "Execution parameters",
+            "default": ""
+          },
+          "extract_requirements": {
+            "doc": "Extract requirements",
+            "type": "boolean",
+            "label": "Extract requirements",
+            "default": false
+          }
+        }
+      },
+      "version": "0.1",
+      "tags": [
+        4,
+        7
+      ],
+      "tools": [
+        "filter",
+        "papermill",
+        "save"
+      ]
+    }
+  },
+  {
+    "model": "backend.subworkflow",
+    "pk": "pylint_subworkflow",
+    "fields": {
+      "name": "Pylint",
+      "description": "pylint - Static code analyser tool for Python",
+      "pipeline_step": "pylint_subworkflow:\r\n  in:\r\n    filter.regex: pylint_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    pylint.disable: pylint_subworkflow.pylint.disable\r\n    pylint.errors_only: pylint_subworkflow.pylint.errors_only\r\n    pylint.verbose: pylint_subworkflow.pylint.verbose\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#pylint_subworkflow'\r\n  out: []",
+      "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: pylint\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    pylint.disable: string\r\n    pylint.errors_only: boolean\r\n    pylint.verbose: boolean\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    pylint_report:\r\n      type: File\r\n      outputSource: pylint_step/pylint_report\r\n\r\n  steps:\r\n    filter_pylint_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    pylint_step:\r\n      in:\r\n        disable: pylint.disable\r\n        errors_only: pylint.errors_only\r\n        file_list: filter_pylint_step/file_list\r\n        source_directory: source_directory\r\n        verbose: pylint.verbose\r\n      run: '#pylint_tool'\r\n      out:\r\n      - pylint_report\r\n    save_pylint_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: pylint_step/pylint_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n  id: pylint_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+      "user_params": {
+        "filter": {
+          "regex": {
+            "type": "string",
+            "label": "regex",
+            "default": ".*\\.py"
+          }
+        },
+        "pylint": {
+          "disable": {
+            "doc": "Disable the message, report, category or checker with the given id(s).",
+            "type": "string",
+            "label": "Disable IDs",
+            "default": "E0401"
+          },
+          "verbose": {
+            "doc": "In verbose mode, extra non-checker-related info will be displayed.",
+            "type": "boolean",
+            "label": "Verbose",
+            "default": false
+          },
+          "errors_only": {
+            "doc": "In error mode, messages with a category besides ERROR or FATAL are suppressed, and no reports are done by default. Error mode is compatible with disabling specific errors.",
+            "type": "boolean",
+            "label": "Errors only",
+            "default": false
+          }
+        }
+      },
+      "version": "0.1",
+      "tags": [
+        1,
+        5
+      ],
+      "tools": [
+        "filter",
+        "pylint",
+        "save"
+      ]
+    }
+  },
+  {
+    "model": "backend.subworkflow",
+    "pk": "ruff_ipynb_subworkflow",
+    "fields": {
+      "name": "Ruff - Notebook",
+      "description": "Ruff - An extremely fast Python linter and code formatter, written in Rust",
+      "pipeline_step": "ruff_ipynb_subworkflow:\r\n  in:\r\n    filter.regex: ruff_ipynb_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    ruff.verbose: ruff_ipynb_subworkflow.ruff.verbose\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#ruff_ipynb_subworkflow'\r\n  out: []",
+      "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: ruff\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    ruff.verbose: boolean\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    ruff_report:\r\n      type: File\r\n      outputSource: ruff_step/ruff_report\r\n\r\n  steps:\r\n    filter_ruff_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    ruff_step:\r\n      in:\r\n        file_list: filter_ruff_step/file_list\r\n        source_directory: source_directory\r\n        verbose: ruff.verbose\r\n      run: '#ruff_tool'\r\n      out:\r\n      - ruff_report\r\n    save_ruff_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: ruff_step/ruff_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n  id: ruff_ipynb_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+      "user_params": {
+        "ruff": {
+          "verbose": {
+            "doc": "Enable verbose logging.",
+            "type": "boolean",
+            "label": "Verbose",
+            "default": false
+          }
+        },
+        "filter": {
+          "regex": {
+            "type": "string",
+            "label": "regex",
+            "default": ".*\\.ipynb"
+          }
+        }
+      },
+      "version": "0.1",
+      "tags": [
+        4,
+        5
+      ],
+      "tools": [
+        "filter",
+        "ruff",
+        "save"
+      ]
+    }
+  },
+  {
+    "model": "backend.subworkflow",
+    "pk": "ruff_subworkflow",
+    "fields": {
+      "name": "Ruff",
+      "description": "Ruff - An extremely fast Python linter and code formatter, written in Rust",
+      "pipeline_step": "ruff_subworkflow:\r\n  in:\r\n    filter.regex: ruff_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    ruff.verbose: ruff_subworkflow.ruff.verbose\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#ruff_subworkflow'\r\n  out: []",
+      "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: ruff\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    ruff.verbose: boolean\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    ruff_report:\r\n      type: File\r\n      outputSource: ruff_step/ruff_report\r\n\r\n  steps:\r\n    filter_ruff_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    ruff_step:\r\n      in:\r\n        file_list: filter_ruff_step/file_list\r\n        source_directory: source_directory\r\n        verbose: ruff.verbose\r\n      run: '#ruff_tool'\r\n      out:\r\n      - ruff_report\r\n    save_ruff_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: ruff_step/ruff_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n  id: ruff_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+      "user_params": {
+        "ruff": {
+          "verbose": {
+            "doc": "Enable verbose logging.",
+            "type": "boolean",
+            "label": "Verbose",
+            "default": false
+          }
+        },
+        "filter": {
+          "regex": {
+            "type": "string",
+            "label": "regex",
+            "default": ".*\\.py"
+          }
+        }
+      },
+      "version": "0.1",
+      "tags": [
+        1,
+        5
+      ],
+      "tools": [
+        "filter",
+        "ruff",
+        "save"
+      ]
+    }
+  },
+  {
+    "model": "backend.subworkflow",
+    "pk": "sonarqube_subworkflow",
+    "fields": {
+      "name": "SonarQube",
+      "description": "SonarQube - Code Quality, Security & Static Analysis Tool\r\n\r\nThis tool creates a project in our internal SonarQube server, sends it the code for analysis, and then retrieves the analysis results for storage in the database.",
+      "pipeline_step": "sonarqube_subworkflow:\r\n  in:\r\n    pipeline_id: pipeline_id\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n\r\n    # \"sonarqube_init\" in the subworkflow receives all the inputs\r\n    sonarqube_project_key: sonarqube_subworkflow.sonarqube_init.sonarqube_project_key\r\n    sonarqube_project_name: sonarqube_subworkflow.sonarqube_init.sonarqube_project_name\r\n    sonarqube_server: sonarqube_subworkflow.sonarqube_init.sonarqube_server\r\n    sonarqube_token: sonarqube_subworkflow.sonarqube_init.sonarqube_token\r\n\r\n  run: '#sonarqube_subworkflow'\r\n  out: []",
+      "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: sonarqube\r\n    pipeline_id:\r\n      type: string\r\n    run_id:\r\n      type: string\r\n    server_url:\r\n      type: string\r\n    source_directory:\r\n      type: Directory\r\n    sonarqube_project_key:\r\n      type: string\r\n    sonarqube_project_name:\r\n      type: string\r\n    sonarqube_server:\r\n      type: string\r\n      default: sonarqube-sonarqube.sonarqube:9000\r\n    sonarqube_token:\r\n      type: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n\r\n    sonarqube_init_step:\r\n      in:\r\n        sonarqube_project_key: sonarqube_project_key\r\n        sonarqube_project_name: sonarqube_project_name\r\n        sonarqube_server: sonarqube_server\r\n        sonarqube_token: sonarqube_token\r\n      run: '#sonarqube_init_tool'\r\n      out:\r\n      - sonarqube_project_key\r\n      - sonarqube_server\r\n      - sonarqube_token\r\n\r\n    sonarqube_scan_step:\r\n      in:\r\n        sonarqube_project_key: sonarqube_init_step/sonarqube_project_key\r\n        sonarqube_project_name: sonarqube_project_name\r\n        sonarqube_server: sonarqube_server\r\n        sonarqube_token: sonarqube_token\r\n        source_directory: source_directory\r\n      run: '#sonarqube_scan_tool'\r\n      out:\r\n      - sonarqube_project_key\r\n      - sonarqube_server\r\n      - sonarqube_token\r\n\r\n    sonarqube_get_report_step:\r\n      in:\r\n        sonarqube_project_key: sonarqube_scan_step/sonarqube_project_key\r\n        sonarqube_server: sonarqube_server\r\n        sonarqube_token: sonarqube_token\r\n      run: '#sonarqube_get_report_tool'\r\n      out:\r\n      - sonarqube_project_key\r\n      - sonarqube_server\r\n      - sonarqube_token\r\n      - sonarqube_report\r\n\r\n    save_sonarqube_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: sonarqube_get_report_step/sonarqube_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n\r\n  id: sonarqube_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+      "user_params": {
+        "sonarqube_init": {
+          "sonarqube_token": {
+            "type": "string",
+            "label": "Sonarqube Access Token",
+            "default": "123"
+          },
+          "sonarqube_server": {
+            "type": "string",
+            "label": "Sonarqube Server",
+            "default": "sonarqube-sonarqube.sonarqube:9000"
+          },
+          "sonarqube_project_key": {
+            "type": "string",
+            "label": "Sonarqube Project Key",
+            "default": "test_project_01"
+          },
+          "sonarqube_project_name": {
+            "type": "string",
+            "label": "Sonarqube Project Name",
+            "default": "Test Project 01"
+          }
+        }
+      },
+      "version": "0.1",
+      "status": "Stable",
+      "available": true,
+      "tags": [],
+      "tools": [
+        "save",
+        "sonarqube_get_report",
+        "sonarqube_init",
+        "sonarqube_scan"
+      ]
+    }
+  },
+  {
+    "model": "backend.subworkflow",
+    "pk": "trivy_subworkflow",
+    "fields": {
+      "name": "Trivy",
+      "description": "The all-in-one open source security scanner\r\nUse Trivy to find vulnerabilities (CVE) & misconfigurations (IaC) across code repositories, binary artifacts, container images, Kubernetes clusters, and more.",
+      "pipeline_step": "trivy_subworkflow:\r\n  in:\r\n    pipeline_id: pipeline_id\r\n    run_id: run_id\r\n    server_url: server_url\r\n    trivy.image: trivy_subworkflow.trivy.image\r\n  run: '#trivy_subworkflow'\r\n  out: []",
+      "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: trivy\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n    trivy.image: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    save_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: trivy_step/trivy_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n    trivy_step:\r\n      in:\r\n        image: trivy.image\r\n      run: '#trivy_tool'\r\n      out:\r\n      - trivy_report\r\n  id: trivy_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+      "user_params": {
+        "trivy": {
+          "image": {
+            "type": "string",
+            "label": "Docker image",
+            "default": "alpine/git"
+          }
+        }
+      },
+      "version": "0.1",
+      "tags": [
+        6,
+        9
+      ],
+      "tools": [
+        "save",
+        "trivy"
+      ]
+    }
+  }
+]

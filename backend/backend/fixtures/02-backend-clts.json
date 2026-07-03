@@ -1,0 +1,146 @@
+[
+  {
+    "model": "backend.commandlinetool",
+    "pk": "ap_validator",
+    "fields": {
+      "name": "Application Package Validator",
+      "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: nexus.spaceapplications.com/repository/docker-eoepca/ap_validator:2025-03-05.1\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          cd $(inputs.source_directory.path)\r\n\r\n          ap-validator \\\\\r\n              --format json \\\\\r\n              --detail '$(inputs.detail)' \\\\\r\n              --entry-point '$(inputs.entry_point)' \\\\\r\n              '$(inputs.file_path)' > ~/ap_validator_report.json\r\n\r\n          exit 0\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    file_path: string\r\n    source_directory: Directory\r\n    detail: string\r\n    entry_point: string\r\n\r\n  outputs:\r\n    ap_validator_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: ap_validator_report.json\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: ap_validator_tool",
+      "version": "0.1"
+    }
+  },
+  {
+    "model": "backend.commandlinetool",
+    "pk": "bandit",
+    "fields": {
+      "name": "Bandit",
+      "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: cytopia/bandit\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          cd $(inputs.source_directory.path)\r\n\r\n          PARAMS=\"-f $(inputs.output_format) -o $HOME/$(inputs.output_file)\"\r\n          if [ \"$(inputs.exit_zero)\" == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS --exit-zero\"\r\n          fi\r\n          if [ \"$(inputs.verbose)\" == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS -v\"\r\n          fi\r\n\r\n          bandit $PARAMS $(inputs.file_list.join(\" \"))\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    exit_zero:\r\n      label: Exit with zero\r\n      doc: Exit with 0, even with results found.\r\n      type: boolean\r\n      default: true\r\n    file_list: string[]\r\n    output_file:\r\n      label: Output file\r\n      doc: Write report to filename.\r\n      type: string\r\n      default: bandit_report.json\r\n    output_format:\r\n      label: Output format\r\n      doc: Specify output format.\r\n      type: string\r\n      default: json\r\n    source_directory: Directory\r\n    verbose: boolean\r\n\r\n  outputs:\r\n    bandit_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: $(inputs.output_file)\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: bandit_tool",
+      "version": "0.1"
+    }
+  },
+  {
+    "model": "backend.commandlinetool",
+    "pk": "clone",
+    "fields": {
+      "name": "Clone repo",
+      "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: alpine/git\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: clone_branch.sh\r\n        entry: |-\r\n          set -e\r\n\r\n          if [ $(inputs.repo_branch) ]; then\r\n              echo 'Branch specified: $(inputs.repo_branch). Cloning branch...'\r\n              git clone $(inputs.repo_url) -b $(inputs.repo_branch)\r\n          else\r\n              echo 'No branch specified. Cloning default branch...'\r\n              git clone $(inputs.repo_url)\r\n          fi\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    repo_branch: string\r\n    repo_url: string\r\n\r\n  outputs:\r\n    repo_directory:\r\n      type: Directory\r\n      outputBinding:\r\n        glob: $(inputs.repo_url.split('/').pop().replace('.git',''))\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - clone_branch.sh\r\n  id: clone_tool",
+      "version": "0.1"
+    }
+  },
+  {
+    "model": "backend.commandlinetool",
+    "pk": "_digest",
+    "fields": {
+      "name": "Report Digest Generator",
+      "definition": "- class: CommandLineTool\r\n\r\n  id: digest_generator\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: python:3.11-slim\r\n    InlineJavascriptRequirement: {}\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n        - entryname: make_digest.py\r\n          entry: |\r\n            import json\r\n            import sys\r\n            from datetime import datetime\r\n\r\n            digest_data = {\r\n                \"tool\": {\r\n                    \"name\": \"flake8\",\r\n                    \"instance\": \"\",\r\n                    \"version\": \"0.1\"\r\n                },\r\n                \"created_at\": datetime.now().isoformat(),\r\n                \"issues\": {\r\n                    \"info\": 4,\r\n                    \"convention\": 3,\r\n                    \"warning\": 3,\r\n                    \"error\": 2,\r\n                    \"security\": 2,\r\n                    \"critical\": 1\r\n                }\r\n            }\r\n\r\n            try:\r\n                with open(\"digest.json\", \"w\", encoding=\"utf-8\") as f:\r\n                    json.dump(digest_data, f, indent=2)\r\n                print(\"[Digest] Successfully generated digest.json\")\r\n            except Exception as e:\r\n                print(f\"[Digest] Error writing file: {e}\", file=sys.stderr)\r\n                sys.exit(1)\r\n\r\n  baseCommand: [\"python3\", \"make_digest.py\"]\r\n\r\n  inputs:\r\n    name: string\r\n    instance:\r\n      type: string\r\n      default: \"\"\r\n    report_file: File\r\n\r\n  outputs:\r\n    digest_file:\r\n      type: File\r\n      outputBinding:\r\n        glob: \"digest.json\"",
+      "version": "0.1"
+    }
+  },
+  {
+    "model": "backend.commandlinetool",
+    "pk": "filter",
+    "fields": {
+      "name": "Filter",
+      "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: alpine:latest\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          cd $(inputs.source_directory.path)\r\n          find . -type f -regex \"$(inputs.regex)\" > $HOME/filter.out\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    regex: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    file_list:\r\n      type: string[]\r\n      outputBinding:\r\n        glob: filter.out\r\n        outputEval: |-\r\n          $(self[0].contents.split('\\n').filter(function(line) {return line.trim() !== '';}))\r\n        loadContents: true\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: filter_tool",
+      "version": "0.1"
+    }
+  },
+  {
+    "model": "backend.commandlinetool",
+    "pk": "flake8",
+    "fields": {
+      "name": "Flake8",
+      "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: eoepca/appquality-flake8-json:v0.1.0\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          cd $(inputs.source_directory.path)\r\n\r\n          PARAMS=\"--format=$(inputs.output_format) --output-file=$HOME/$(inputs.output_file)\"\r\n          if [ \"$(inputs.exit_zero)\" == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS --exit-zero\"\r\n          fi\r\n          if [ \"$(inputs.verbose)\" == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS -v\"\r\n          fi\r\n\r\n          flake8 $PARAMS $(inputs.file_list.join(\" \"))\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    exit_zero:\r\n      label: Exit with zero\r\n      doc: Force Flake8 to use the exit status code 0 even if there are errors.\r\n      type: boolean\r\n      default: true\r\n    file_list: string[]\r\n    output_file:\r\n      label: Output file\r\n      doc: Redirect all output to the specified file.\r\n      type: string\r\n      default: flake8_report.json\r\n    output_format:\r\n      label: Output format\r\n      doc: Select the formatter used to display errors to the user.\r\n      type: string\r\n      default: json\r\n    source_directory: Directory\r\n    verbose: boolean\r\n\r\n  outputs:\r\n    flake8_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: $(inputs.output_file)\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: flake8_tool",
+      "version": "0.1"
+    }
+  },
+  {
+    "model": "backend.commandlinetool",
+    "pk": "notebook-bp-validator",
+    "fields": {
+      "name": "Jupyter Notebook Best Practices Validator",
+      "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: eoepca/notebook-bp-validator:2025-05-12.1\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          cd $(inputs.source_directory.path)\r\n\r\n          PARAMS=\"-s $(inputs.schema)\"\r\n          if [ '$(inputs.abspath)' == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS -p\"\r\n          fi\r\n\r\n          nb-validator $PARAMS $(inputs.file_list.join(\" \")) > ~/notebook-bp-validator_report.json\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    abspath: boolean\r\n    file_list: string[]\r\n    schema: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    notebook-bp-validator_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: notebook-bp-validator_report.json\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: notebook-bp-validator_tool",
+      "version": "0.1"
+    }
+  },
+  {
+    "model": "backend.commandlinetool",
+    "pk": "papermill",
+    "fields": {
+      "name": "Papermill",
+      "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: continuumio/miniconda3\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          set -e\r\n\r\n          cat ~/err.ipynb > ~/out.ipynb\r\n          echo \"[Papermill] Source directory: $(inputs.source_directory.path)\"\r\n          echo \"[Papermill] Notebook path: $(inputs.notebook_path)\"\r\n          echo \"[Papermill] Extract requirements: $(inputs.extract_requirements)\"\r\n          echo \"[Papermill] Extra requirements: $(inputs.extra_requirements)\"\r\n          echo \"[Papermill] Execution parameters: $(inputs.execution_parameters)\"\r\n\r\n          cd $(inputs.source_directory.path)\r\n\r\n          if [ -s environment.yml ]; then\r\n            echo \"Info: Found non-empty environment.yml file in the source folder. Will use it to setup the Conda environment.\"\r\n            ENV=`grep \"name: \" environment.yml | cut - -d' ' -f2`\r\n            echo \"Info: Environment name: $ENV\"\r\n            cp -p environment.yml ~/environment.yml\r\n            touch ~/requirements.txt\r\n          else\r\n            if [ \"$(inputs.extract_requirements)\" = \"true\" ]; then\r\n              echo \"Info: Generating requirements.txt\"\r\n              cd ~\r\n              apt update && apt install -y jq\r\n              pip install pipreqsnb\r\n              pipreqsnb --force --encoding utf-8 --savepath ~/requirements.txt $(inputs.source_directory.path)/$(inputs.notebook_path)\r\n              echo \"Info: Generating environment.yml\"\r\n              ENV=`cat $(inputs.source_directory.path)/$(inputs.notebook_path) | jq .metadata.kernelspec.name -r`\r\n              echo \"Info: Environment name: $ENV\"\r\n              echo \"name: $ENV\" > ~/environment.yml\r\n            else\r\n              echo \"Info: Generating environment.yml\"\r\n              pip install pyyaml\r\n              python ~/script.py $(inputs.notebook_path) | tee ~/environment.yml\r\n              touch ~/requirements.txt\r\n            fi\r\n          fi\r\n\r\n          if [ ! -s ~/environment.yml ]; then\r\n            echo \"Error: environment.yml is empty. Aborting environment creation.\"\r\n            exit 1\r\n          fi\r\n\r\n          echo \"Requirements file:\"\r\n          cat ~/requirements.txt\r\n\r\n          echo \"Environment file:\"\r\n          cat ~/environment.yml\r\n\r\n          ENV=`grep \"name: \" ~/environment.yml | cut - -d' ' -f2`\r\n          echo \"Info: Environment name: $ENV\"\r\n\r\n          conda env create -f ~/environment.yml\r\n          conda run -n $ENV pip install ipykernel papermill\r\n          conda run -n $ENV pip install -r ~/requirements.txt\r\n          if [ \"$(inputs.extra_requirements)\" != \"\" ]; then\r\n              conda run -n $ENV pip install $(inputs.extra_requirements)\r\n          fi\r\n          conda run -n $ENV ipython kernel install --user --name $ENV\r\n          conda run -n $ENV papermill $(inputs.source_directory.path)/$(inputs.notebook_path) ~/out.ipynb\r\n\r\n      - entryname: script.py\r\n        entry: |-\r\n          import json\r\n          import yaml\r\n          import sys\r\n\r\n          try:\r\n              with open('$(inputs.notebook_path)') as f:\r\n                  nb_json = json.load(f)\r\n          except Exception as e:\r\n              sys.stderr.write(f\"Failed to load notebook: {e}\\n\")\r\n              sys.exit(1)\r\n\r\n          conda_env = nb_json.get(\"metadata\", {}).get(\"software_requirements\", {}).get(\"conda_environment\", None)\r\n\r\n          try:\r\n              kernel_name = nb_json[\"metadata\"][\"kernelspec\"][\"name\"]\r\n          except KeyError as e:\r\n              sys.stderr.write(f\"Missing key in notebook metadata: {e}\\n\")\r\n              sys.exit(1)\r\n\r\n          if conda_env:\r\n              if conda_env.get(\"name\", None) == kernel_name:\r\n                  if conda_env.get(\"dependencies\"):\r\n                      res = yaml.dump({\"name\": conda_env[\"name\"], \"dependencies\": conda_env[\"dependencies\"]})\r\n                      print(res)\r\n                  else:\r\n                      sys.stderr.write(\"No dependencies found in the environment specification.\\n\")\r\n                      sys.exit(1)\r\n              else:\r\n                  sys.stderr.write(\"Kernel name does not match the conda environment name.\\n\")\r\n                  sys.exit(1)\r\n          else:\r\n              res = yaml.dump({\"name\": kernel_name, \"dependencies\": []})\r\n              print(res)\r\n\r\n      - entryname: err.ipynb\r\n        entry: |-\r\n          {\r\n            \"cells\": [\r\n              {\r\n                \"cell_type\": \"markdown\",\r\n                \"metadata\": {},\r\n                \"source\": [\r\n                  \"Error: The notebook could not be run.\"\r\n                ]\r\n              }\r\n            ],\r\n            \"metadata\": {\r\n              \"language_info\": {\r\n                \"name\": \"python\"\r\n              }\r\n            },\r\n            \"nbformat\": 4,\r\n            \"nbformat_minor\": 2\r\n          }\r\n\r\n  inputs:\r\n    notebook_path: string\r\n    extra_requirements:\r\n      label: Python requirements\r\n      doc: Space-separated list of Python libraries to be installed before executing the notebook\r\n      type: string\r\n      default: \"\"\r\n    extract_requirements:\r\n      label: Extract requirements\r\n      doc: Inspect the notebook cells to derive library requirements\r\n      type: boolean\r\n      default: false\r\n    execution_parameters:\r\n      label: Execution parameters\r\n      doc: These parameters are provided as inputs to the executed notebooks\r\n      type: string\r\n      default: \"\"\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    output_nb:\r\n      type: File\r\n      outputBinding:\r\n        glob: out.ipynb\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: papermill_tool",
+      "version": "0.1"
+    }
+  },
+  {
+    "model": "backend.commandlinetool",
+    "pk": "pylint",
+    "fields": {
+      "name": "Pylint",
+      "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: cytopia/pylint\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          cd $(inputs.source_directory.path)\r\n\r\n          PARAMS=\"--output-format=$(inputs.output_format) --output=$HOME/$(inputs.output_file) --disable=$(inputs.disable)\"\r\n          if [ \"$(inputs.exit_zero)\" == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS --exit-zero\"\r\n          fi\r\n          if [ \"$(inputs.errors_only)\" == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS -E\"\r\n          fi\r\n          if [ \"$(inputs.verbose)\" == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS -v\"\r\n          fi\r\n\r\n          pylint $PARAMS $(inputs.file_list.join(\" \"))\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    disable: string\r\n    errors_only: boolean\r\n    exit_zero:\r\n      doc: |-\r\n        Always return a 0 (non-error) status code, even if lint errors are found. This is primarily useful in continuous integration scripts.\r\n      type: boolean\r\n      default: true\r\n    file_list: string[]\r\n    output_file:\r\n      doc: Specify an output file.\r\n      type: string\r\n      default: pylint_report.json\r\n    output_format:\r\n      doc: |-\r\n        Set the output format. Available formats are: text, parseable, colorized, json2 (improved json format), json (old json format) and msvs (visual studio). You can also give a reporter class, e.g. mypackage.mymodule.MyReporterClass.\r\n      type: string\r\n      default: json\r\n    source_directory: Directory\r\n    verbose: boolean\r\n\r\n  outputs:\r\n    pylint_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: $(inputs.output_file)\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: pylint_tool",
+      "version": "0.1"
+    }
+  },
+  {
+    "model": "backend.commandlinetool",
+    "pk": "ruff",
+    "fields": {
+      "name": "Ruff",
+      "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: ghcr.io/astral-sh/ruff:alpine\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: script.sh\r\n        entry: |-\r\n          cd $(inputs.source_directory.path)\r\n\r\n          PARAMS=\"--output-format $(inputs.output_format) -o $HOME/$(inputs.output_file)\"\r\n          if [ \"$(inputs.exit_zero)\" == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS -e\"\r\n          fi\r\n          if [ \"$(inputs.no_cache)\" == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS -n\"\r\n          fi\r\n          if [ \"$(inputs.verbose)\" == \"true\" ] ; then\r\n            PARAMS=\"$PARAMS -v\"\r\n          fi\r\n\r\n          ruff check $PARAMS $(inputs.file_list.join(\" \"))\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    exit_zero:\r\n      label: Exit with zero\r\n      doc: Exit with status code \"0\", even upon detecting lint violations.\r\n      type: boolean\r\n      default: true\r\n    no_cache:\r\n      label: Disable cache\r\n      doc: Disable cache reads.\r\n      type: boolean\r\n      default: true\r\n    file_list: string[]\r\n    output_file:\r\n      label: Output file\r\n      doc: Specify file to write the linter output to.\r\n      type: string\r\n      default: ruff_report.json\r\n    output_format:\r\n      label: Output format\r\n      doc: |-\r\n        Output serialization format for violations. Possible values: concise, full, json, json-lines, junit, grouped, github, gitlab, pylint, rdjson, azure, sarif.\r\n      type: string\r\n      default: json\r\n    source_directory: Directory\r\n    verbose: boolean\r\n\r\n  outputs:\r\n    ruff_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: $(inputs.output_file)\r\n\r\n  baseCommand: sh\r\n  arguments:\r\n  - script.sh\r\n  id: ruff_tool",
+      "version": "0.1"
+    }
+  },
+  {
+    "model": "backend.commandlinetool",
+    "pk": "save",
+    "fields": {
+      "name": "Save report",
+      "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: curlimages/curl\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    name: string\r\n    instance:\r\n      type: string\r\n      default: \"\"\r\n    pipeline_id: string\r\n    report: File\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  baseCommand: curl\r\n  arguments:\r\n  - prefix: -X\r\n    valueFrom: POST\r\n  - prefix: -L\r\n    valueFrom: |-\r\n      $(inputs.server_url + '/api/pipelines/' + inputs.pipeline_id + '/runs/' + inputs.run_id + '/jobreports/?name=' + inputs.name + '&instance=' + inputs.instance)\r\n  - prefix: -H\r\n    valueFrom: Content-Type:application/json\r\n  - prefix: -d\r\n    valueFrom: $('@' + inputs.report.path)\r\n  id: save_tool",
+      "version": "0.1"
+    }
+  },
+  {
+    "model": "backend.commandlinetool",
+    "pk": "save_report_and_digest",
+    "fields": {
+      "name": "Save report and digest",
+      "definition": "- class: CommandLineTool\r\n  id: save_tool\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: curlimages/curl\r\n    InlineJavascriptRequirement: {}\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: save_script.sh\r\n        entry: |-\r\n          #!/usr/bin/env sh\r\n          set -e\r\n\r\n          URL=\"$(inputs.server_url)/api/pipelines/$(inputs.pipeline_id)/runs/$(inputs.run_id)/jobreports/?name=$(inputs.name)&instance=$(inputs.instance)\"\r\n          echo \"[Save] Backend request URL: $URL\"\r\n          REPORT_FILE=\"$(inputs.report_file.path)\"\r\n          DIGEST_FILE=\"$(inputs.digest_file === null ? 'digest.json' : inputs.digest_file.path)\"\r\n          echo \"[Save] Mandatory report file: $REPORT_FILE\"\r\n          echo \"[Save] Optional digest file: $DIGEST_FILE\"\r\n\r\n          # Check if the digest file does not exist OR is empty (size 0)\r\n          if [ ! -s \"$DIGEST_FILE\" ]; then\r\n            echo \"[Save] Digest file is missing or empty. Creating it with an empty dictionary...\"\r\n            echo '{}' > \"$DIGEST_FILE\"\r\n          fi\r\n\r\n          # Execute the curl command\r\n          echo \"[Save] Sending POST request to $URL...\"\r\n          curl -X POST -F \"report=@$REPORT_FILE\" -F \"digest=@$DIGEST_FILE\" \"$URL\"\r\n\r\n  baseCommand: [\"sh\", \"save_script.sh\"]\r\n\r\n  inputs:\r\n    name: string\r\n    instance:\r\n      type: string\r\n      default: \"\"\r\n    pipeline_id: string\r\n    report_file: File\r\n    digest_file: File?\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs:\r\n    stdout: stdout",
+      "version": "0.1"
+    }
+  },
+  {
+    "model": "backend.commandlinetool",
+    "pk": "sonarqube_get_report",
+    "fields": {
+      "name": "[SonarQube] Get report",
+      "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: curlimages/curl\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    sonarqube_project_key:\r\n      type: string\r\n    sonarqube_server:\r\n      type: string\r\n      default: sonarqube-sonarqube.sonarqube:9000\r\n    sonarqube_token:\r\n      type: string\r\n\r\n  outputs:\r\n    sonarqube_project_key:\r\n      type: string\r\n      outputBinding:\r\n        outputEval: $(inputs.sonarqube_project_key)\r\n    sonarqube_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: sonarqube_report.json\r\n    sonarqube_server:\r\n      type: string\r\n      outputBinding:\r\n        outputEval: $(inputs.sonarqube_server)\r\n    sonarqube_token:\r\n      type: string\r\n      outputBinding:\r\n        outputEval: $(inputs.sonarqube_token)\r\n  stdout: sonarqube_report.json\r\n\r\n  baseCommand:\r\n  - curl\r\n  arguments:\r\n  - prefix: -L\r\n    valueFrom: |-\r\n      $('http://' + inputs.sonarqube_server + '/api/issues/search?components=' + inputs.sonarqube_project_key)\r\n  - prefix: -u\r\n    valueFrom: $(inputs.sonarqube_token + ':')\r\n  id: sonarqube_get_report_tool",
+      "version": "0.1"
+    }
+  },
+  {
+    "model": "backend.commandlinetool",
+    "pk": "sonarqube_init",
+    "fields": {
+      "name": "[SonarQube] Init",
+      "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: curlimages/curl\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    sonarqube_project_key:\r\n      type: string\r\n    sonarqube_project_name:\r\n      type: string\r\n    sonarqube_server:\r\n      type: string\r\n      default: sonarqube-sonarqube.sonarqube:9000\r\n    sonarqube_token:\r\n      type: string\r\n\r\n  outputs:\r\n    sonarqube_project_key:\r\n      type: string\r\n      outputBinding:\r\n        outputEval: $(inputs.sonarqube_project_key)\r\n    sonarqube_server:\r\n      type: string\r\n      outputBinding:\r\n        outputEval: $(inputs.sonarqube_server)\r\n    sonarqube_token:\r\n      type: string\r\n      outputBinding:\r\n        outputEval: $(inputs.sonarqube_token)\r\n\r\n  baseCommand:\r\n  - curl\r\n  arguments:\r\n  - prefix: -X\r\n    valueFrom: POST\r\n  - prefix: -L\r\n    valueFrom: $('http://' + inputs.sonarqube_server + '/api/projects/create')\r\n  - prefix: -u\r\n    valueFrom: $(inputs.sonarqube_token + ':')\r\n  - prefix: -d\r\n    valueFrom: $('name=' + inputs.sonarqube_project_name)\r\n  - prefix: -d\r\n    valueFrom: $('project=' + inputs.sonarqube_project_key)\r\n  id: sonarqube_init_tool",
+      "version": "0.1"
+    }
+  },
+  {
+    "model": "backend.commandlinetool",
+    "pk": "sonarqube_scan",
+    "fields": {
+      "name": "[SonarQube] Scan repo",
+      "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: sonarsource/sonar-scanner-cli\r\n    EnvVarRequirement:\r\n      envDef:\r\n        SONAR_HOST_URL: $('http://' + inputs.sonarqube_server)\r\n        SONAR_TOKEN: $(inputs.sonarqube_token)\r\n    InlineJavascriptRequirement: {}\r\n\r\n  inputs:\r\n    sonarqube_project_key:\r\n      type: string\r\n    sonarqube_server:\r\n      type: string\r\n      default: sonarqube-sonarqube.sonarqube:9000\r\n    sonarqube_token:\r\n      type: string\r\n    source_directory:\r\n      type: Directory\r\n\r\n  outputs:\r\n    sonarqube_project_key:\r\n      type: string\r\n      outputBinding:\r\n        glob:\r\n        outputEval: $(inputs.sonarqube_project_key)\r\n    sonarqube_server:\r\n      type: string\r\n      outputBinding:\r\n        glob:\r\n        outputEval: $(inputs.sonarqube_server)\r\n    sonarqube_token:\r\n      type: string\r\n      outputBinding:\r\n        glob:\r\n        outputEval: $(inputs.sonarqube_token)\r\n\r\n  baseCommand:\r\n  - sonar-scanner\r\n  arguments:\r\n  - prefix: -D\r\n    valueFrom: $('sonar.projectKey=' + inputs.sonarqube_project_key)\r\n    separate: false\r\n  # - prefix: -D\r\n  #   valueFrom: $('sonar.userHome=$HOME')\r\n  #   separate: false\r\n  - prefix: -D\r\n    valueFrom: $('sonar.projectBaseDir=' + inputs.source_directory.path + '/../')\r\n    separate: false\r\n  # - prefix: -D\r\n  #   valueFrom: $('sonar.source=$HOME' /*+ inputs.source_directory.path*/)\r\n  #   separate: false\r\n  - prefix: -X\r\n  id: sonarqube_scan_tool",
+      "version": "0.1"
+    }
+  },
+  {
+    "model": "backend.commandlinetool",
+    "pk": "trivy",
+    "fields": {
+      "name": "Trivy",
+      "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: aquasec/trivy:latest\r\n\r\n  inputs:\r\n    image: string\r\n\r\n  outputs:\r\n    trivy_report:\r\n      type: File\r\n      outputBinding:\r\n        glob: trivy_report.json\r\n\r\n  baseCommand: trivy\r\n  arguments:\r\n  - image\r\n  - prefix: -f\r\n    valueFrom: json\r\n  - prefix: -o\r\n    valueFrom: trivy_report.json\r\n  - $(inputs.image)\r\n  id: trivy_tool",
+      "version": "0.1"
+    }
+  }
+]
