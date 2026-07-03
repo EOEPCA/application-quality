@@ -6,7 +6,7 @@
     temporary
     :width="800"
   >
-    <v-card>
+    <v-card class="h-100 d-flex flex-column">
       <v-card-title class="d-flex align-center">
         Execute: {{ pipeline.name }}
         <v-spacer />
@@ -18,7 +18,9 @@
         />
       </v-card-title>
 
-      <v-card-text>
+      <v-divider></v-divider>
+
+      <v-card-text class="flex-grow-1 overflow-y-auto">
         <v-alert
           v-if="error"
           type="error"
@@ -78,6 +80,8 @@
           </template>
         </v-form>
       </v-card-text>
+
+      <v-divider></v-divider>
 
       <v-card-actions>
         <v-spacer />
