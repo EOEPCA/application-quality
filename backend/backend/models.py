@@ -12,6 +12,7 @@ class Pipeline(models.Model):
     created_at      = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     edited_at       = models.DateTimeField(auto_now=True, blank=True, null=True)
     version         = models.CharField(max_length=50, null=True)
+    quality_rules   = models.JSONField(default=dict, blank=True, null=True)
 
     class Meta:
         constraints = [
@@ -41,6 +42,11 @@ class PipelineRun(models.Model):
     @property
     def job_reports_count(self):
         return self.jobreports.count()
+
+    @property
+    def digest_quality(self):
+        # Possible values: undefined, unknown, pass, pass_with_comments, fail, exception
+        return self.digest.get("digest_quality", "undefined") if self.digest else "undefined"
 
     def __str__(self):
         return f"{'✅' if self.status == 'succeeded' else '❌'} Run {self.id}: {self.pipeline.name}"

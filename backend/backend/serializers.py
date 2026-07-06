@@ -36,6 +36,7 @@ class PipelineSerializer(serializers.ModelSerializer):
             "description",
             "tools",
             "default_inputs",
+            "quality_rules",
             "owner",
             "owner_name",
             "created_at",
@@ -46,6 +47,7 @@ class PipelineSerializer(serializers.ModelSerializer):
 
 class PipelineRunSerializer(serializers.ModelSerializer):
     job_reports_count = serializers.SerializerMethodField()
+    digest_quality = serializers.SerializerMethodField()
     started_by = serializers.ReadOnlyField(source="started_by.username")
     triggered_by = serializers.ReadOnlyField(source="triggered_by.id")
 
@@ -62,6 +64,7 @@ class PipelineRunSerializer(serializers.ModelSerializer):
             "inputs",
             "output",
             "digest",
+            "digest_quality",
             "executed_cwl",
             "started_by",
             "triggered_by",
@@ -70,6 +73,9 @@ class PipelineRunSerializer(serializers.ModelSerializer):
 
     def get_job_reports_count(self, obj):
         return obj.job_reports_count
+
+    def get_digest_quality(self, obj):
+        return obj.digest_quality
 
 
 class JobReportSerializer(serializers.ModelSerializer):
