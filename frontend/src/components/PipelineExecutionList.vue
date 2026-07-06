@@ -93,6 +93,16 @@
             </div>
           </td>
           <td>
+            <div class="d-flex align-center">
+              <span 
+                :class="qualityColors[item.digest_quality] || 'bg-grey'" 
+                class="d-inline-block rounded-circle mr-2"
+                style="width: 10px; height: 10px;"
+              ></span>
+              <span class="text-capitalize nowrap">{{ item.digest_quality.replaceAll("_", " ") }}</span>
+            </div>
+          </td>
+          <td>
             <v-progress-linear
               :model-value="progress(item)"
               color="rgb(24, 103, 192, 0.5)"
@@ -187,7 +197,7 @@
           <JSONTableViewer
             :data="prunePipelineExecutionDetails(selectedExecution)"
             :dont-convert="['usage_report', 'inputs', 'digest']"
-            :key-order="['pipeline_name', 'started_by', 'start_time', 'completion_time', 'status', 'job_reports_count', 'user', 'inputs', 'digest']"
+            :key-order="['pipeline_name', 'started_by', 'start_time', 'completion_time', 'status', 'job_reports_count', 'user', 'inputs', 'digest', 'digest_quality']"
           />
         </v-card-text>
       </v-card>
@@ -205,8 +215,8 @@
           />
           <JSONTableViewer
             :data="pruneTriggerEventDetails(selectedExecution)"
-            :dont-convert="['usage_report', 'inputs']"
-            :key-order="['pipeline_name', 'started_by', 'start_time', 'completion_time', 'status', 'job_reports_count', 'user', 'inputs']"
+            :dont-convert="[]"
+            :key-order="[]"
           />
         </v-card-text>
       </v-card>
@@ -274,6 +284,11 @@ export default {
           sortable: true,
         },
         {
+          title: 'Quality',
+          key: 'digest_quality',
+          sortable: true,
+        },
+        {
           title: 'Progress',
           key: 'progress',
           sortable: true,
@@ -298,6 +313,14 @@ export default {
         "starting": "bg-info",
         "active": "bg-warning",
         "succeeded": "bg-success",
+      },
+      qualityColors: {
+        "undefined": "bg-gray",
+        "unknown": "bg-gray",
+        "pass_with_comments": "bg-warning",
+        "pass": "bg-success",
+        "fail": "bg-error",
+        "exception": "bg-info",
       },
     };
   },
@@ -413,6 +436,7 @@ export default {
         'started_by',
         'usage_report',
         'digest',
+        'digest_quality',
         // 'inputs' are filtered separately below
       ];
       const details = Object.fromEntries(
@@ -438,7 +462,7 @@ export default {
     },
 
     pruneTriggerEventDetails(execution) {
-      console.log("pruneTriggerEventDetails: TO BE IMPLEMENTED");
+      console.log("pruneTriggerEventDetails: TO BE IMPLEMENTED", execution);
       //return execution.trigger_event
       return { "Status": "TO BE IMPLEMENTED" };
     },
@@ -448,7 +472,6 @@ export default {
       this.selectedExecution = execution;
       this.showDetails = true;
     },
-
 
     viewTriggerEventDetails(execution) {
       console.log('Selected execution:', execution);

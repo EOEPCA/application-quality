@@ -195,7 +195,7 @@
           <JSONTableViewer
             :data="prunePipelineDetails(selectedPipeline)"
             :dont-convert="['default_inputs']"
-            :key-order="['name', 'description', 'version', 'owner_name', 'created_at', 'edited_at', 'tools', 'default_inputs']"
+            :key-order="['name', 'description', 'version', 'owner_name', 'created_at', 'edited_at', 'tools', 'quality_rules', 'default_inputs']"
           />
         </v-card-text>
       </v-card>
@@ -454,6 +454,7 @@ export default {
         'edited_at',
         'tools',
         'default_inputs',
+        'quality_rules',
       ];
       if (this.authStore.isAdmin) {
         // Only display these properties to admin users
