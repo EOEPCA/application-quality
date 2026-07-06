@@ -252,7 +252,7 @@
       "name": "Pylint",
       "description": "pylint - Static code analyser tool for Python",
       "pipeline_step": "pylint_subworkflow:\r\n  in:\r\n    filter.regex: pylint_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    pylint.disable: pylint_subworkflow.pylint.disable\r\n    pylint.errors_only: pylint_subworkflow.pylint.errors_only\r\n    pylint.verbose: pylint_subworkflow.pylint.verbose\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#pylint_subworkflow'\r\n  out: []",
-      "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: pylint\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    pylint.disable: string\r\n    pylint.errors_only: boolean\r\n    pylint.verbose: boolean\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    pylint_report:\r\n      type: File\r\n      outputSource: pylint_step/pylint_report\r\n\r\n  steps:\r\n    filter_pylint_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    pylint_step:\r\n      in:\r\n        disable: pylint.disable\r\n        errors_only: pylint.errors_only\r\n        file_list: filter_pylint_step/file_list\r\n        source_directory: source_directory\r\n        verbose: pylint.verbose\r\n      run: '#pylint_tool'\r\n      out:\r\n      - pylint_report\r\n    save_pylint_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: pylint_step/pylint_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n  id: pylint_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+      "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: pylint\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    pylint.disable: string\r\n    pylint.errors_only: boolean\r\n    pylint.verbose: boolean\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    pylint_report:\r\n      type: File\r\n      outputSource: pylint_step/pylint_report\r\n\r\n  steps:\r\n    filter_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    pylint_step:\r\n      in:\r\n        disable: pylint.disable\r\n        errors_only: pylint.errors_only\r\n        file_list: filter_step/file_list\r\n        source_directory: source_directory\r\n        verbose: pylint.verbose\r\n      run: '#pylint_tool'\r\n      out:\r\n      - pylint_report\r\n    digest_step:\r\n      run: '#digest_generator'\r\n      in:\r\n        name: name\r\n        report_file: pylint_step/pylint_report\r\n      out:\r\n      - digest_file\r\n    save_step:\r\n      run: '#save_tool'\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report_file: pylint_step/pylint_report\r\n        digest_file: digest_step/digest_file\r\n        run_id: run_id\r\n        server_url: server_url\r\n      out: []\r\n  id: pylint_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
       "user_params": {
         "filter": {
           "regex": {
@@ -283,6 +283,8 @@
         }
       },
       "version": "0.1",
+      "status": "Stable",
+      "available": true,
       "tags": [
         1,
         5
@@ -290,7 +292,8 @@
       "tools": [
         "filter",
         "pylint",
-        "save"
+        "_digest",
+        "save_report_and_digest"
       ]
     }
   },

@@ -99,7 +99,7 @@ def _create_image_pull_secrets(registry: str, username: str, password: str) -> d
 def _check_digest_rules(pipeline_run: PipelineRun, pr_digest: dict) -> str:
     """
     Example rule:
-        "(issues.error == 0 and issues.critical == 0) or issues.security < 1"
+        "(error == 0 and critical == 0) or security < 1"
     """
     logger.info("Check quality rules to pipeline run %s", pipeline_run.id)
     quality_rules = pr_digest.get("quality_rules", {})
