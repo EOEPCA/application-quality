@@ -169,8 +169,8 @@
                 height="400"
                 mode="tree"
                 :expandedOnStart="true"
-                v-model:json="localModelValue.cql2Filter"
-                @change="(content, previousContent, status) => handleJsonEditorChange('cql2_filter', status)"
+                v-model:json="localModelValue.cql2_filter"
+                @change="(content, previousContent, status) => handleJsonEditorChange('cql2_filter', content, status)"
               />
 
               <!-- Default Input Parameters (JSON) -->
@@ -186,8 +186,8 @@
                 ref="paramsDefaultEditor"
                 height="400"
                 mode="tree"
-                v-model:json="localModelValue.paramsDefault"
-                @change="(content, previousContent, status) => handleJsonEditorChange('params_default', status)"
+                v-model:json="localModelValue.params_default"
+                @change="(content, previousContent, status) => handleJsonEditorChange('params_default', content, status)"
               />
 
               <!-- Parameters Mapping (JSON) -->
@@ -203,8 +203,8 @@
                 ref="paramsMappingEditor"
                 height="400"
                 mode="tree"
-                v-model:json="localModelValue.paramsMapping"
-                @change="(content, previousContent, status) => handleJsonEditorChange('params_mapping', status)"
+                v-model:json="localModelValue.params_mapping"
+                @change="(content, previousContent, status) => handleJsonEditorChange('params_mapping', content, status)"
               /> -->
 
             </v-card-text>
@@ -359,14 +359,14 @@ export default {
       this.localModelValue = this.modelValue
         ? JSON.parse(JSON.stringify(this.modelValue))
         : null;
-      if (this.localModelValue.cql2Filter === undefined) {
-        this.localModelValue.cql2Filter = {};
+      if (this.localModelValue.cql2_filter === undefined) {
+        this.localModelValue.cql2_filter = {};
       }
-      if (this.localModelValue.paramsDefault === undefined) {
-        this.localModelValue.paramsDefault = {};
+      if (this.localModelValue.params_default === undefined) {
+        this.localModelValue.params_default = {};
       }
-      if (this.localModelValue.paramsMapping === undefined) {
-        this.localModelValue.paramsMapping = {};
+      if (this.localModelValue.params_mapping === undefined) {
+        this.localModelValue.params_mapping = {};
       }
       this.localModelValue.selectedType = this.localModelValue.triggerType;
       this.localModelValue.selectedPipeline = this.localModelValue.pipeline;
@@ -381,10 +381,21 @@ export default {
       this.triggerName = this.localModelValue.name;
     },
 
-    handleJsonEditorChange(editorKey, status) {
-      console.debug("Editor content change:", editorKey, status);
-      this.editorErrors[editorKey] = (status.contentErrors != undefined);
-      console.debug("Editor errors:", Object.values(this.editorErrors));
+    handleJsonEditorChange(key, content, status) {
+      console.debug(`"${key}" editor content change (status: ${status}):`, content);
+      if (content && content.json !== undefined) {
+        this.localModelValue[key] = content.json;
+      } else if (content && content.text !== undefined) {
+        try {
+          this.localModelValue[key] = JSON.parse(content.text);
+          // console.log(`Succeeded to parse JSON: ${this.localModelValue[key]}`);
+        } catch (e) {
+          console.error("Failed to parse JSON:", e);
+          // Ignore syntax errors while the user is actively typing
+        }
+      }
+      this.editorErrors[key] = (status.contentErrors != undefined);
+      console.debug(`Editor errors: ${Object.values(this.editorErrors)}`);
     },
 
     cancel() {
@@ -407,9 +418,9 @@ export default {
           status: this.localModelValue.status,
           enabled: this.localModelValue.enabled,
           owner_name: this.localModelValue.owner_name,
-          params_default: jsonParse(this.localModelValue.paramsDefault) || {},
-          params_mapping: jsonParse(this.localModelValue.paramsMapping) || {},
-          cql2_filter: jsonParse(this.localModelValue.cql2Filter) || {},
+          cql2_filter: jsonParse(this.localModelValue.cql2_filter) || {},
+          params_default: jsonParse(this.localModelValue.params_default) || {},
+          params_mapping: jsonParse(this.localModelValue.params_mapping) || {},
           pipeline_id: this.localModelValue.selectedPipeline.id,
           trigger_type: this.localModelValue.selectedType.slug,
         };
@@ -446,9 +457,9 @@ export default {
           status: this.localModelValue.status,
           enabled: this.localModelValue.enabled,
           owner_name: this.localModelValue.owner_name,
-          cql2_filter: jsonParse(this.localModelValue.cql2Filter) || {},
-          params_default: jsonParse(this.localModelValue.paramsDefault) || {},
-          params_mapping: jsonParse(this.localModelValue.paramsMapping) || {},
+          cql2_filter: jsonParse(this.localModelValue.cql2_filter) || {},
+          params_default: jsonParse(this.localModelValue.params_default) || {},
+          params_mapping: jsonParse(this.localModelValue.params_mapping) || {},
           pipeline_id: this.localModelValue.selectedPipeline.id,
           trigger_type: this.localModelValue.selectedType.slug,
         };

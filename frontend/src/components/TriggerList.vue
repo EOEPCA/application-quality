@@ -458,9 +458,9 @@ export default {
         owner_name: this.authStore.username,  // The current user name
         status: "Testing",
         enabled: true,
-        cql2Filter: {},
-        paramsDefault: {},
-        paramsMapping: {},
+        cql2_filter: {},
+        params_default: {},
+        params_mapping: {},
         availableTypes: this.triggerStore.triggerTypes,
         availablePipelines: this.pipelineStore.pipelines,
         // Statuses are enforced in the backend DB model (see the Trigger Model definition)
@@ -508,9 +508,9 @@ export default {
         availableTypes: this.triggerStore.triggerTypes,
         pipeline: this.pipelineStore.pipelineById(trigger.pipeline_id),
         availablePipelines: this.pipelineStore.pipelines,
-        cql2Filter: trigger.cql2_filter,
-        paramsDefault: trigger.params_default,
-        paramsMapping: trigger.params_mapping,
+        cql2_filter: trigger.cql2_filter,
+        params_default: trigger.params_default,
+        params_mapping: trigger.params_mapping,
         isCreation: false,
         // Statuses are enforced in the backend DB model (see the Trigger Model definition)
         availableStatus: ['Disabled', 'Testing', 'Restricted', 'Enabled'],  // 'Deleted'

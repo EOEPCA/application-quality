@@ -315,8 +315,8 @@ export default {
         "succeeded": "bg-success",
       },
       qualityColors: {
-        "undefined": "bg-gray",
-        "unknown": "bg-gray",
+        "undefined": "bg-grey",
+        "unknown": "bg-grey",
         "pass_with_comments": "bg-warning",
         "pass": "bg-success",
         "fail": "bg-error",
