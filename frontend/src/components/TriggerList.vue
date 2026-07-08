@@ -184,13 +184,16 @@
     <!-- Triggers Details Dialog -->
     <v-dialog v-model="showDetails" max-width="1200px">
       <v-card v-if="selectedTrigger">
-        <v-card-text>
+        <v-card-title class="d-flex align-center">
           <v-alert
-            v-if="selectedTrigger.slug"
             type="info"
-            :text="selectedTrigger.slug"
-            class="mb-4"
+            :text="'Trigger: '+ selectedTrigger.trigger_type_name + ' &rarr; ' + selectedTrigger.pipeline_name"
+            class="ma-2"
+            icon-size="2rem"
           />
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="flex-grow-1 overflow-y-auto">
           <JSONTableViewer
             :data="pruneTriggerDetails(selectedTrigger)"
             :dont-convert="['cql2_filter', 'params_default', 'params_mapping']"

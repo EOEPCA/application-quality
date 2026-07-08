@@ -185,13 +185,16 @@
     <!-- Pipeline Details Dialog -->
     <v-dialog v-model="showDetailsDialog" max-width="1200px">
       <v-card v-if="selectedPipeline">
-        <v-card-text>
+        <v-card-title class="d-flex align-center">
           <v-alert
-            v-if="selectedPipeline.name"
             type="info"
             :text="selectedPipeline.name + ' ' + selectedPipeline.version"
-            class="mb-4"
+            class="ma-2"
+            icon-size="2rem"
           />
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="flex-grow-1 overflow-y-auto">
           <JSONTableViewer
             :data="prunePipelineDetails(selectedPipeline)"
             :dont-convert="['default_inputs']"
@@ -204,13 +207,11 @@
     <!-- Pipeline Payload Dialog -->
     <v-dialog v-model="showPayloadDialog" max-width="800px">
       <v-card v-if="selectedPipeline">
-        <!-- v-card-title>
-            {{ selectedPipeline.name || selectedPipeline.id }}
-            <v-spacer />
-            <v-btn icon="mdi-close" variant="text" @click="showDetails = false" />
-          </v-card-title -->
-        <v-card-text>
-          <v-alert v-if="selectedPipeline" type="info" class="mb-4"
+        <v-card-title class="d-flex align-center">
+          <v-alert
+            type="info"
+            class="ma-2"
+            icon-size="2rem"
             >Use the template below to execute the pipeline using cloud events
             or API calls.<br />
             Pipeline name: <b>{{ selectedPipeline.name }}</b
@@ -220,6 +221,9 @@
             See the definition of the parameters in the tool information.<br />
             Change the parameter values as necessary.</v-alert
           >
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="flex-grow-1 overflow-y-auto">
           <pre class="report-json">{{
             JSON.stringify(executionPayload, null, 2)
           }}</pre>

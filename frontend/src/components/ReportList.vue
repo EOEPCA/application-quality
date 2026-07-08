@@ -156,13 +156,16 @@
     <!-- Pipeline Report Dialog -->
     <v-dialog v-model="showDetails" max-width="1200px">
       <v-card v-if="selectedReport">
-        <v-card-text>
+        <v-card-title class="d-flex align-center">
           <v-alert
-            v-if="selectedReport.name"
             type="info"
-            :text="selectedReport.name + ' report generated at ' + formatDate(selectedReport.created_at)"
-            class="mb-4"
+            :text="selectedReport.name + ' report generated on ' + formatDate(selectedReport.created_at)"
+            class="ma-2"
+            icon-size="2rem"
           />
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="flex-grow-1 overflow-y-auto">
           <JSONTableViewer
             :data="pruneReportDetails(selectedReport)"
             :dont-convert="['output', 'digest']"

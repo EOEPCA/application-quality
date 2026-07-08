@@ -187,13 +187,16 @@
     <!-- Pipeline Execution Details Dialog -->
     <v-dialog v-model="showDetails" max-width="1200px">
       <v-card v-if="selectedExecution">
-        <v-card-text>
+        <v-card-title class="d-flex align-center">
           <v-alert
-            v-if="selectedExecution.status"
             type="info"
             :text="pipelineStore.pipelineById(selectedExecution.pipeline).name + ' executed on ' + formatDate(selectedExecution.start_time) + ': ' + selectedExecution.status"
-            class="mb-4"
+            class="ma-2"
+            icon-size="2rem"
           />
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="flex-grow-1 overflow-y-auto">
           <JSONTableViewer
             :data="prunePipelineExecutionDetails(selectedExecution)"
             :dont-convert="['usage_report', 'inputs', 'digest']"
@@ -206,13 +209,17 @@
     <!-- Pipeline Execution Trigger Event Dialog -->
     <v-dialog v-model="showTriggerEvent" max-width="1200px">
       <v-card v-if="selectedExecution">
-        <v-card-text>
+        <v-card-title class="d-flex align-center">
           <v-alert
-            v-if="selectedExecution.status"
             type="info"
             :text="triggerEventDetailsTitle(selectedExecution)"
-            class="mb-4"
+            class="ma-2"
+            icon="mdi-animation-play-outline"
+            icon-size="2rem"
           />
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="flex-grow-1 overflow-y-auto">
           <JSONTableViewer
             :data="pruneTriggerEventDetails(selectedExecution)"
             :dont-convert="['event_headers', 'event_body']"

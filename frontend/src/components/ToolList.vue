@@ -142,13 +142,16 @@
     <!-- Tools Details Dialog -->
     <v-dialog v-model="showDetails" max-width="1200px">
       <v-card v-if="selectedTool">
-        <v-card-text>
+        <v-card-title class="d-flex align-center">
           <v-alert
-            v-if="selectedTool.name"
             type="info"
             :text="selectedTool.name + ' ' + selectedTool.version"
-            class="mb-4"
+            class="ma-2"
+            icon-size="2rem"
           />
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="flex-grow-1 overflow-y-auto">
           <JSONTableViewer
             :data="pruneToolDetails(selectedTool)"
             :dont-convert="['user_params']"
