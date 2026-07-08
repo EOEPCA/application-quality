@@ -80,7 +80,7 @@
             <v-btn
               color="primary"
               variant="text"
-              v-tooltip:bottom-end="'Pipeline information (' + item.name + ')'"
+              v-tooltip:bottom-end="'Pipeline details (' + item.name + ')'"
               @click="viewPipelineDetails(item)"
             >
               <v-icon> mdi-information </v-icon>

@@ -101,7 +101,7 @@
             <v-btn
               color="primary"
               variant="text"
-              v-tooltip:bottom-end="'Tool information'"
+              v-tooltip:bottom-end="'Tool details'"
               @click="viewToolDetails(item)"
             >
               <v-icon size="26px"> mdi-information </v-icon>

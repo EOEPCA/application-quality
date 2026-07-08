@@ -21,6 +21,15 @@ const triggerApi = axios.create({
   },
 });
 
+const triggerEventApi = axios.create({
+  baseURL: API_URL + '/triggers/-/events',
+  timeout: API_TIMEOUT,
+  headers: {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  },
+});
+
 export const triggerService = {
 
   async getTriggerTypes() {
@@ -45,7 +54,7 @@ export const triggerService = {
 
   async getTriggerById(triggerId) {
     try {
-      const response = await triggerApi.get(`/${triggerId}`);
+      const response = await triggerApi.get(`/${triggerId}/`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching trigger ${triggerId}:`, error);
@@ -86,6 +95,16 @@ export const triggerService = {
       return response.data;
     } catch (error) {
       console.error(`Error fetching events for trigger ${triggerId}:`, error);
+      throw error;
+    }
+  },
+
+  async getTriggerEventById(eventId) {
+    try {
+      const response = await triggerEventApi.get(`/${eventId}/`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching trigger event with Id ${eventId}:`, error);
       throw error;
     }
   },

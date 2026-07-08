@@ -6,6 +6,7 @@ export const useTriggerStore = defineStore('trigger', {
   state: () => ({
     triggerTypes: [],
     triggers: [],
+    triggerEvents: [],
     loadingTriggers: false,
     loadingExecutions: true,
     selectedTriggerId: null,
@@ -70,6 +71,43 @@ export const useTriggerStore = defineStore('trigger', {
       index = this.triggers.findIndex((p) => p.slug === id);
       if (index !== -1) {
         return this.triggers[index];
+      }
+      return null;
+    },
+
+    async fetchTriggerEventById(id) {
+      this.loadingTriggers = true;
+      this.listError = null;
+      try {
+        const trigger_event = await triggerService.getTriggerEventById(id);
+        const index = this.triggerEvents.findIndex((p) => p.id === id);
+        if (index !== -1) {
+          this.triggerEvents[index] = trigger_event;
+        } else {
+          this.triggerEvents.push(trigger_event);
+        }
+      } catch (error) {
+        const msg_prefix = 'Error fetching trigger event: ';
+        if (error.response?.data?.detail) {
+          console.error(msg_prefix, error, error.response.data.detail);
+          this.listError = msg_prefix + error.response.data.detail;
+        } else {
+          console.error(msg_prefix, error);
+          this.listError = msg_prefix + error.message;
+        }
+      } finally {
+        this.loadingTriggers = false;
+      }
+    },
+
+    getTriggerEventById(id) {
+      var index = this.triggerEvents.findIndex((p) => p.id === id);
+      if (index == -1) {
+        this.fetchTriggerEventById(id);
+      }
+      index = this.triggerEvents.findIndex((p) => p.id === id);
+      if (index !== -1) {
+        return this.triggerEvents[index];
       }
       return null;
     },

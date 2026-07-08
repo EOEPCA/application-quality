@@ -76,9 +76,9 @@
           <td>
             {{ item.pipeline && pipelineStore.pipelineById(item.pipeline).name }}
           </td>
-          <td>
+          <!-- <td>
             {{ item.pipeline && pipelineStore.pipelineById(item.pipeline).version }}
-          </td>
+          </td> -->
           <td v-if="this.authStore.isAdmin">{{ item.started_by }}</td>
           <td>{{ formatDate(item.start_time) }}</td>
           <td>{{ formatDate(item.completion_time) }}</td>
@@ -118,20 +118,20 @@
             <v-btn
               color="primary"
               variant="text"
-              v-tooltip:bottom-end="'Execution information'"
+              v-tooltip:bottom-end="'Execution details'"
               @click="viewPipelineExecutionDetails(item)"
             >
               <v-icon size="26px"> mdi-information </v-icon>
             </v-btn>
-            <!-- <v-btn
+            <v-btn
               color="primary"
               variant="text"
               :disabled="item.trigger_event == undefined"
-              v-tooltip:bottom-end="'Trigger information'"
+              v-tooltip:bottom-end="'Trigger details'"
               @click="viewTriggerEventDetails(item)"
             >
               <v-icon size="26px"> mdi-animation-play-outline </v-icon>
-            </v-btn> -->
+            </v-btn>
             <v-btn
               color="primary"
               variant="text"
@@ -210,13 +210,13 @@
           <v-alert
             v-if="selectedExecution.status"
             type="info"
-            :text="pipelineStore.pipelineById(selectedExecution.pipeline).name + ' executed on ' + formatDate(selectedExecution.start_time) + ': ' + selectedExecution.status"
+            :text="triggerEventDetailsTitle(selectedExecution)"
             class="mb-4"
           />
           <JSONTableViewer
             :data="pruneTriggerEventDetails(selectedExecution)"
-            :dont-convert="[]"
-            :key-order="[]"
+            :dont-convert="['event_headers', 'event_body']"
+            :key-order="['id', 'trigger_type_name', 'pipeline_name', 'event_time', 'source', 'event_type']"
           />
         </v-card-text>
       </v-card>
@@ -256,11 +256,12 @@ export default {
           sortable: true,
           align: 'start',
         },
-        {
-          title: 'Version',
-          key: 'version',
-          sortable: true,
-        },
+        // {
+        //   title: 'Version',
+        //   key: 'version',
+        //   sortable: true,
+        //   admins_only: true,
+        // },
         {
           // Only shown to admins using computed property, below
           title: 'User',
@@ -462,9 +463,41 @@ export default {
     },
 
     pruneTriggerEventDetails(execution) {
-      console.log("pruneTriggerEventDetails: TO BE IMPLEMENTED", execution);
-      //return execution.trigger_event
-      return { "Status": "TO BE IMPLEMENTED" };
+      console.log('pruneTriggerEventDetails for trigger event Id', execution?.trigger_event);
+      if (execution?.trigger_event == undefined) {
+        return { 'Status': 'Not trigger event found' };
+      }
+      const event = this.triggerStore.getTriggerEventById(execution.trigger_event);
+      console.log('Trigger event:', event);
+      if (event == undefined) {
+        return { 'Status': 'Loading ...' };
+      }
+      const keysToKeep = [
+        'id',
+        'trigger_type_name',
+        'pipeline_name',
+        'event_time',
+        'source',
+        'event_type',
+        'event_headers',
+        'event_body',
+      ];
+      const details = Object.fromEntries(
+        Object.entries(event).filter(([key]) => keysToKeep.includes(key)),
+      );
+      return details;
+    },
+
+    triggerEventDetailsTitle(execution) {
+      console.log('triggerEventDetailsTitle for trigger event Id', execution?.trigger_event);
+      if (execution?.trigger_event == undefined) {
+        return 'No trigger event found';
+      }
+      const event = this.triggerStore.getTriggerEventById(execution.trigger_event);
+      if (event == undefined) {
+        return 'Loading ...';
+      }
+      return 'Trigger event: ' + event.trigger_type_name + ' received on ' + formatDate(event.event_time);
     },
 
     viewPipelineExecutionDetails(execution) {

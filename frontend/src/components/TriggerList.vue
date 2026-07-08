@@ -96,7 +96,7 @@
             <v-btn
               color="primary"
               variant="text"
-              v-tooltip:bottom-end="'Trigger information'"
+              v-tooltip:bottom-end="'Trigger details'"
               @click="viewTriggerDetails(item)"
             >
               <v-icon size="26px"> mdi-information </v-icon>
