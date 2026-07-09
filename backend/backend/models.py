@@ -141,9 +141,9 @@ class Trigger(models.Model):
     cql2_filter       = models.JSONField(default=dict, blank=True, help_text="Filter expressed in CQL2-JSON", verbose_name="CQL2-JSON filter")
     params_default    = models.JSONField(default=dict, blank=True)
     params_mapping    = models.JSONField(default=dict, blank=True)
-    trigger_type      = models.ForeignKey(TriggerType, related_name="triggers", on_delete=models.CASCADE)
-    pipeline          = models.ForeignKey(Pipeline, related_name="triggers", on_delete=models.CASCADE)
-    owner             = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name="triggers")
+    trigger_type      = models.ForeignKey(TriggerType, related_name="triggers", blank=True, null=True, on_delete=models.SET_NULL)
+    pipeline          = models.ForeignKey(Pipeline, related_name="triggers", blank=True, null=True, on_delete=models.SET_NULL)
+    owner             = models.ForeignKey(User, related_name="triggers", blank=True, null=True, on_delete=models.SET_NULL)
     status            = models.CharField(max_length=20, choices=Status.choices, default=Status.ENABLED)
     enabled           = models.BooleanField(default=True)
 
@@ -152,13 +152,14 @@ class Trigger(models.Model):
 
 
 class TriggerEvent(models.Model):
-    trigger       = models.ForeignKey(Trigger, related_name="trigger_events", on_delete=models.CASCADE)
+    trigger       = models.ForeignKey(Trigger, related_name="trigger_events", blank=True, null=True, on_delete=models.SET_NULL)
     source        = models.CharField(max_length=100, null=False, blank=False)
     event_time    = models.DateTimeField(auto_now_add=False, blank=False, null=False)
     event_type    = models.CharField(max_length=100, null=False, blank=False)
     event_headers = models.JSONField(default=dict, blank=True)  # Stored, e.g. a CloudEvent headers
     event_body    = models.JSONField(default=dict, blank=True)  # Stored, e.g. a CloudEvent body
-    pipeline_run  = models.ForeignKey(PipelineRun, on_delete=models.SET_NULL, null=True, blank=True, related_name="triggered_by")
+    # Note: This should have been implemented using a OneToOneField as a un can have at most one associated event
+    pipeline_run  = models.ForeignKey(PipelineRun, on_delete=models.SET_NULL, blank=True, null=True, related_name="triggered_by")
 
     def __str__(self):
         return f"Trigger Event {self.id}: {self.trigger}, Run: {self.pipeline_run}"
