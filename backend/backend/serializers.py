@@ -46,10 +46,10 @@ class PipelineSerializer(serializers.ModelSerializer):
 
 
 class PipelineRunSerializer(serializers.ModelSerializer):
-    job_reports_count = serializers.SerializerMethodField()
     digest_quality = serializers.SerializerMethodField()
     started_by = serializers.ReadOnlyField(source="started_by.username")
-    triggered_by = serializers.ReadOnlyField(source="triggered_by.id")
+    trigger_event = serializers.SerializerMethodField()
+    job_reports_count = serializers.SerializerMethodField()
 
     class Meta:
         model = PipelineRun
@@ -67,7 +67,7 @@ class PipelineRunSerializer(serializers.ModelSerializer):
             "digest_quality",
             "executed_cwl",
             "started_by",
-            "triggered_by",
+            "trigger_event",
             "job_reports_count",
         ]
 
@@ -76,6 +76,11 @@ class PipelineRunSerializer(serializers.ModelSerializer):
 
     def get_digest_quality(self, obj):
         return obj.digest_quality
+
+    def get_trigger_event(self, obj):
+        # Fetch the first trigger event from the relation if it exists
+        first_event = obj.triggered_by.first()
+        return first_event.id if first_event else None
 
 
 class JobReportSerializer(serializers.ModelSerializer):
@@ -181,6 +186,8 @@ class TriggerEventSerializer(serializers.ModelSerializer):
             "source",
             "event_time",
             "event_type",
+            "event_headers",
+            "event_body",
             "user",
             "trigger",
             "trigger_type",
