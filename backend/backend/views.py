@@ -145,7 +145,6 @@ class EventsView(APIView):
             event_time = headers.get('Ce-Time', None)
 
             user = self._get_matching_user(event_user, event_sender)
-            pipeline_id = self._get_pipeline_id(event_subject)
 
             # Default response data
             res_data = {
@@ -163,7 +162,23 @@ class EventsView(APIView):
 
             # React to the event
             # Note: The Knative Trigger filters on the event type prefix
-            for trigger in self._get_matching_triggers(event_type, payload):
+            matching_triggers = self._get_matching_triggers(event_type, payload)
+
+            if not matching_triggers:
+                # Create an TriggerEvent record even without matching active trigger definition
+                trigger_event = TriggerEvent.objects.create(
+                    trigger=None,
+                    source=event_source,
+                    event_time=event_time,
+                    event_type=event_type,
+                    event_headers=headers,
+                    event_body=payload,
+                )
+                trigger_event.save()
+                logger.info("Trigger event recorded with id %s", trigger_event.id)
+                logger.info("No matching active trigger found")
+
+            for trigger in matching_triggers:
                 # Create a TriggerEvent record and start a pipeline execution
                 trigger_event = TriggerEvent.objects.create(
                     trigger=trigger,
