@@ -67,7 +67,7 @@ The *Application Quality* BB integrates with Grafana to visualise the various re
 
 Default panels and dashboards are provided. Users may use the provided panels to create new dashboards.
 
-## Pipeline Automation
+## Pipeline Execution Automation
 
 The *Application Quality* BB supports the automated execution of pipelines triggered by updates to
 the applications resources (git, containers, etc.), as reported by the Automation Service via the
