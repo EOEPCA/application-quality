@@ -5,12 +5,13 @@ from datetime import datetime
 from json.decoder import JSONDecodeError
 from kubernetes import config
 
-from backend.models import PipelineRun, JobReport
+from backend.models import PipelineRun
 from backend.utils.workspaces import get_vcluster_config_file
 from pycalrissian.context import CalrissianContext
 from pycalrissian.execution import CalrissianExecution
 from pycalrissian.job import CalrissianJob
 from rule_engine import Rule
+from .github import GH_CONTEXT_STATUS, post_quality_state as gh_post_quality_state
 from .tools import getenv_bool
 
 
@@ -195,16 +196,69 @@ def _update_pipeline_run(pipeline_run: PipelineRun, execution: CalrissianExecuti
     logger.info("succeeded %s", execution.is_succeeded())
     # tool_logs = execution.get_tool_logs()  # Can be useful to avoid using save_tool
 
+    digest = _generate_pipeline_run_digest(pipeline_run)
     pipeline_run.refresh_from_db()
     pipeline_run.usage_report = usage
     # pipeline_run.start_time = execution.get_start_time()
     pipeline_run.completion_time = execution.get_completion_time()
     pipeline_run.status = execution.get_status().value
     pipeline_run.output = output
-    pipeline_run.digest = _generate_pipeline_run_digest(pipeline_run)
+    pipeline_run.digest = digest
 
     pipeline_run.save()
-    logger.info("Run %s completed", pipeline_run.id)
+    logger.info("Pipeline run %s updated", pipeline_run.id)
+
+    if digest.get("digest_quality", None) in ["pass", "pass_with_comments"]:
+        _update_quality_status(pipeline_run, GH_CONTEXT_STATUS.SUCCESS)
+    else:
+        _update_quality_status(pipeline_run, GH_CONTEXT_STATUS.FAILURE)
+
+
+def _update_quality_status(pipeline_run: PipelineRun, status: str):
+    """
+    This function updates in GitHub or GitLab the quality status of the code being analysed.
+    The pipeline run must be linked to a push event issued by GitHub or GitLab.
+    The parameters (owner, repository, commit SHA) are extracted from the event body.
+    Before starting the workflow, the status is set to PENDING.
+    When the execution is complete, the status depends on the computed digest: SUCCESS or FAILURE.
+    """
+    logger.debug("Update application quality status for Run %s", pipeline_run.id)
+    response = None
+    try:
+        # Obtain the trigger event, if any
+        event = pipeline_run.triggered_by.first()
+        if not event:
+            # This pipeline run has not been triggered by an event
+            logger.info(
+                "Run %s not triggered by an event. Skipping quality status update.",
+                pipeline_run.id,
+            )
+            return
+        # Check the trigger event type
+        if event.event_type == "org.eoepca.webhook.github.push":
+            # Extract the owner, repository, and commit SHA from the event body
+            owner = event.event_body.get("repository", {}).get("owner", None).get("name", None)
+            repo = event.event_body.get("repository", {}).get("name", None)
+            sha = event.event_body.event_body.get("head_commit", {}).get("id", None)
+            # Update the quality status in GitHub
+            response = gh_post_quality_state(owner, repo, sha, status)
+            logger.debug(
+                "Application quality status updated in GitHub for Run %s",
+                pipeline_run.id
+            )
+        elif event.event_type == "org.eoepca.webhook.gitlab.push":
+            # Updating quality status in GitLab is not supported yet
+            logger.warning("Application quality status in GitLab is not supported yet.")
+        else:
+            logger.info(
+                "Run %s not triggered by a push event: %s. Skipping quality status update.",
+                pipeline_run.id,
+                event.event_type,
+            )
+    except Exception as e:
+        logger.error("Failed to load in-cluster config: %s", e)
+        raise e
+    return response
 
 
 def run_workflow(
@@ -214,6 +268,7 @@ def run_workflow(
     username: str,
 ) -> dict:
     pipeline_run = PipelineRun.objects.get(id=run_id)
+    _update_quality_status(pipeline_run, GH_CONTEXT_STATUS.PENDING)
 
     logger.debug("Executing workflow for user %s", username)
 
