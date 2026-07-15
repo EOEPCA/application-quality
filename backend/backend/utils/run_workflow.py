@@ -239,12 +239,12 @@ def _update_quality_status(pipeline_run: PipelineRun, status: str):
             # Extract the owner, repository, and commit SHA from the event body
             owner = event.event_body.get("repository", {}).get("owner", None).get("name", None)
             repo = event.event_body.get("repository", {}).get("name", None)
-            sha = event.event_body.event_body.get("head_commit", {}).get("id", None)
+            sha = event.event_body.get("head_commit", {}).get("id", None)
             # Update the quality status in GitHub
             response = gh_post_quality_state(owner, repo, sha, status)
             logger.debug(
                 "Application quality status updated in GitHub for Run %s",
-                pipeline_run.id
+                pipeline_run.id,
             )
         elif event.event_type == "org.eoepca.webhook.gitlab.push":
             # Updating quality status in GitLab is not supported yet
