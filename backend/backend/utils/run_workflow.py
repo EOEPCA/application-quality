@@ -11,7 +11,11 @@ from pycalrissian.context import CalrissianContext
 from pycalrissian.execution import CalrissianExecution
 from pycalrissian.job import CalrissianJob
 from rule_engine import Rule
-from .github import GH_CONTEXT_STATUS, post_quality_state as gh_post_quality_state
+from .github import (
+    GH_CONTEXT_STATUS,
+    post_quality_state as gh_post_quality_state,
+    get_properties as gh_get_properties,
+)
 from .tools import getenv_bool
 
 
@@ -234,29 +238,30 @@ def _update_quality_status(pipeline_run: PipelineRun, status: str):
                 pipeline_run.id,
             )
             return
-        # Check the trigger event type
-        if event.event_type == "org.eoepca.webhook.github.push":
-            # Extract the owner, repository, and commit SHA from the event body
-            owner = event.event_body.get("repository", {}).get("owner", None).get("name", None)
-            repo = event.event_body.get("repository", {}).get("name", None)
-            sha = event.event_body.get("head_commit", {}).get("id", None)
-            # Update the quality status in GitHub
+        # Extract the owner, repository, and commit SHA from the event body
+        # and update the quality status in GitHub
+        if event.event_type.startswith("org.eoepca.webhook.github"):
+            owner, repo, sha = gh_get_properties(event.event_body)
             response = gh_post_quality_state(owner, repo, sha, status)
             logger.debug(
                 "Application quality status updated in GitHub for Run %s",
                 pipeline_run.id,
             )
-        elif event.event_type == "org.eoepca.webhook.gitlab.push":
+        elif event.event_type.startswith("org.eoepca.webhook.gitlab"):
             # Updating quality status in GitLab is not supported yet
             logger.warning("Application quality status in GitLab is not supported yet.")
         else:
             logger.info(
-                "Run %s not triggered by a push event: %s. Skipping quality status update.",
+                "Run %s not triggered by a push or pull_request event: %s. Skipping quality status update.",
                 pipeline_run.id,
                 event.event_type,
             )
     except Exception as e:
-        logger.error("Failed to load in-cluster config: %s", e)
+        logger.error(
+            "Failed to update application quality status for Run %s: %s",
+            pipeline_run.id,
+            e,
+        )
         raise e
     return response
 

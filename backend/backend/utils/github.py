@@ -83,3 +83,21 @@ def post_quality_state(owner, repo, sha, state, statuses_url=None, target_url=No
         err = json.dumps(response.json, indent=2)
         logger.error(msg, owner, repo, GITHUB_STATUS_CONTEXT, state, err)
     return response
+
+
+def get_properties(event_body):
+    # Extract the owner, repository, and commit SHA from the event body
+    owner = None
+    repo = None
+    sha = None
+    if "pusher" in event_body:
+        owner = event_body.get("repository", {}).get("owner", None).get("login", None)
+        repo = event_body.get("repository", {}).get("name", None)
+        sha = event_body.get("head_commit", {}).get("id", None)
+    elif "pull_request" in event_body:
+        # if event_body["action"] => "opened" | "synchronize"
+        owner = event_body.get("repository", {}).get("owner", None).get("login", None)
+        repo = event_body.get("repository", {}).get("name", None)
+        sha = event_body.get("pull_request", {}).get("head", {}).get("sha", {})
+    logger.debug("GitHub event properties: owner=%s, repo=%s, sha=%s", owner, repo, sha)
+    return owner, repo, sha
