@@ -99,7 +99,7 @@
                 class="d-inline-block rounded-circle mr-2"
                 style="width: 10px; height: 10px;"
               ></span>
-              <span class="text-capitalize nowrap">{{ item.digest_quality.replaceAll("_", " ") }}</span>
+              <span class="text-capitalize nowrap">{{ renderDigestQuality(item) }}</span>
             </div>
           </td>
           <td class="text-right nowrap">
@@ -471,6 +471,16 @@ export default {
 
     hasTriggerAndDigestQuality(execution) {
       return execution.trigger_event && execution.digest?.digest_quality;
+    },
+
+    renderDigestQuality(execution) {
+      const quality = execution.digest_quality;
+      const manual_quality = execution.digest?.manual?.digest_quality;
+      if (quality != "undefined" && manual_quality != "undefined" && quality != manual_quality) {
+        // Display the manually set digest quality, if present
+        return (quality + ' -> ' + manual_quality).replaceAll("_", " ");
+      }
+      return quality.replaceAll("_", " ");
     },
 
     prunePipelineExecutionDetails(execution) {
