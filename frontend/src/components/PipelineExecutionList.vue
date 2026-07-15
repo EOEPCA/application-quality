@@ -147,6 +147,53 @@
             >
               <v-icon size="28px"> mdi-chart-box-outline </v-icon>
             </v-btn>
+
+            <!-- Dropdown menu with extra actions: mark pending, success, failed -->
+            <v-menu v-if="this.authStore.isAdmin" location="bottom end">
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  variant="text"
+                  :disabled="!hasTriggerAndDigestQuality(item)"
+                  v-tooltip:bottom-end="'Manually change the digest quality'"
+                >
+                  <v-icon> mdi-dots-vertical </v-icon>
+                </v-btn>
+              </template>
+
+              <v-list>
+                <v-list-item
+                  @click="setQualityStatus(item, 'pending')"
+                >
+                  <template v-slot:prepend>
+                    <v-icon color="warning" icon="mdi-pencil" />
+                  </template>
+                  <v-list-item-title
+                    >Mark Quality as Pending</v-list-item-title
+                  >
+                </v-list-item>
+                <v-list-item
+                  @click="setQualityStatus(item, 'pass')"
+                >
+                  <template v-slot:prepend>
+                    <v-icon color="success" icon="mdi-pencil" />
+                  </template>
+                  <v-list-item-title
+                    >Mark Quality as Passed</v-list-item-title
+                  >
+                </v-list-item>
+                <v-list-item
+                  @click="setQualityStatus(item, 'fail')"
+                >
+                  <template v-slot:prepend>
+                    <v-icon color="error" icon="mdi-pencil" />
+                  </template>
+                  <v-list-item-title
+                    >Mark Quality as Failed</v-list-item-title
+                  >
+                </v-list-item>
+              </v-list>
+            </v-menu>
           </td>
         </tr>
       </template>
@@ -422,6 +469,10 @@ export default {
       return inputsToKeep.includes(key) || key.includes('.');
     },
 
+    hasTriggerAndDigestQuality(execution) {
+      return execution.trigger_event && execution.digest?.digest_quality;
+    },
+
     prunePipelineExecutionDetails(execution) {
       const keysToKeep = [
         'pipeline_name', // Pipeline name (inserted in the execution details below)
@@ -530,6 +581,23 @@ export default {
       return formatDate(date);
     },
 
+    async setQualityStatus(execution, status) {
+      console.log('Set quality status of execution to ', execution, status);
+      try {
+        await this.pipelineStore.setExecutionQualityStatus(execution, status);
+        this.$notify({
+          title: `Successfully changed the quality status to: ${status}`,
+          type: 'success',
+        });
+      } catch (error) {
+        this.$notify({
+          title: 'Failed to change the quality status:',
+          text: error,
+          type: 'error',
+        });
+      }
+    },
+
     startPolling() {
       if (this.isPolling) return;
 
@@ -588,5 +656,10 @@ export default {
 .v-btn {
   padding: 5px;
   min-width: 0px;
+}
+
+.v-icon {
+  font-size: 26px;
+  min-width: 30px;
 }
 </style>

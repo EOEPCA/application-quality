@@ -239,5 +239,10 @@ export const usePipelineStore = defineStore('pipeline', {
         this.loadingPipelines = false;
       }
     },
+
+    async setExecutionQualityStatus(execution, status) {
+      console.log('Set execution digest quality status:', execution.id, status);
+      pipelineService.setPipelineExecutionQualityStatus(execution.pipeline, execution.id, status);
+    },
   },
 });
