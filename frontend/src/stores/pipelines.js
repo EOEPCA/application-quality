@@ -242,7 +242,12 @@ export const usePipelineStore = defineStore('pipeline', {
 
     async setExecutionQualityStatus(execution, status) {
       console.log('Set execution digest quality status:', execution.id, status);
-      pipelineService.setPipelineExecutionQualityStatus(execution.pipeline, execution.id, status);
+      // The response contains the updated pipeline run object
+      return await pipelineService.setPipelineExecutionQualityStatus(
+        execution.pipeline,
+        execution.id,
+        status
+      );
     },
   },
 });

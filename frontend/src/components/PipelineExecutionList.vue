@@ -585,6 +585,7 @@ export default {
       console.log('Set quality status of execution to ', execution, status);
       try {
         await this.pipelineStore.setExecutionQualityStatus(execution, status);
+        this.refreshPipelineExecutions();
         this.$notify({
           title: `Successfully changed the quality status to: ${status}`,
           type: 'success',
