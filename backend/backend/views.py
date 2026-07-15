@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 from jinja2 import Template
 
 from rest_framework import mixins, permissions, status, viewsets
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -291,6 +291,8 @@ class PipelineViewSet(viewsets.ModelViewSet):
 class PipelineRunViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.PipelineRunSerializer
     permission_classes = [permissions.IsAuthenticated]
+    lookup_url_kwarg = "run_id"
+    lookup_field = "id"
 
     def get_queryset(self):
         user = self.request.user
@@ -363,6 +365,29 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             serializer.data,
             status=status.HTTP_201_CREATED
         )
+
+    # Customise how pipeline runs are updated using PATCH
+    def partial_update(self, request, *args, **kwargs) -> Response:
+        user = request.user
+        if not user or not user.is_staff:
+            raise PermissionDenied("You must be an administrator to manually update digest quality.")
+        logger.info("User %s is updating a pipeline run (admin=%s)", user, user.is_staff)
+        pipeline_run = self.get_object()
+        data = request.data or {}
+        logger.debug("Patching run %s with data: %s", pipeline_run, data)
+        if data.get("digest", {}).get("digest_quality", None):
+            new_quality = data["digest"]["digest_quality"]
+            logger.debug("Manually changing the digest quality status to: %s", data)
+            current_digest = pipeline_run.digest
+            updated_digest = dict(current_digest)
+            updated_digest["manual"] = {
+                "digest_quality": new_quality,
+                "time": timezone.now().isoformat(timespec="seconds"),
+                "user": user.username,
+            }
+            logger.debug("Updated digest: %s", updated_digest)
+            request.data["digest"] = updated_digest
+        return super().partial_update(request, *args, **kwargs)
 
     @staticmethod
     def _merge_params(subworkflow: Subworkflow, default_inputs: dict) -> dict:
