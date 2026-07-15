@@ -102,18 +102,6 @@
               <span class="text-capitalize nowrap">{{ item.digest_quality.replaceAll("_", " ") }}</span>
             </div>
           </td>
-          <td>
-            <v-progress-linear
-              :model-value="progress(item)"
-              color="rgb(24, 103, 192, 0.5)"
-              height="24"
-              min="0"
-              :max="progressMax(item)"
-              :indeterminate="item.status.toLowerCase() == 'starting'"
-            >
-              Reports:&nbsp;<strong>{{ progress(item) }}</strong>
-            </v-progress-linear>
-          </td>
           <td class="text-right nowrap">
             <v-btn
               color="primary"
@@ -141,7 +129,14 @@
               "
               @click="viewPipelineExecutionReports(item)"
             >
-              <v-icon size="28px"> mdi-note-text-outline </v-icon>
+              <!-- Add a badge on the icon to display the reports count -->
+              <v-badge
+                color="primary"
+                :content="item.job_reports_count"
+                :model-value="item.job_reports_count > 0"
+              >
+                <v-icon size="28px"> mdi-note-text-outline </v-icon>
+              </v-badge>
             </v-btn>
             <v-btn
               v-if="settings.isGrafanaEnabled()"
@@ -294,11 +289,6 @@ export default {
         {
           title: 'Quality',
           key: 'digest_quality',
-          sortable: true,
-        },
-        {
-          title: 'Progress',
-          key: 'progress',
           sortable: true,
         },
         {
