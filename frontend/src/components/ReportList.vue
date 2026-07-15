@@ -113,6 +113,45 @@
           <td>{{ item.name || 'No name' }}</td>
           <td>{{ item.instance || '' }}</td>
           <td>{{ formatDate(item.created_at) }}</td>
+          <td>
+            <!-- The v-tooltip style is a trick to display multiline text -->
+            <div
+              v-tooltip:bottom="{
+                text: digestTooltip(item),
+                style: 'white-space: pre-line;'
+              }" 
+              class="d-flex align-center ga-10 cursor-pointer"
+              v-if="item.digest?.issues"
+            >
+              <v-badge
+                color="success"
+                :content="item.digest?.issues?.info"
+              />
+              <v-badge
+                color="primary"
+                :content="item.digest?.issues?.convention"
+              />
+              <v-badge
+                color="warning"
+                :content="item.digest?.issues?.warning"
+              />
+              <v-badge
+                color="secondary"
+                :content="item.digest.issues.security"
+              />
+              <v-badge
+                color="error"
+                :content="item.digest.issues.error"
+              />
+              <v-badge
+                color="error"
+                :content="item.digest.issues.critical"
+              />
+            </div>
+            <div v-else>
+              -
+            </div>
+          </td>
           <td class="text-right nowrap">
             <v-btn
               color="primary"
@@ -235,6 +274,11 @@ export default {
           sortable: true,
         },
         {
+          title: 'Digest',
+          key: 'digest',
+          sortable: true,
+        },
+        {
           title: '',
           key: 'actions',
           sortable: false,
@@ -314,6 +358,13 @@ export default {
 
     formatDate(date) {
       return formatDate(date);
+    },
+
+    digestTooltip(report) {
+      const issues = report.digest?.issues;
+      const part1 = `Info: ${issues.info}\nConvention: ${issues.convention}\nWarnings: ${issues.warning}`;
+      const part2 = `Security: ${issues.security}\nError: ${issues.error}\nCritical: ${issues.critical}`;
+      return `${part1}\n${part2}`;
     },
 
     pruneReportDetails(report) {
