@@ -8,10 +8,11 @@ from django.utils import timezone
 from django.db.models import Count, Q
 from django.db.utils import IntegrityError
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from jinja2 import Template
 
 from rest_framework import mixins, permissions, status, viewsets
-from rest_framework.exceptions import ValidationError, PermissionDenied
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -27,6 +28,7 @@ from backend.models import (
 )
 from backend.tasks import run_workflow_task
 from backend.utils.cloudevents import encode as ce_encode, decode as ce_decode, is_match
+from backend.utils.run_workflow import update_quality_status
 from . import serializers
 
 
@@ -387,7 +389,20 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
             }
             logger.debug("Updated digest: %s", updated_digest)
             request.data["digest"] = updated_digest
-        return super().partial_update(request, *args, **kwargs)
+            try:
+                # Update the quality status in GitHub/GitLab/...
+                update_quality_status(pipeline_run, new_quality)
+            except Exception as error:
+                logger.error(error)
+                raise ValidationError(
+                    { "detail": "Failed to update the status in the git repository." }
+                ) from error
+            return super().partial_update(request, *args, **kwargs)
+        # Only the digest quality status may be updated. In all other cases, raise a BAD REQUEST
+        return Response(
+            { "error": "Invalid pipeline run update request" },
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     @staticmethod
     def _merge_params(subworkflow: Subworkflow, default_inputs: dict) -> dict:

@@ -15,7 +15,7 @@
     "model": "backend.triggertype",
     "pk": "github_webhook_pull_request",
     "fields": {
-      "description": "Pull Request events originating from a GitHub repository",
+      "description": "Pull Request events (open and synchronize) originating from a GitHub repository",
       "name": "GitHub Pull Request",
       "event_type_prefix": "org.eoepca.webhook.github.pull_request",
       "data": {},

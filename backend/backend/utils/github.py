@@ -3,12 +3,13 @@ import os
 import requests
 
 from enum import Enum
+from .tools import getenv_bool
 
 
 logger = logging.getLogger(__name__)
 
 
-GITHUB_STATUS_ENABLED = os.getenv("GITHUB_STATUS_ENABLED", False)
+GITHUB_STATUS_ENABLED = getenv_bool("GITHUB_STATUS_ENABLED", False)
 if GITHUB_STATUS_ENABLED:
     GITHUB_STATUS_CONTEXT = os.getenv("GITHUB_STATUS_CONTEXT", "EOEPCA Application Quality / Quality Check")
     GITHUB_STATUS_DESCRIPTION = os.getenv("GITHUB_STATUS_DESCRIPTION", "Application quality metrics met all threshold guidelines.")

@@ -213,12 +213,12 @@ def _update_pipeline_run(pipeline_run: PipelineRun, execution: CalrissianExecuti
     logger.info("Pipeline run %s updated", pipeline_run.id)
 
     if digest.get("digest_quality", None) in ["pass", "pass_with_comments"]:
-        _update_quality_status(pipeline_run, GH_CONTEXT_STATUS.SUCCESS)
+        update_quality_status(pipeline_run, GH_CONTEXT_STATUS.SUCCESS)
     else:
-        _update_quality_status(pipeline_run, GH_CONTEXT_STATUS.FAILURE)
+        update_quality_status(pipeline_run, GH_CONTEXT_STATUS.FAILURE)
 
 
-def _update_quality_status(pipeline_run: PipelineRun, status: str):
+def update_quality_status(pipeline_run: PipelineRun, status: str):
     """
     This function updates in GitHub or GitLab the quality status of the code being analysed.
     The pipeline run must be linked to a push event issued by GitHub or GitLab.
@@ -273,7 +273,7 @@ def run_workflow(
     username: str,
 ) -> dict:
     pipeline_run = PipelineRun.objects.get(id=run_id)
-    _update_quality_status(pipeline_run, GH_CONTEXT_STATUS.PENDING)
+    update_quality_status(pipeline_run, GH_CONTEXT_STATUS.PENDING)
 
     logger.debug("Executing workflow for user %s", username)
 
