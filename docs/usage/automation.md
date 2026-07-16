@@ -130,10 +130,14 @@ The form also includes two JSON fields: the first one allows specifying a CQL2 F
 
 The CQL2 Filter applies on the CloudEvent properties found in the event body.
 
-This example filters indicates that the selected Analysis Pipeline must be executed if the event is issued for the `application-quality` repository in the `EOEPCA` organisation, that the event is related to the `backend` branch, and the original action has been done by GitHub user `bevalentin`:
+### Example GitHub Push Event Trigger
+
+This example CQL2 filter, below, indicates that the selected Analysis Pipeline must be executed if the `push` action has been performed by `bevalentin` in the `backend` branch of the repository `EOEPCA/application-quality`.
+
+!!! note
+    Push events are submitted by GitHub whether the related commits belong to a Pull Request or not. To trigger Analysis Pipelines when a Pull Request is created or updated (to prevent merging in case of issues, for example), use the trigger type **GitHub Pull Request** (see below).
 
 ```json
-	
 {
   "op": "and",
   "args": [
@@ -226,5 +230,133 @@ The following example defines default parameters for the selected pipeline:
 }
 ```
 
+### Example GitHub Pull Request Trigger
+
+This example CQL2 filter, below, indicates that the selected Analysis Pipeline must be executed if the action has been performed by `bevalentin` in the `backend` branch of the repository `EOEPCA/application-quality`, and a pull request exists for that branch.
+
+```json
+{
+  "op": "and",
+  "args": [
+    {
+      "op": "=",
+      "args": [
+        {
+          "property": "repository.full_name"
+        },
+        "EOEPCA/application-quality"
+      ]
+    },
+    {
+      "op": "=",
+      "args": [
+        {
+          "property": "pull_request.head.ref"
+        },
+        "backend"
+      ]
+    },
+    {
+      "op": "=",
+      "args": [
+        {
+          "property": "sender.login"
+        },
+        "bevalentin"
+      ]
+    }
+  ]
+}
+```
+
+Default parameters for the selected pipeline may be specified as show in the example, above.
+
+
+## Reporting Quality Status in GitHub Pull Requests
+
+GitHub allows configuring protection rules on selected branches.
+
+A typical scenario consists in protecting the `main` branch against changes that may have unexpected, negative impact, such as changing the behaviour or introducing bugs.
+
+To activate this mechanism, apply these steps:
+
+1. Create a GitHub API Access Token.
+1. Configure the Application Quality Service (environment variables in `secrets` and `configmap`).
+1. Create a Branch Protection Rule.
+1. Verify the branch protection is working properly.
+
+Each steps is details hereafter:
+
+### Create a GitHub API Access Token
+
+To create a GitHub API Token:
+
+1. **Developer Settings**
+    * In the top-right corner of GitHub, click your profile picture **Settings**.
+    * In the left sidebar, scroll down to the very bottom and click **Developer settings**.
+
+2. **Generate a Fine-Grained Token**
+    * In the left sidebar, expand **Personal access tokens** and click **Fine-grained tokens**.
+    * Click the **Generate new token** button.
+
+3. **Configure the Token Details**
+    * **Token name:** Give it a clear name like `eoepca-appquality-status`.
+    * **Expiration:** Set an expiration period (e.g., 90 days or custom).
+    * **Resource owner:** Select your account or the organization that owns the target repository.
+
+4. **Restrict Repository Access**
+    * Under **Repository access**, change it from *All repositories* to **Only select repositories**.
+    * Select the specific repository from the dropdown list.
+
+5. **Grant Status Permissions Only**
+    * Scroll down to **Permissions** and expand **Repository permissions**.
+    * Locate **Commit statuses** in the list.
+    * Change its dropdown access level from *No access* to **Access: Read and write**.
+    * Leave all other dropdown selections as *No access*.
+
+
+6. **Generate & Copy**
+    * Click **Generate token** at the bottom of the page.
+    * **Copy the token immediately.** GitHub will never show it to you again once you navigate away from the page. The GitHub API Token starts with `github_pat_`.
+
+
+### Configure the Application Quality Service
+
+Configure Application Quality backend pod with the following environment variables:
+
+| Variable                    | Description                                                                    |
+| --------------------------- | ------------------------------------------------------------------------------ |
+| `GITHUB_STATUS_ENABLED`     | Set to `true` to activate the mechanism globally. Default value: `false`. |
+| `GITHUB_API_TOKEN`          | *Optional* - GitHub API Token used if no organisation specific token is matching. Note: At least an organisation specific or a global token must be configured. |
+| `GITHUB_API_TOKEN__EOEPCA`  | *Optional* - GitHub API Token used if a status must be updated in a repository belonging to the `EOEPCA` organisation. Additional tokens may be defined for other organisations. |
+| `GITHUB_STATUS_CONTEXT`     | The name of the status (named "context" in GitHub). For example: `EOEPCA Application Quality / Quality Check`.     |
+| `GITHUB_STATUS_DESCRIPTION` | A description string submitted with the new status. For example: `Application quality metrics met all threshold guidelines`. It is displayed in the related Pull Requests. |
+| `GITHUB_STATUS_TARGET_URL`  | A URL submitted with the new status. For example: https://application-quality.develop.eoepca.org. This is displayed as a link in the related Pull Requests. |
+
+!!! TODO
+    These variables are pre-configured in the Helm Charts of the building block.
+    See **TBD**
+
+!!! TODO
+    Provide the API tokens via (sealed) secrets.
+
+
+### Create a Branch Protection Rule
+
+To configure a branch protection rule in GitHub:
+
+1. Navigate to the **Settings** page of the project repository, and select the **Branches** menu entry.
+1. Click **Add rule** to create a new rule (or *Edit* an existing one like `main`).
+1. Select the branch to protect (e.g. *main*).
+1. In the list of protection types, check the box for **Require status checks to pass before merging**.
+1. In the search box that appears, type the **exact name identifier** configured in the Application Quality servcie (e.g., `EOEPCA Application Quality / Quality Check`). *See the note below*.
+1. Click **Create** or **Save changes**.
+
+
 !!! note
-    A more user-friendly form will be provided in a future version of the Application Quality Service Web portal.
+    If the Application Quality service has never posted to the repository before, its name won't show up in the search box yet. You can still type it out manually and hit Enter, or run your external script *once* against a commit so GitHub learns the name.
+
+
+### Verify the branch protection is working properly
+
+**TBW**
