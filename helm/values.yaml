@@ -145,6 +145,12 @@ sonarqube:
   serverUrl: ""
   accessToken: ""
 
+github:
+  enabled: false
+  statusContext: "EOEPCA Application Quality / Quality Check"
+  statusDescription: "Application quality metrics met all threshold guidelines."
+  statusTargetURL: ""
+
 nodeSelector: {}
 
 tolerations: []
