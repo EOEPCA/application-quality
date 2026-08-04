@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import requests
@@ -32,6 +33,19 @@ class GH_CONTEXT_STATUS(str, Enum):
         return value in cls._value2member_map_
 
     @classmethod
+    def map_value(cls, value: str) -> str:
+        value = value.lower()
+        if value.startswith("succ") or value.startswith("pass") or value in ["ok", "yes"]:
+            return GH_CONTEXT_STATUS.SUCCESS
+        if value.startswith("fail") or value in ["nok", "ko", "no"]:
+            return GH_CONTEXT_STATUS.FAILURE
+        if value.startswith("wait") or value in ["pending"]:
+            return GH_CONTEXT_STATUS.PENDING
+        if value.startswith("err"):
+            return GH_CONTEXT_STATUS.ERROR
+        return None
+
+    @classmethod
     def describe(cls, value: str) -> bool:
         if value == GH_CONTEXT_STATUS.PENDING:
             return "Best practices validation is being applied"
@@ -61,6 +75,7 @@ def post_quality_state(owner, repo, sha, state, statuses_url=None, target_url=No
         "Authorization": "Bearer " + GITHUB_API_TOKEN,
         "Accept": "application/vnd.github+json",
     }
+    state = GH_CONTEXT_STATUS.map_value(state)
     if not GH_CONTEXT_STATUS.has_value(state):
         logger.error("Invalid GitHub status: %s", state)
     # If a GitHub API URL is not provided, generate one
