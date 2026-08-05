@@ -14,9 +14,9 @@ An implementation of this mechanism uses the [Knative Eventing](https://knative.
 
 The procedures for deploying these components are described in their respective documentation:
 
-* Knative Eventing: https://knative.dev/docs/eventing/
-* *Notification and Automation* BB: https://eoepca.readthedocs.io/projects/notification-automation/en/latest/
-* Webhook Source: https://github.com/EOEPCA/na-webhook-source#deployment
+* [Knative Eventing](https://knative.dev/docs/eventing/)
+* [Notification and Automation BB](https://eoepca.readthedocs.io/projects/notification-automation/en/latest/)
+* [N&A BB Webhook Source](https://github.com/EOEPCA/na-webhook-source#deployment)
 
 ### Application Quality Service Trigger
 
@@ -328,17 +328,24 @@ Configure Application Quality backend pod with the following environment variabl
 | --------------------------- | ------------------------------------------------------------------------------ |
 | `GITHUB_STATUS_ENABLED`     | Set to `true` to activate the mechanism globally. Default value: `false`. |
 | `GITHUB_API_TOKEN`          | *Optional* - GitHub API Token used if no organisation specific token is matching. Note: At least an organisation specific or a global token must be configured. |
-| `GITHUB_API_TOKEN__EOEPCA`  | *Optional* - GitHub API Token used if a status must be updated in a repository belonging to the `EOEPCA` organisation. Additional tokens may be defined for other organisations. |
+| `GITHUB_API_TOKEN__<org>`  | *Optional* - GitHub API Token used if a status must be updated in a repository belonging to the `<org>` organisation. Additional tokens may be defined for other organisations. By default, the value of `GITHUB_API_TOKEN` is used. For example: `GITHUB_API_TOKEN__EOEPCA` |
 | `GITHUB_STATUS_CONTEXT`     | The name of the status (named "context" in GitHub). For example: `EOEPCA Application Quality / Quality Check`.     |
 | `GITHUB_STATUS_DESCRIPTION` | A description string submitted with the new status. For example: `Application quality metrics met all threshold guidelines`. It is displayed in the related Pull Requests. |
 | `GITHUB_STATUS_TARGET_URL`  | A URL submitted with the new status. For example: https://application-quality.develop.eoepca.org. This is displayed as a link in the related Pull Requests. |
 
-!!! TODO
-    These variables are pre-configured in the Helm Charts of the building block.
-    See **TBD**
+For security reasons, the GitHub API Tokens `GITHUB_API_TOKEN` and `GITHUB_API_TOKEN__<org>` should be provided in a Secret.
 
-!!! TODO
-    Provide the API tokens via (sealed) secrets.
+These variables are pre-configured in the Helm Charts of the building block. See section `github` in [values.yaml](https://github.com/EOEPCA/application-quality/blob/main/helm/values.yaml).
+
+For example:
+
+```yaml
+github:
+  enabled: true
+  statusContext: "EOEPCA Application Quality / Quality Check"
+  statusDescription: "Application quality metrics met all threshold guidelines."
+  statusTargetURL: "https://application-quality.develop.eoepca.org/"
+```
 
 
 ### Create a Branch Protection Rule
@@ -348,7 +355,8 @@ To configure a branch protection rule in GitHub:
 1. Navigate to the **Settings** page of the project repository, and select the **Branches** menu entry.
 1. Click **Add rule** to create a new rule (or *Edit* an existing one like `main`).
 1. Select the branch to protect (e.g. *main*).
-1. In the list of protection types, check the box for **Require status checks to pass before merging**.
+1. In the list of protection types, check the box **Require status checks to pass before merging**.
+1. Check also the **Do not allow bypassing the above settings** box to prevent regular users to bypass the result of the quality check.
 1. In the search box that appears, type the **exact name identifier** configured in the Application Quality servcie (e.g., `EOEPCA Application Quality / Quality Check`). *See the note below*.
 1. Click **Create** or **Save changes**.
 
@@ -357,6 +365,37 @@ To configure a branch protection rule in GitHub:
     If the Application Quality service has never posted to the repository before, its name won't show up in the search box yet. You can still type it out manually and hit Enter, or run your external script *once* against a commit so GitHub learns the name.
 
 
-### Verify the branch protection is working properly
+### Branch Protection in Pull Request
 
-**TBW**
+The details page of the Pull Requests targetting the protected branch include a panel informing about the status of the associated workflows and other checks.
+
+The status **EOEPCA Application Quality / Quality Check** is listed as **Required**, meaning that the PR may only be merged if it is a success.
+
+After the PR creation or a push in the source branch, the status is set to *pending*:
+
+![GitHub Pull Request with quality check pending](img/user-manual/github-pull-request-quality-check-pending.png)
+
+The GitHub Webhook configuration and the Pipeline Triggers start the execution of analysis pipelines in the Application Quality service.
+
+If the result of the analysis is not good (quality value derived from the [Analysis Digests](user-manual.md#quality-rules-and-analysis-digests)), the service sets the **EOEPCA Application Quality / Quality Check** status to *failed*.
+
+The merge button remains disabled:
+
+![GitHub Pull Request with failed quality check](img/user-manual/github-pull-request-quality-check-failure.png)
+
+If the results of the analysis is good, the **EOEPCA Application Quality / Quality Check** status is set to *successful*.
+
+The merge button is now enabled (provided there are no other checks preventing the merge):
+
+![GitHub Pull Request with successful quality check](img/user-manual/github-pull-request-quality-check-success.png)
+
+
+### Manually Setting the Quality Status
+
+The Application Quality Web portal allows overriding the derived quality status.
+
+Navigate to the [Pipeline Executions Page](#pipelines-executions-page) and expand the menu associated to the pipeline execution to override:
+
+![Pipeline Executions Context Menu](img/user-manual/app-analysis-pipeline-executions-menu.png)
+
+Select the new Quality Status in the menu. The status is modified in the related Pull Request accordingly.
