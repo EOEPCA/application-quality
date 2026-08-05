@@ -390,11 +390,20 @@ The merge button is now enabled (provided there are no other checks preventing t
 ![GitHub Pull Request with successful quality check](img/user-manual/github-pull-request-quality-check-success.png)
 
 
+### Direct Pushes in a Protected Branch
+
+Similarly, the target branch is also protected against direct pushes. As configured in the [GitHub Webhooks](#github-webhooks), an event is sent to the Application Quality service when a push is applied.
+
+The check result is visible in the list of commits. The quality status may also be modified manually via the Pipeline Execution page, as explained below.
+
+![Pipeline Executions Context Menu](img/user-manual/github-push-quality-check-success.png)
+
+
 ### Manually Setting the Quality Status
 
 The Application Quality Web portal allows overriding the derived quality status.
 
-Navigate to the [Pipeline Executions Page](#pipelines-executions-page) and expand the menu associated to the pipeline execution to override:
+Navigate to the [Pipeline Executions Page](user-manual.md#pipeline-executions-page) and expand the menu associated to the pipeline execution to override:
 
 ![Pipeline Executions Context Menu](img/user-manual/app-analysis-pipeline-executions-menu.png)
 
