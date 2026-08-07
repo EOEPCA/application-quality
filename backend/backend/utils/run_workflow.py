@@ -1,3 +1,4 @@
+import base64
 import logging
 import os
 
@@ -6,17 +7,17 @@ from json.decoder import JSONDecodeError
 from kubernetes import config
 
 from backend.models import PipelineRun
+from backend.utils.github import (
+    GH_CONTEXT_STATUS,
+    post_quality_state as gh_post_quality_state,
+    get_properties as gh_get_properties,
+)
+from backend.utils.tools import getenv_bool
 from backend.utils.workspaces import get_vcluster_config_file
 from pycalrissian.context import CalrissianContext
 from pycalrissian.execution import CalrissianExecution
 from pycalrissian.job import CalrissianJob
 from rule_engine import Rule
-from .github import (
-    GH_CONTEXT_STATUS,
-    post_quality_state as gh_post_quality_state,
-    get_properties as gh_get_properties,
-)
-from .tools import getenv_bool
 
 
 AQBB_STORAGECLASS = os.getenv("AQBB_STORAGECLASS", "standard")
