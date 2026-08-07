@@ -3,9 +3,6 @@
   "overwrite": false,
   "dashboard": {
     "editable": true,
-    "fiscalYearStartMonth": 0,
-    "graphTooltip": 0,
-    "id": 10,
     "links": [
       {
         "asDropdown": false,

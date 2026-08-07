@@ -4,9 +4,6 @@
   "dashboard": {
     "description": "Dashboard for displaying Jupyter notebooks Best Practice Validation Reports",
     "editable": true,
-    "fiscalYearStartMonth": 0,
-    "graphTooltip": 0,
-    "id": 13,
     "links": [
       {
         "asDropdown": false,
