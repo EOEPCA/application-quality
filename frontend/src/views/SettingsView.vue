@@ -39,29 +39,77 @@
         >Grafana Dashboards Pipeline execution report 35</a
       >.
     </p>
-    <label v-if="this.authStore.isAdmin">
-      <span>
-        Show Deleted Triggers:
-      </span>
-      <input 
-        type="checkbox" 
-        v-model="settings.showDeletedTriggers" 
-      />
-    </label>
+    <p>
+      <label v-if="this.authStore.isAdmin">
+        <span>
+          Show Deleted Triggers:
+        </span>
+        <input 
+          type="checkbox" 
+          v-model="settings.showDeletedTriggers" 
+        />
+      </label>
+    </p>
+    <br/>
+    <p>
+      <label v-if="this.authStore.isAdmin">
+        <v-btn color="primary" @click="gitHubDialog = true" class="text-none">
+          Update Quality Check Status in GitHub
+        </v-btn>
+        <v-dialog v-model="gitHubDialog" max-width="640">
+          <GitHubStatusCheckForm @submit="onGitHubSubmit" @cancel="onGitHubCancel" />
+        </v-dialog>
+      </label>
+    </p>
   </div>
 </template>
 
 <script>
 import { useAuthStore } from '@/stores/auth';
 import { useSettingsStore } from '@/stores/settings';
+import { actionsService } from '@/services/actions';
+import GitHubStatusCheckForm from '@/components/GitHubStatusCheckForm.vue';
 
 export default {
   name: 'SettingsView',
-
+  components: {
+    GitHubStatusCheckForm,
+  },
+  data() {
+    return {
+      gitHubDialog: false,
+    }
+  },
   setup() {
     const authStore = useAuthStore();
     const settings = useSettingsStore();
     return { settings, authStore };
+  },
+  methods: {
+    async onGitHubSubmit(payload) {
+      // payload = { repoUrl, refType, ref, status }
+      console.log('Received submit payload:', payload)
+
+      try {
+        //await this.updateQualityCheckStatus(payload)
+        await actionsService.setGitHubQualityCheckStatus(payload)
+        this.$notify({
+          title: 'Quality Check status updated successfully',
+          type: 'success',
+        });
+      } catch (err) {
+        this.$notify({
+          title: `Failed to update status: ${err.message}`,
+          type: 'error',
+        });
+      }
+      this.gitHubDialog = false
+    },
+
+    onGitHubCancel() {
+      console.log('Dialog was cancelled')
+      this.gitHubDialog = false
+    },
   },
 };
 </script>

@@ -114,7 +114,7 @@ export default {
         { title: 'Pipelines Executions', path: '/executions', icon: 'mdi-monitor-eye' },
         { title: 'Execution Reports', path: '/reports', icon: 'mdi-note-text-outline' },
         { title: 'Pipelines Triggers', path: '/triggers', icon: 'mdi-animation-play-outline' },
-        { title: 'Settings', path: '/settings', icon: 'mdi-cog' },
+        { title: 'Settings & Tools', path: '/settings', icon: 'mdi-cog' },
       ],
       userDetails: null,
       notify: {
