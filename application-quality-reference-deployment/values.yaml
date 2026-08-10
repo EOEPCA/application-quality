@@ -25,14 +25,14 @@ application-quality:
   # Application Quality backend
   api:
     image:
-      repository: nexus.spaceapplications.com/repository/docker-asb-public/eoepca/eoepca-appquality-backend
-      tag: 2026-08-04a
+      repository: eoepca/eoepca-appquality-backend
+      tag: 2.0.0-rc6
 
   # Application Quality frontend
   web:
     image:
-      repository: nexus.spaceapplications.com/repository/docker-asb-public/eoepca/eoepca-appquality-frontend
-      tag: 2026-07-15a
+      repository: eoepca/eoepca-appquality-frontend
+      tag: 2.0.0-rc6
     publicUrl: "https://application-quality.develop.eoepca.org"
 
   persistence:
