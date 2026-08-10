@@ -64,6 +64,7 @@
 
     <v-alert v-if="store.error" type="error" :text="store.error" closable />
 
+    <!-- eslint-disable vue/no-v-model-argument -->
     <v-data-table
       v-if="store.reports.length"
       v-model:items-per-page="itemsPerPage"
@@ -74,6 +75,7 @@
       class="elevation-1"
       hover
     >
+    <!-- eslint-enable vue/no-v-model-argument -->
       <!-- template v-slot:top>
           <v-toolbar flat>
             <v-toolbar-title>Reports</v-toolbar-title>
@@ -111,6 +113,45 @@
           <td>{{ item.name || 'No name' }}</td>
           <td>{{ item.instance || '' }}</td>
           <td>{{ formatDate(item.created_at) }}</td>
+          <td>
+            <!-- The v-tooltip style is a trick to display multiline text -->
+            <div
+              v-tooltip:bottom="{
+                text: digestTooltip(item),
+                style: 'white-space: pre-line;'
+              }" 
+              class="d-flex align-center ga-10 cursor-pointer"
+              v-if="item.digest?.issues"
+            >
+              <v-badge
+                color="success"
+                :content="item.digest?.issues?.info"
+              />
+              <v-badge
+                color="primary"
+                :content="item.digest?.issues?.convention"
+              />
+              <v-badge
+                color="warning"
+                :content="item.digest?.issues?.warning"
+              />
+              <v-badge
+                color="secondary"
+                :content="item.digest.issues.security"
+              />
+              <v-badge
+                color="error"
+                :content="item.digest.issues.error"
+              />
+              <v-badge
+                color="error"
+                :content="item.digest.issues.critical"
+              />
+            </div>
+            <div v-else>
+              -
+            </div>
+          </td>
           <td class="text-right nowrap">
             <v-btn
               color="primary"
@@ -151,24 +192,24 @@
 
     <v-progress-circular v-else indeterminate class="ma-4" />
 
-    <!-- Tools Details Dialog -->
-    <v-dialog v-model="showDetails" max-width="800px">
+    <!-- Pipeline Report Dialog -->
+    <v-dialog v-model="showDetails" max-width="1200px">
       <v-card v-if="selectedReport">
-        <!-- v-card-title>
-            {{ selectedReport.name || selectedReport.id }}
-            <v-spacer />
-            <v-btn icon="mdi-close" variant="text" @click="showDetails = false" />
-          </v-card-title -->
-        <v-card-text>
+        <v-card-title class="d-flex align-center">
           <v-alert
-            v-if="selectedReport.name"
             type="info"
-            :text="selectedReport.name"
-            class="mb-4"
+            :text="selectedReport.name + ' report generated on ' + formatDate(selectedReport.created_at)"
+            class="ma-2"
+            icon-size="2rem"
           />
-          <pre class="report-json">{{
-            JSON.stringify(selectedReport, null, 2)
-          }}</pre>
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="flex-grow-1 overflow-y-auto">
+          <JSONTableViewer
+            :data="pruneReportDetails(selectedReport)"
+            :dont-convert="['output', 'digest']"
+            :key-order="['tool_name', 'run_id', 'report_id', 'created_at', 'name', 'digest']"
+          />
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -178,11 +219,14 @@
 <script>
 import { useSettingsStore } from '@/stores/settings';
 import { usePipelineStore } from '@/stores/pipelines';
+import JSONTableViewer from '@/components/JSONTableViewer.vue';
 import { formatDate } from '@/assets/tools';
 
 export default {
   name: 'ReportList',
-
+  components: {
+    JSONTableViewer,
+  },
   data() {
     return {
       search: '',
@@ -191,7 +235,7 @@ export default {
       //selectedExecutionId: null,
       selectedReport: null,
       itemsPerPage: 10,
-      sortBy: [{ key: 'execution_time', order: 'asc' }],
+      sortBy: [{ key: 'created_at', order: 'desc' }],
 
       headers: [
         {
@@ -227,6 +271,11 @@ export default {
         {
           title: 'Report Time',
           key: 'created_at',
+          sortable: true,
+        },
+        {
+          title: 'Digest',
+          key: 'digest',
           sortable: true,
         },
         {
@@ -311,8 +360,35 @@ export default {
       return formatDate(date);
     },
 
+    digestTooltip(report) {
+      const issues = report.digest?.issues;
+      const part1 = `Info: ${issues.info}\nConvention: ${issues.convention}\nWarnings: ${issues.warning}`;
+      const part2 = `Security: ${issues.security}\nError: ${issues.error}\nCritical: ${issues.critical}`;
+      return `${part1}\n${part2}`;
+    },
+
+    pruneReportDetails(report) {
+      const keysToKeep = [
+        'tool_name',
+        'run_id',
+        'report_id',
+        'created_at',
+        'digest',
+        //'id',
+        //'run',
+        //'instance',
+        'output',
+      ];
+      return Object.fromEntries(
+        Object.entries(report).filter(([key]) => keysToKeep.includes(key)),
+      );
+    },
+
     viewReport(report) {
       this.selectedReport = report;
+      this.selectedReport.run_id = this.selectedReport.run;
+      this.selectedReport.report_id = this.selectedReport.id;
+      this.selectedReport.tool_name = this.selectedReport.name;
       this.showDetails = true;
     },
 

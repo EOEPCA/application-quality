@@ -34,6 +34,7 @@
       closable
     />
 
+    <!-- eslint-disable vue/no-v-model-argument -->
     <v-data-table
       v-if="toolStore.tools.length"
       v-model:items-per-page="itemsPerPage"
@@ -44,6 +45,7 @@
       class="elevation-1"
       hover
     >
+    <!-- eslint-enable vue/no-v-model-argument -->
       <!-- template v-slot:top>
           <v-toolbar flat>
             <v-toolbar-title>Tools</v-toolbar-title>
@@ -71,7 +73,18 @@
           </td>
           <td>{{ item.version || 'N/A' }}</td>
           <td _v-if="this.authStore.isAdmin">{{ item.status }}</td>
-          <td v-if="this.authStore.isAdmin">{{ item.available }}</td>
+          <td v-if="this.authStore.isAdmin">
+            <div class="d-flex align-center">
+              <span
+                :class="item.available ? 'bg-success' : 'bg-error'" 
+                class="d-inline-block rounded-circle mr-2"
+                style="width: 10px; height: 10px;"
+              ></span>
+              <span class="text-body-2">
+                {{ item.available ? 'Yes' : 'No' }}
+              </span>
+            </div>
+          </td>
           <td class="nowrap">
             <v-chip
               v-for="tag_name in item.tags"
@@ -88,7 +101,7 @@
             <v-btn
               color="primary"
               variant="text"
-              v-tooltip:bottom-end="'Tool information'"
+              v-tooltip:bottom-end="'Tool details'"
               @click="viewToolDetails(item)"
             >
               <v-icon size="26px"> mdi-information </v-icon>
@@ -129,24 +142,21 @@
     <!-- Tools Details Dialog -->
     <v-dialog v-model="showDetails" max-width="1200px">
       <v-card v-if="selectedTool">
-        <!-- v-card-title>
-          {{ selectedTool.name || selectedTool.id }}
-          <v-spacer />
-          <v-btn icon="mdi-close" variant="text" @click="showDetails = false" />
-        </v-card-title -->
-        <v-card-text>
+        <v-card-title class="d-flex align-center">
           <v-alert
-            v-if="selectedTool.name"
             type="info"
-            :text="selectedTool.name"
-            class="mb-4"
+            :text="selectedTool.name + ' ' + selectedTool.version"
+            class="ma-2"
+            icon-size="2rem"
           />
-          <JsonToHtmlTable
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="flex-grow-1 overflow-y-auto">
+          <JSONTableViewer
             :data="pruneToolDetails(selectedTool)"
-            :showDataType="false"
-            :showKey="false"
+            :dont-convert="['user_params']"
+            :key-order="['name', 'description', 'version', 'tools', 'tags', 'user_params']"
           />
-          <!-- pre class="tool-json">{{ JSON.stringify(selectedTool, null, 2) }}</pre -->
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -156,14 +166,12 @@
 <script>
 import { useAuthStore } from '@/stores/auth';
 import { useToolStore } from '@/stores/tools';
-import JsonToHtmlTable from '@/components/JsonToHtmlTable.vue';
-//import VueJsonToHtmlTable from 'vue-json-to-html-table'
-import 'vue-json-to-html-table/dist/style.css';
+import JSONTableViewer from '@/components/JSONTableViewer.vue';
 
 export default {
   name: 'ToolList',
   components: {
-    JsonToHtmlTable,
+    JSONTableViewer,
   },
   data() {
     return {
@@ -171,12 +179,12 @@ export default {
       showDetails: false,
       selectedTool: null,
       itemsPerPage: 10,
-      sortBy: [{ key: 'description', order: 'asc' }],
+      sortBy: [{ key: 'name', order: 'asc' }],
 
       headers: [
         {
           title: 'Tool',
-          key: 'description',
+          key: 'name',
           sortable: true,
           align: 'start',
         },
@@ -209,9 +217,6 @@ export default {
           align: 'center',
         },
       ],
-      jsonData: {
-        test: 123,
-      },
     };
   },
 
@@ -253,17 +258,9 @@ export default {
       await this.toolStore.fetchTools();
     },
 
-    formatDate(date) {
-      if (!date) return 'N/A';
-      return new Date(date).toLocaleDateString('en-UK', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        second: 'numeric',
-      });
-    },
+    // formatDate(date) {
+    //   return formatDate(date);
+    // },
 
     tagChipColor(tagName) {
       // Determine color based on tag name prefix

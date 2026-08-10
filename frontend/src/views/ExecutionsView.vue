@@ -2,7 +2,7 @@
   <div>
     <h2 class="text-h4 mb-4">
       <v-icon icon="mdi-monitor-eye" size="x-small" class="mr-2" />
-      Analysis Pipeline Executions
+      Analysis Pipelines Executions
     </h2>
     <pipeline-execution-list />
   </div>
