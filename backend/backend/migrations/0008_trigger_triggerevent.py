@@ -23,9 +23,9 @@ class Migration(migrations.Migration):
                 ('params_mapping', models.JSONField(blank=True, default=dict)),
                 ('status', models.CharField(choices=[('Disabled', 'Disabled'), ('Testing', 'Testing'), ('Restricted', 'Restricted'), ('Enabled', 'Enabled'), ('Deleted', 'Deleted')], default='Enabled', max_length=20)),
                 ('enabled', models.BooleanField(default=True)),
-                ('owner', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='triggers', to=settings.AUTH_USER_MODEL)),
-                ('pipeline', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='triggers', to='backend.pipeline')),
-                ('trigger_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='triggers', to='backend.triggertype')),
+                ('owner', models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, related_name='triggers', blank=True, null=True, to=settings.AUTH_USER_MODEL)),
+                ('pipeline', models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, related_name='triggers', blank=True, null=True, to='backend.pipeline')),
+                ('trigger_type', models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, related_name='triggers', blank=True, null=True, to='backend.triggertype')),
             ],
         ),
         migrations.CreateModel(
@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
                 ('event_headers', models.JSONField(blank=True, default=dict)),
                 ('event_body', models.JSONField(blank=True, default=dict)),
                 ('pipeline_run', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='triggered_by', to='backend.pipelinerun')),
-                ('trigger', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='trigger_events', to='backend.trigger')),
+                ('trigger', models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, related_name='trigger_events', blank=True, null=True, to='backend.trigger')),
             ],
         ),
     ]

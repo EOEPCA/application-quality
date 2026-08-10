@@ -4,9 +4,9 @@
       <v-spacer />
 
       <v-select
-        v-model="store.selectedPipelineId"
+        v-model="selectedPipeline"
         label="Pipeline"
-        :items="store.pipelines"
+        :items="pipelineStore.pipelines"
         item-title="name"
         item-value="id"
         variant="solo"
@@ -43,7 +43,7 @@
         icon="mdi-backspace-outline"
         size="small"
         class="mx-2"
-        @click="search = ''; store.selectedPipelineId = null"
+        @click="search = ''; pipelineStore.selectedPipelineId = null"
       /> -->
       <!-- Instant refresh button -->
       <!-- <v-btn
@@ -51,56 +51,74 @@
           size="small"
           class="mx-2"
           @click="refreshPipelineExecutions"
-          :loading="store.loadingExecutions"
+          :loading="pipelineStore.loadingExecutions"
         /> -->
     </v-card-title>
 
-    <v-alert v-if="store.error" type="error" :text="store.error" closable />
+    <v-alert v-if="pipelineStore.error" type="error" :text="pipelineStore.error" closable />
 
+    <!-- eslint-disable vue/no-v-model-argument -->
     <v-data-table
       v-model:items-per-page="itemsPerPage"
       v-model:sort-by="sortBy"
       :headers="filteredHeaders"
-      :items="store.executions"
+      :items="pipelineStore.executions"
       :filter-keys="['pipeline']"
       :custom-filter="filterOnPipelineId"
       class="elevation-1"
       hover
     >
+    <!-- eslint-enable vue/no-v-model-argument -->
       <template v-slot:top> </template>
 
       <template v-slot:item="{ item }">
         <tr>
           <td>
-            {{ item.pipeline && store.pipelineById(item.pipeline).name }}
+            {{ item.pipeline && pipelineStore.pipelineById(item.pipeline).name }}
           </td>
-          <td>
-            {{ item.pipeline && store.pipelineById(item.pipeline).version }}
-          </td>
+          <!-- <td>
+            {{ item.pipeline && pipelineStore.pipelineById(item.pipeline).version }}
+          </td> -->
           <td v-if="this.authStore.isAdmin">{{ item.started_by }}</td>
           <td>{{ formatDate(item.start_time) }}</td>
           <td>{{ formatDate(item.completion_time) }}</td>
-          <td class="first-letter">{{ item.status || 'Unknown' }}</td>
           <td>
-            <v-progress-linear
-              :model-value="progress(item)"
-              color="rgb(24, 103, 192, 0.5)"
-              height="24"
-              min="0"
-              :max="progressMax(item)"
-              :indeterminate="item.status.toLowerCase() == 'starting'"
-            >
-              Reports:&nbsp;<strong>{{ progress(item) }}</strong>
-            </v-progress-linear>
+            <div class="d-flex align-center">
+              <span 
+                :class="statusColors[item.status] || 'bg-grey'" 
+                class="d-inline-block rounded-circle mr-2"
+                style="width: 10px; height: 10px;"
+              ></span>
+              <span class="text-capitalize">{{ item.status }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex align-center">
+              <span 
+                :class="qualityColors[item.digest_quality] || 'bg-grey'" 
+                class="d-inline-block rounded-circle mr-2"
+                style="width: 10px; height: 10px;"
+              ></span>
+              <span class="text-capitalize nowrap">{{ renderDigestQuality(item) }}</span>
+            </div>
           </td>
           <td class="text-right nowrap">
             <v-btn
               color="primary"
               variant="text"
-              v-tooltip:bottom-end="'Execution information'"
+              v-tooltip:bottom-end="'Execution details'"
               @click="viewPipelineExecutionDetails(item)"
             >
               <v-icon size="26px"> mdi-information </v-icon>
+            </v-btn>
+            <v-btn
+              color="primary"
+              variant="text"
+              :disabled="item.trigger_event == undefined"
+              v-tooltip:bottom-end="'Trigger details'"
+              @click="viewTriggerEventDetails(item)"
+            >
+              <v-icon size="26px"> mdi-animation-play-outline </v-icon>
             </v-btn>
             <v-btn
               color="primary"
@@ -111,7 +129,14 @@
               "
               @click="viewPipelineExecutionReports(item)"
             >
-              <v-icon size="28px"> mdi-note-text-outline </v-icon>
+              <!-- Add a badge on the icon to display the reports count -->
+              <v-badge
+                color="primary"
+                :content="item.job_reports_count"
+                :model-value="item.job_reports_count > 0"
+              >
+                <v-icon size="28px"> mdi-note-text-outline </v-icon>
+              </v-badge>
             </v-btn>
             <v-btn
               v-if="settings.isGrafanaEnabled()"
@@ -122,13 +147,60 @@
             >
               <v-icon size="28px"> mdi-chart-box-outline </v-icon>
             </v-btn>
+
+            <!-- Dropdown menu with extra actions: mark pending, success, failed -->
+            <v-menu v-if="this.authStore.isAdmin" location="bottom end">
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  variant="text"
+                  :disabled="!hasTriggerAndDigestQuality(item)"
+                  v-tooltip:bottom-end="'Manually change the digest quality'"
+                >
+                  <v-icon> mdi-dots-vertical </v-icon>
+                </v-btn>
+              </template>
+
+              <v-list>
+                <v-list-item
+                  @click="setQualityStatus(item, 'pending')"
+                >
+                  <template v-slot:prepend>
+                    <v-icon color="warning" icon="mdi-pencil" />
+                  </template>
+                  <v-list-item-title
+                    >Mark Quality as Pending</v-list-item-title
+                  >
+                </v-list-item>
+                <v-list-item
+                  @click="setQualityStatus(item, 'pass')"
+                >
+                  <template v-slot:prepend>
+                    <v-icon color="success" icon="mdi-pencil" />
+                  </template>
+                  <v-list-item-title
+                    >Mark Quality as Passed</v-list-item-title
+                  >
+                </v-list-item>
+                <v-list-item
+                  @click="setQualityStatus(item, 'fail')"
+                >
+                  <template v-slot:prepend>
+                    <v-icon color="error" icon="mdi-pencil" />
+                  </template>
+                  <v-list-item-title
+                    >Mark Quality as Failed</v-list-item-title
+                  >
+                </v-list-item>
+              </v-list>
+            </v-menu>
           </td>
         </tr>
       </template>
 
       <template v-slot:no-data>
         <v-alert
-          v-if="store.selectedPipelineId"
+          v-if="pipelineStore.selectedPipelineId"
           type="info"
           text="No execution found for the selected pipeline"
           class="ma-2"
@@ -143,7 +215,7 @@
     </v-data-table>
 
     <!-- <v-alert
-          v-else-if="!store.loadingExecutions"
+          v-else-if="!pipelineStore.loadingExecutions"
           type="info"
           text="No pipeline executions found"
         />
@@ -154,32 +226,51 @@
           class="ma-4"
         /> -->
 
-    <!-- Pipeline Details Dialog -->
-    <v-dialog v-model="showDetails" max-width="800px">
+    <!-- Pipeline Execution Details Dialog -->
+    <v-dialog v-model="showDetails" max-width="1200px">
       <v-card v-if="selectedExecution">
-        <!-- v-card-title>
-            {{ selectedExecution.pipeline}} / {{ selectedExecution.id }}
-            <v-spacer />
-            <v-btn icon="mdi-close" variant="text" @click="showDetails = false" />
-          </v-card-title -->
-        <v-card-text>
+        <v-card-title class="d-flex align-center">
           <v-alert
-            v-if="selectedExecution.status"
             type="info"
-            :text="selectedExecution.status"
-            class="mb-4"
+            :text="pipelineStore.pipelineById(selectedExecution.pipeline).name + ' executed on ' + formatDate(selectedExecution.start_time) + ': ' + selectedExecution.status"
+            class="ma-2"
+            icon-size="2rem"
           />
-          <!-- JsonToHtmlTable :data="prunePipelineExecutionDetails(selectedExecution)" / -->
-          <pre class="execution-json">{{
-            JSON.stringify(
-              prunePipelineExecutionDetails(selectedExecution),
-              null,
-              2,
-            )
-          }}</pre>
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="flex-grow-1 overflow-y-auto">
+          <JSONTableViewer
+            :data="prunePipelineExecutionDetails(selectedExecution)"
+            :dont-convert="['usage_report', 'inputs', 'digest']"
+            :key-order="['pipeline_name', 'started_by', 'start_time', 'completion_time', 'status', 'job_reports_count', 'user', 'inputs', 'digest', 'digest_quality']"
+          />
         </v-card-text>
       </v-card>
     </v-dialog>
+
+    <!-- Pipeline Execution Trigger Event Dialog -->
+    <v-dialog v-model="showTriggerEvent" max-width="1200px">
+      <v-card v-if="selectedExecution">
+        <v-card-title class="d-flex align-center">
+          <v-alert
+            type="info"
+            :text="triggerEventDetailsTitle(selectedExecution)"
+            class="ma-2"
+            icon="mdi-animation-play-outline"
+            icon-size="2rem"
+          />
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="flex-grow-1 overflow-y-auto">
+          <JSONTableViewer
+            :data="pruneTriggerEventDetails(selectedExecution)"
+            :dont-convert="['event_headers', 'event_body']"
+            :key-order="['id', 'trigger_type_name', 'pipeline_name', 'event_time', 'source', 'event_type']"
+          />
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
   </v-card>
 </template>
 
@@ -188,18 +279,22 @@ import { useSettingsStore } from '@/stores/settings';
 import { useAuthStore } from '@/stores/auth';
 import { useToolStore } from '@/stores/tools';
 import { usePipelineStore } from '@/stores/pipelines';
+import { useTriggerStore } from '@/stores/triggers';
 import { formatDate } from '@/assets/tools';
-// import JsonToHtmlTable from '@/components/JsonToHtmlTable.vue'
+import JSONTableViewer from '@/components/JSONTableViewer.vue';
 
 export default {
   name: 'PipelineExecutionList',
-  // components: {
-  //   JsonToHtmlTable
-  // },
+  components: {
+    JSONTableViewer,
+  },
 
   data() {
     return {
       showDetails: false,
+      showTriggerEvent: false,
+      selectedPipeline: null,
+      selectedTrigger: null,
       selectedExecution: null,
       itemsPerPage: 10,
       sortBy: [{ key: 'start_time', order: 'desc' }],
@@ -210,11 +305,12 @@ export default {
           sortable: true,
           align: 'start',
         },
-        {
-          title: 'Version',
-          key: 'version',
-          sortable: true,
-        },
+        // {
+        //   title: 'Version',
+        //   key: 'version',
+        //   sortable: true,
+        //   admins_only: true,
+        // },
         {
           // Only shown to admins using computed property, below
           title: 'User',
@@ -238,8 +334,8 @@ export default {
           sortable: true,
         },
         {
-          title: 'Progress',
-          key: 'progress',
+          title: 'Quality',
+          key: 'digest_quality',
           sortable: true,
         },
         {
@@ -256,15 +352,31 @@ export default {
       lastPollTime: null,
       errorCount: 0,
       maxErrors: 3, // Stop polling after 3 consecutive errors
+      statusColors: {
+        "failed": "bg-error",
+        "running": "bg-warning",
+        "starting": "bg-info",
+        "active": "bg-warning",
+        "succeeded": "bg-success",
+      },
+      qualityColors: {
+        "undefined": "bg-grey",
+        "unknown": "bg-grey",
+        "pass_with_comments": "bg-warning",
+        "pass": "bg-success",
+        "fail": "bg-error",
+        "exception": "bg-info",
+      },
     };
   },
 
   setup() {
     const settings = useSettingsStore();
-    const store = usePipelineStore();
+    const pipelineStore = usePipelineStore();
+    const triggerStore = useTriggerStore();
     const toolStore = useToolStore();
     const authStore = useAuthStore();
-    return { settings, store, toolStore, authStore };
+    return { settings, pipelineStore, triggerStore, toolStore, authStore };
   },
 
   computed: {
@@ -283,7 +395,22 @@ export default {
   },
 
   mounted() {
+    // Called each time the Pipeline Executions page is navigated to
     this.refreshTools();
+    this.pipelineStore.selectedPipelineId = this.$route.query['pipeline'];
+    this.triggerStore.selectedTriggerId = this.$route.query['trigger'];
+    if (this.pipelineStore.selectedPipelineId) {
+      this.selectedPipeline = this.pipelineStore.pipelineById();
+      console.log("Selected pipeline:", this.selectedPipeline);
+    } else {
+      this.selectedPipeline = undefined;
+    }
+    if (this.pipelineStore.selectedTriggerId) {
+      this.selectedTrigger = this.triggerStore.triggerById();
+      console.log("Selected trigger:", this.selectedTrigger);
+    } else {
+      this.selectedTrigger = undefined;
+    }
     this.refreshPipelineExecutions();
     // this.isPolling = false
     // this.togglePolling()
@@ -292,19 +419,19 @@ export default {
   methods: {
     progress(execution) {
       // console.log("Progress of", execution.id, execution.job_reports_count)
-      // console.log("Max progress:", this.store.pipelineById(execution.pipeline).tools.length)
+      // console.log("Max progress:", this.pipelineStore.pipelineById(execution.pipeline).tools.length)
       return execution.job_reports_count;
     },
 
     progressMax(execution) {
-      // console.log("Max progress:", this.store.pipelineById(execution.pipeline).tools.length)
-      const pipeline = this.store.pipelineById(execution.pipeline);
+      // console.log("Max progress:", this.pipelineStore.pipelineById(execution.pipeline).tools.length)
+      const pipeline = this.pipelineStore.pipelineById(execution.pipeline);
       // Do not include init tools as they don't generate reports
-      console.log('Pipeline tools:', pipeline.tools);
+      // console.debug('Pipeline tools:', pipeline.tools);
       const analysisTools = pipeline.tools.filter(
         (tool) => !this.toolStore.isInitTool(tool),
       );
-      console.log('Analysis tools:', analysisTools);
+      // console.debug('Analysis tools:', analysisTools);
       return analysisTools.length;
     },
 
@@ -313,15 +440,28 @@ export default {
       return value == query;
     },
 
+    filterOnTriggerId(value, query, item) {
+      console.info('filterOnTriggerId:', value, query, item);
+      return value == query;
+    },
+
     async refreshTools() {
       await this.toolStore.fetchTools();
     },
 
     async refreshPipelineExecutions() {
-      console.info('Retrieving pipelines');
-      await this.store.fetchPipelines();
-      console.info('Retrieving pipeline executions');
-      await this.store.fetchPipelineExecutions(this.store.selectedPipelineId);
+      this.pipelineStore.selectedPipelineId = this.selectedPipeline?.id || this.selectedPipeline;
+      await this.pipelineStore.fetchPipelines();
+      if (this.pipelineStore.selectedPipelineId) {
+        console.info('Retrieving executions of pipeline', this.pipelineStore.selectedPipelineId);
+        await this.pipelineStore.fetchPipelineExecutions(this.pipelineStore.selectedPipelineId);
+      } else if (this.triggerStore.selectedTriggerId) {
+        console.info('Retrieving executions triggered by', this.triggerStore.selectedTriggerId);
+        await this.triggerStore.fetchPipelineExecutions(this.triggerStore.selectedTriggerId);
+      } else {
+        console.info('Retrieving all pipeline executions');
+        await this.pipelineStore.fetchPipelineExecutions();
+      }
     },
 
     isUserInput(key) {
@@ -329,9 +469,24 @@ export default {
       return inputsToKeep.includes(key) || key.includes('.');
     },
 
+    hasTriggerAndDigestQuality(execution) {
+      return execution.trigger_event && execution.digest?.digest_quality;
+    },
+
+    renderDigestQuality(execution) {
+      const quality = execution.digest_quality;
+      const manual_quality = execution.digest?.manual?.digest_quality;
+      if (quality != "undefined" && manual_quality != "undefined" && quality != manual_quality) {
+        // Display the manually set digest quality, if present
+        return (quality + ' -> ' + manual_quality).replaceAll("_", " ");
+      }
+      return quality.replaceAll("_", " ");
+    },
+
     prunePipelineExecutionDetails(execution) {
       const keysToKeep = [
-        'pipeline',
+        'pipeline_name', // Pipeline name (inserted in the execution details below)
+        // 'pipeline',
         'start_time',
         'completion_time',
         'job_reports_count',
@@ -339,6 +494,8 @@ export default {
         'user',
         'started_by',
         'usage_report',
+        'digest',
+        'digest_quality',
         // 'inputs' are filtered separately below
       ];
       const details = Object.fromEntries(
@@ -351,6 +508,9 @@ export default {
           this.isUserInput(key),
         ),
       );
+      // Add the pipeline name
+      details.pipeline_name = this.pipelineStore.pipelineById(execution.pipeline).name;
+      // Add all inputs values if the user is admin
       if (this.authStore.isAdmin) {
         // Display all inputs to admin users
         details.inputs = execution.inputs;
@@ -360,17 +520,61 @@ export default {
       return details;
     },
 
+    pruneTriggerEventDetails(execution) {
+      console.log('pruneTriggerEventDetails for trigger event Id', execution?.trigger_event);
+      if (execution?.trigger_event == undefined) {
+        return { 'Status': 'Not trigger event found' };
+      }
+      const event = this.triggerStore.getTriggerEventById(execution.trigger_event);
+      console.log('Trigger event:', event);
+      if (event == undefined) {
+        return { 'Status': 'Loading ...' };
+      }
+      const keysToKeep = [
+        'id',
+        'trigger_type_name',
+        'pipeline_name',
+        'event_time',
+        'source',
+        'event_type',
+        'event_headers',
+        'event_body',
+      ];
+      const details = Object.fromEntries(
+        Object.entries(event).filter(([key]) => keysToKeep.includes(key)),
+      );
+      return details;
+    },
+
+    triggerEventDetailsTitle(execution) {
+      console.log('triggerEventDetailsTitle for trigger event Id', execution?.trigger_event);
+      if (execution?.trigger_event == undefined) {
+        return 'No trigger event found';
+      }
+      const event = this.triggerStore.getTriggerEventById(execution.trigger_event);
+      if (event == undefined) {
+        return 'Loading ...';
+      }
+      return 'Trigger event: ' + event.trigger_type_name + ' received on ' + formatDate(event.event_time);
+    },
+
     viewPipelineExecutionDetails(execution) {
       console.log('Selected execution:', execution);
       this.selectedExecution = execution;
       this.showDetails = true;
     },
 
+    viewTriggerEventDetails(execution) {
+      console.log('Selected execution:', execution);
+      this.selectedExecution = execution;
+      this.showTriggerEvent = true;
+    },
+
     viewPipelineExecutionReports(execution) {
       console.log('Selected execution:', execution);
       this.selectedExecution = execution;
-      this.store.selectedPipelineId = execution.pipeline;
-      this.store.selectedExecutionId = execution.id;
+      this.pipelineStore.selectedPipelineId = execution.pipeline;
+      this.pipelineStore.selectedExecutionId = execution.id;
       this.$router.push('/reports');
     },
 
@@ -385,6 +589,24 @@ export default {
 
     formatDate(date) {
       return formatDate(date);
+    },
+
+    async setQualityStatus(execution, status) {
+      console.log('Set quality status of execution to ', execution, status);
+      try {
+        await this.pipelineStore.setExecutionQualityStatus(execution, status);
+        this.refreshPipelineExecutions();
+        this.$notify({
+          title: `Successfully changed the quality status to: ${status}`,
+          type: 'success',
+        });
+      } catch (error) {
+        this.$notify({
+          title: 'Failed to change the quality status:',
+          text: error,
+          type: 'error',
+        });
+      }
     },
 
     startPolling() {
@@ -438,10 +660,6 @@ export default {
   font-family: monospace;
 }
 
-.first-letter {
-  text-transform: capitalize;
-}
-
 .nowrap {
   white-space: nowrap;
 }
@@ -449,5 +667,10 @@ export default {
 .v-btn {
   padding: 5px;
   min-width: 0px;
+}
+
+.v-icon {
+  font-size: 26px;
+  min-width: 30px;
 }
 </style>

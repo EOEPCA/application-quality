@@ -37,7 +37,7 @@ export const pipelineService = {
 
   async getPipelineById(pipelineId) {
     try {
-      const response = await pipelineApi.get(`/${pipelineId}`);
+      const response = await pipelineApi.get(`/${pipelineId}/`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching pipeline ${pipelineId}:`, error);
@@ -101,11 +101,30 @@ export const pipelineService = {
 
   async getPipelineExecutionById(pipelineId, runId) {
     try {
-      const response = await pipelineApi.get(`/${pipelineId}/runs/${runId}`);
+      const response = await pipelineApi.get(`/${pipelineId}/runs/${runId}/`);
       return response.data;
     } catch (error) {
       console.error(
         `Error fetching pipeline execution ${pipelineId} ${runId}:`,
+        error,
+      );
+      throw error;
+    }
+  },
+
+  async setPipelineExecutionQualityStatus(pipelineId, runId, status) {
+    try {
+      const response = await pipelineApi.patch(`/${pipelineId}/runs/${runId}/`,
+        {
+          digest: {
+            digest_quality: status
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        `Error setting pipeline execution quality status ${pipelineId} ${runId}:`,
         error,
       );
       throw error;
