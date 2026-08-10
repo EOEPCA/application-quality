@@ -158,7 +158,7 @@ class TriggerEvent(models.Model):
     event_type    = models.CharField(max_length=100, null=False, blank=False)
     event_headers = models.JSONField(default=dict, blank=True)  # Stored, e.g. a CloudEvent headers
     event_body    = models.JSONField(default=dict, blank=True)  # Stored, e.g. a CloudEvent body
-    # Note: This should have been implemented using a OneToOneField as a un can have at most one associated event
+    # Note: This should have been implemented using a OneToOneField as a run can have at most one associated event
     pipeline_run  = models.ForeignKey(PipelineRun, on_delete=models.SET_NULL, blank=True, null=True, related_name="triggered_by")
 
     def __str__(self):

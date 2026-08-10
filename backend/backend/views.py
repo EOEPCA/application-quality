@@ -616,7 +616,7 @@ class TriggerViewSet(viewsets.ModelViewSet):
             return
         if not self.request.user.is_staff:
             # Current user is not staff => The trigger may only be assigned to himself
-            if requested_owner != self.request.user:
+            if requested_owner != self.request.user:--
                 raise ValidationError({
                     "owner": [f"You may not assign a trigger to user '{requested_owner.name}'."],
                 })
