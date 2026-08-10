@@ -273,3 +273,8 @@ CORS_ALLOWED_ORIGINS = [os.getenv("PUBLIC_URL")]  # Frontend URL
 #CSRF_COOKIE_SECURE = False
 #CSRF_USE_SESSIONS = True
 CSRF_TRUSTED_ORIGINS = [os.getenv("PUBLIC_URL")]  # API Base URL
+
+add_hosts_raw = os.getenv("ADDITIONAL_ALLOWED_HOSTS")
+if add_hosts_raw:
+    add_hosts_list = [host.strip() for host in add_hosts_raw.split(',') if host.strip()]
+    CSRF_TRUSTED_ORIGINS.extend(add_hosts_list)

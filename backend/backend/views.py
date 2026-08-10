@@ -5,12 +5,14 @@ import time
 import yaml
 
 from django.utils import timezone
+from django.db.models import Count, Q
 from django.db.utils import IntegrityError
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from jinja2 import Template
 
 from rest_framework import mixins, permissions, status, viewsets
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -26,6 +28,7 @@ from backend.models import (
 )
 from backend.tasks import run_workflow_task
 from backend.utils.cloudevents import encode as ce_encode, decode as ce_decode, is_match
+from backend.utils.run_workflow import update_quality_status
 from . import serializers
 
 
@@ -144,7 +147,6 @@ class EventsView(APIView):
             event_time = headers.get('Ce-Time', None)
 
             user = self._get_matching_user(event_user, event_sender)
-            pipeline_id = self._get_pipeline_id(event_subject)
 
             # Default response data
             res_data = {
@@ -162,7 +164,23 @@ class EventsView(APIView):
 
             # React to the event
             # Note: The Knative Trigger filters on the event type prefix
-            for trigger in self._get_matching_triggers(event_type, payload):
+            matching_triggers = self._get_matching_triggers(event_type, payload)
+
+            if not matching_triggers:
+                # Create an TriggerEvent record even without matching active trigger definition
+                trigger_event = TriggerEvent.objects.create(
+                    trigger=None,
+                    source=event_source,
+                    event_time=event_time,
+                    event_type=event_type,
+                    event_headers=headers,
+                    event_body=payload,
+                )
+                trigger_event.save()
+                logger.info("Trigger event recorded with id %s", trigger_event.id)
+                logger.info("No matching active trigger found")
+
+            for trigger in matching_triggers:
                 # Create a TriggerEvent record and start a pipeline execution
                 trigger_event = TriggerEvent.objects.create(
                     trigger=trigger,
@@ -275,6 +293,8 @@ class PipelineViewSet(viewsets.ModelViewSet):
 class PipelineRunViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.PipelineRunSerializer
     permission_classes = [permissions.IsAuthenticated]
+    lookup_url_kwarg = "run_id"
+    lookup_field = "id"
 
     def get_queryset(self):
         user = self.request.user
@@ -305,6 +325,7 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         pipeline_run = PipelineRun.objects.create(
             pipeline=pipeline,
             usage_report="",
+            digest="",
             start_time=timezone.now(),
             status="starting",
             started_by=user,
@@ -345,6 +366,42 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
         return Response(
             serializer.data,
             status=status.HTTP_201_CREATED
+        )
+
+    # Customise how pipeline runs are updated using PATCH
+    def partial_update(self, request, *args, **kwargs) -> Response:
+        user = request.user
+        if not user or not user.is_staff:
+            raise PermissionDenied("You must be an administrator to manually update digest quality.")
+        logger.info("User %s is updating a pipeline run (admin=%s)", user, user.is_staff)
+        pipeline_run = self.get_object()
+        data = request.data or {}
+        logger.debug("Patching run %s with data: %s", pipeline_run, data)
+        if data.get("digest", {}).get("digest_quality", None):
+            new_quality = data["digest"]["digest_quality"]
+            logger.debug("Manually changing the digest quality status to: %s", data)
+            current_digest = pipeline_run.digest
+            updated_digest = dict(current_digest)
+            updated_digest["manual"] = {
+                "digest_quality": new_quality,
+                "time": timezone.now().isoformat(timespec="seconds"),
+                "user": user.username,
+            }
+            logger.debug("Updated digest: %s", updated_digest)
+            request.data["digest"] = updated_digest
+            try:
+                # Update the quality status in GitHub/GitLab/...
+                update_quality_status(pipeline_run, new_quality)
+            except Exception as error:
+                logger.error(error)
+                raise ValidationError(
+                    { "detail": "Failed to update the status in the git repository." }
+                ) from error
+            return super().partial_update(request, *args, **kwargs)
+        # Only the digest quality status may be updated. In all other cases, raise a BAD REQUEST
+        return Response(
+            { "error": "Invalid pipeline run update request" },
+            status=status.HTTP_400_BAD_REQUEST
         )
 
     @staticmethod
@@ -462,11 +519,26 @@ class JobReportViewSet(
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        if request.FILES:
+            logger.info("The request contains files: %s", ", ".join(request.FILES.keys()))
+            report_file = request.FILES.get("report")
+            report_data = json.loads(report_file.read().decode("utf-8"))
+            digest_file = request.FILES.get("digest")
+            digest_data = json.loads(digest_file.read().decode("utf-8"))
+            #logger.info("Report: %s", json.dumps(report_data, indent=2))
+            logger.info("Report digest: %s", json.dumps(digest_data, indent=2))
+            logger.info("Successfully read both files from the request")
+        else:
+            logger.info("No FILES found in the request")
+            report_data = request.data
+            digest_data = {}
+
         job_report = JobReport.objects.create(
             name=tool_name,
             instance=instance,
             run=run,
-            output=request.data,
+            output=report_data,
+            digest=digest_data,
             created_at=timezone.now()
         )
 
@@ -521,23 +593,11 @@ class TriggerViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.request.user.is_staff:
-            return Trigger.objects.all()
-        return (
-            Trigger.objects.filter(owner=self.request.user)
-            | Trigger.objects.filter(owner__isnull=True)
-        )
-
-    def perform_create(self, serializer):
-        pass
-        # try:
-        #     serializer.save(owner=self.request.user, template=pipeline_cwl_template)
-        # except IntegrityError as ie:
-        #     logger.error(ie)
-        #     raise ValidationError(
-        #         {
-        #             "detail": "A pipeline with this name, version, and owner already exists."
-        #         }
-        #     ) from ie
+            return Trigger.objects.all().annotate(event_count=Count("trigger_events"))
+        return Trigger.objects.filter(
+            ~Q(status="Deleted"),
+            Q(owner=self.request.user) | Q(owner__isnull=True)
+        ).annotate(event_count=Count("trigger_events"))
 
     def get_permissions(self):
         if self.action in ["create", "list", "retrieve"]:
@@ -546,31 +606,91 @@ class TriggerViewSet(viewsets.ModelViewSet):
             return [permissions.IsAuthenticated(), IsOwnerOrAdmin()]
         return super().get_permissions()
 
+    # Intercept the POST (create) request
+    def perform_create(self, serializer):
+        # Look up owner since validation has already passed in the serializer
+        requested_owner = serializer.validated_data.get("owner")
+        if not requested_owner:
+            # No specific owner requested => Assign the trigger to the current user
+            serializer.save(owner=self.request.user)
+            return
+        if not self.request.user.is_staff:
+            # Current user is not staff => The trigger may only be assigned to himself
+            if requested_owner != self.request.user:--
+                raise ValidationError({
+                    "owner": [f"You may not assign a trigger to user '{requested_owner.name}'."],
+                })
+        serializer.save(owner=requested_owner)
+
+    # Intercept the PUT and PATCH (update) requests
+    def perform_update(self, serializer):
+        return self.perform_create(serializer)
+
+    # Intercept the DELETE request
+    def perform_destroy(self, instance):
+        # Update the trigger status instead of deleting it.
+        # Otherwise all the associated events and pipeline runs are deleted as well due to cascading.
+        logger.info("Disabling and setting the trigger status to 'Deleted' instead of deleting the trigger %s", instance)
+        instance.status = "Deleted"
+        instance.enabled = False 
+        instance.save()
+
 
 class TriggerEventViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.TriggerEventSerializer
 
     def get_queryset(self):
-        trigger_slug = self.kwargs["trigger_slug"]
+        trigger_id = self.kwargs["trigger_id"]
         user = self.request.user
         if user:
             logger.info(
                 "User %s is requesting trigger events information for trigger %s",
                 user,
-                trigger_slug
+                trigger_id
             )
         else:
             logger.info(
                 "Anonymous user is requesting trigger events information for trigger %s",
-                trigger_slug
+                trigger_id
             )
         if user and user.is_staff:
             logger.info("User %s is staff / admin", user)
             # Admins may get all the tools, whatever their status or availability flag
-            if trigger_slug in ["_", "-"]:
+            if trigger_id in ["_", "-"]:
                 return TriggerEvent.objects.all()
-            return TriggerEvent.objects.filter(trigger__slug=trigger_slug)
+            return TriggerEvent.objects.filter(trigger__slug=trigger_id)
         # Return only the trigger events owned by the requesting user
-        if trigger_slug in ["_", "-"]:
+        if trigger_id in ["_", "-"]:
             return TriggerEvent.objects.filter(pipeline_run__user=user)
-        return TriggerEvent.objects.filter(pipeline_run__user=user, trigger__slug=trigger_slug)
+        return TriggerEvent.objects.filter(pipeline_run__user=user, trigger__slug=trigger_id)
+
+
+class TriggerRunViewSet(viewsets.ReadOnlyModelViewSet):
+    # This viewset returns serialized pipeline runs
+    # (same as PipelineRunViewSet but filtered differently)
+    serializer_class = serializers.PipelineRunSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def _get_matching_runs(trigger_events):
+        logger.debug("Trigger events: %s", trigger_events)
+        run_ids = [event.pipeline_run_id for event in trigger_events if event.pipeline_run_id]
+        logger.debug("Pipeline run IDs: %s", run_ids)
+        pipeline_runs = PipelineRun.objects.filter(id__in=run_ids)
+        logger.debug("Pipeline runs: %s", pipeline_runs)
+        return pipeline_runs
+
+    def get_queryset(self):
+        user = self.request.user
+        trigger_id = self.kwargs["trigger_id"]
+        logger.info("User '%s' is requesting pipeline runs for trigger '%s'", user, trigger_id)
+        trigger_events = None
+        if user.is_staff:
+            if trigger_id in ["_", "-"]:
+                trigger_events = TriggerEvent.objects.all()
+            else:
+                trigger_events = TriggerEvent.objects.filter(trigger__slug=trigger_id)
+            return self._get_matching_runs(trigger_events)
+        if trigger_id in ["_", "-"]:
+            return PipelineRun.objects.filter(started_by=self.request.user)
+        return PipelineRun.objects.filter(pipeline_id=p_id, started_by=self.request.user)

@@ -11,6 +11,7 @@ from backend.views import (
     TriggerTypeViewSet,
     TriggerViewSet,
     TriggerEventViewSet,
+    TriggerRunViewSet,
 )
 
 router = DefaultRouter()
@@ -22,7 +23,8 @@ router.register(r"tools",                                                       
 router.register(r"tags",                                                                 TagViewSet,          basename="tag")
 router.register(r"triggertypes",                                                         TriggerTypeViewSet,  basename="trigger-type")
 router.register(r"triggers",                                                             TriggerViewSet,      basename="trigger")
-router.register(r"triggers/(?P<trigger_slug>[^/.]+)/events",                             TriggerEventViewSet, basename="trigger-event")
+router.register(r"triggers/(?P<trigger_id>[^/.]+)/events",                               TriggerEventViewSet, basename="trigger-event")
+router.register(r"triggers/(?P<trigger_id>[^/.]+)/runs",                                 TriggerRunViewSet,   basename="trigger-run")
 
 urlpatterns = router.urls
 
