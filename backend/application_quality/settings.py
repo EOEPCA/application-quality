@@ -82,6 +82,7 @@ if add_hosts_raw:
 # Application definition
 
 INSTALLED_APPS = [
+    "backend",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -91,7 +92,6 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "corsheaders",
-    "backend",
     "mozilla_django_oidc",
     "django_svelte_jsoneditor",  # See SVELTE_JSONEDITOR_PROPS, below
 ]
