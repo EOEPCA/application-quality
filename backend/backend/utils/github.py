@@ -1,10 +1,12 @@
 import json
 import logging
 import os
+import re
 import requests
 
 from enum import Enum
 from backend.utils.tools import getenv_bool
+from urllib.parse import urlparse
 
 
 logger = logging.getLogger(__name__)
@@ -95,9 +97,13 @@ def post_quality_state(owner, repo, sha, state, statuses_url=None, target_url=No
         msg = "GitHub status updated for %s/%s: %s = %s"
         logger.info(msg, owner, repo, GITHUB_STATUS_CONTEXT, state)
     elif response.status_code >= 400:
-        msg = "Failed to updated GitHub status for %s/%s: %s = %s \n%s"
-        err = json.dumps(response.json, indent=2)
-        logger.error(msg, owner, repo, GITHUB_STATUS_CONTEXT, state, err)
+        msg = "Failed to update GitHub status for %s/%s: %s = %s\n%s"
+        try:
+            err = json.dumps(response.json(), indent=2)
+            logger.error(msg, owner, repo, GITHUB_STATUS_CONTEXT, state, err)
+        except Exception as e:
+            logger.error(e)
+            logger.error(msg, owner, repo, GITHUB_STATUS_CONTEXT, state, response.text)
     return response
 
 
@@ -117,3 +123,53 @@ def get_properties(event_body):
         sha = event_body.get("pull_request", {}).get("head", {}).get("sha", {})
     logger.debug("GitHub event properties: owner=%s, repo=%s, sha=%s", owner, repo, sha)
     return owner, repo, sha
+
+
+def parse_repo_url(url):
+    """
+    Extract (owner, repo) from a GitHub repository URL.
+
+    Supports:
+      - https://github.com/owner/repo
+      - https://github.com/owner/repo/
+      - https://github.com/owner/repo.git
+      - https://github.com/owner/repo/pull/123
+      - https://github.com/owner/repo/tree/main
+      - git@github.com:owner/repo.git
+      - github.com/owner/repo (no scheme)
+
+    Returns:
+        tuple[str, str]: (owner, repo)
+
+    Raises:
+        ValueError: if the URL doesn't match a recognizable GitHub repo format.
+    """
+    if not url:
+        raise ValueError("URL is empty")
+
+    url = url.strip()
+
+    # SSH-style: git@github.com:owner/repo.git
+    ssh_match = re.match(r'^git@github\.com:([^/]+)/([^/]+?)(\.git)?/?$', url)
+    if ssh_match:
+        return ssh_match.group(1), ssh_match.group(2)
+
+    # Add a scheme if missing, so urlparse handles it consistently
+    if not re.match(r'^https?://', url):
+        url = 'https://' + url
+
+    parsed = urlparse(url)
+
+    if 'github.com' not in parsed.netloc:
+        raise ValueError(f"Not a GitHub URL: {url}")
+
+    # path looks like: /owner/repo or /owner/repo/pull/123 etc.
+    parts = [p for p in parsed.path.split('/') if p]
+
+    if len(parts) < 2:
+        raise ValueError(f"Could not extract owner/repo from URL: {url}")
+
+    owner, repo = parts[0], parts[1]
+    repo = re.sub(r'\.git$', '', repo)  # strip trailing .git if present
+
+    return owner, repo
