@@ -91,15 +91,18 @@ export default {
       console.log('Received submit payload:', payload)
 
       try {
-        //await this.updateQualityCheckStatus(payload)
         await actionsService.setGitHubQualityCheckStatus(payload)
         this.$notify({
           title: 'Quality Check status updated successfully',
           type: 'success',
         });
       } catch (err) {
+        let message = err.response?.data?.error;
+        if (message == undefined) {
+          message = err.message;
+        }
         this.$notify({
-          title: `Failed to update status: ${err.message}`,
+          title: `Failed to update status: ${message}`,
           type: 'error',
         });
       }
@@ -107,7 +110,7 @@ export default {
     },
 
     onGitHubCancel() {
-      console.log('Dialog was cancelled')
+      // console.log('Dialog was cancelled')
       this.gitHubDialog = false
     },
   },
