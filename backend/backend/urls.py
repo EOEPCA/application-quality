@@ -6,12 +6,13 @@ from backend.views import (
     JobReportViewSet,
     SubworkflowViewSet,
     TagViewSet,
-    SettingsView,
-    EventsView,
     TriggerTypeViewSet,
     TriggerViewSet,
     TriggerEventViewSet,
     TriggerRunViewSet,
+    SettingsView,
+    ActionsView,
+    EventsView,
 )
 
 router = DefaultRouter()
@@ -30,5 +31,6 @@ urlpatterns = router.urls
 
 urlpatterns += [
     path("settings/", SettingsView.as_view(), name="settings"),
+    path("actions/<slug:action_name>", ActionsView.as_view(), name="actions"),
     path("events/", EventsView.as_view(), name="events"),
 ]
