@@ -31,6 +31,7 @@ from backend.utils.cloudevents import encode as ce_encode, decode as ce_decode, 
 from backend.utils.github import (
     parse_repo_url as gh_parse_repo_url,
     post_quality_state as gh_post_quality_state,
+    post_pr_quality_state as gh_post_pr_quality_state,
 )
 from backend.utils.run_workflow import update_quality_status
 from . import serializers
@@ -74,43 +75,42 @@ class ActionsView(APIView):
         if not request.user.is_staff:
             logger.warning(f"Unauthorized action attempt by user {request.user} on '{action_name}'")
             return Response(
-                {'error': 'You do not have permission to perform this action'},
+                {"error": "You do not have permission to perform this action"},
                 status=status.HTTP_403_FORBIDDEN,
             )
         logger.info(f"Actions view: {action_name}")
         handler = self.get_handler(action_name)
         if handler is None:
             return Response(
-                {'error': f'Unknown action "{action_name}"'},
+                {"error": f'Unknown action "{action_name}"'},
                 status=status.HTTP_404_NOT_FOUND,
             )
         return handler(request)
 
     def get_handler(self, action_name):
         handlers = {
-            'github-quality-check-status': self.handle_github_quality_check_status,
+            "github-quality-check-status": self.handle_github_quality_check_status,
         }
         return handlers.get(action_name)
 
     def handle_github_quality_check_status(self, request):
         data = request.data
-        repo_url = data.get('repoUrl'):
-        ref_type = data.get('refType')  # 'pull_request' | 'commit'
-        ref = data.get('ref')
-        gh_status = data.get('status')  # 'pending' | 'failure' | 'success'
+        repo_url = data.get("repoUrl")
+        ref_type = data.get("refType")  # "pull_request" | "commit"
+        ref = data.get("ref")
+        gh_status = data.get("status")  # "pending" | "failure" | "success"
         # Extract the owner and repo from the URL
         owner, repo = gh_parse_repo_url(repo_url)
         logger.info(f"Updating {owner}/{repo} {ref_type}={ref} to status={gh_status}")
-        response = gh_post_quality_state(owner, repo, ref, gh_status)
-        # TODO: Return an error if something went wrong, for example:
-        # [2026-08-10 20:50:23,378] INFO - Actions view: github-quality-check-status
-        # [2026-08-10 20:50:23,378] INFO - Updating EOEPCA/application-quality commit=1043564356 to status=pending
-        # [2026-08-10 20:50:23,726] ERROR - Failed to update GitHub status for EOEPCA/application-quality: EOEPCA Application Quality / Quality Check = pending 
-        # {
-        #   "message": "No commit found for SHA: 1043564356",
-        #   "documentation_url": "https://docs.github.com/rest/commits/statuses#create-a-commit-status",
-        #   "status": "422"
-        # }
+        if ref_type == "commit":
+            response = gh_post_quality_state(owner, repo, ref, gh_status)
+        elif ref_type == "pull_request":
+            response = gh_post_pr_quality_state(owner, repo, ref, gh_status)
+        else:
+            return Response(
+                { "error": f'Unknown reference type: {ref_type} (must be "commit" or "pull_request")' },
+                status=status.HTTP_400_BAD_REQUEST
+            )
         if response.status_code >= 400:
             res = response.json()
             return Response(
@@ -121,11 +121,11 @@ class ActionsView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         return Response({
-            'message': 'Quality Check status update received',
-            'repoUrl': repo_url,
-            'refType': ref_type,
-            'ref': ref,
-            'status': gh_status,
+            "message": "Quality Check status update received",
+            "repoUrl": repo_url,
+            "refType": ref_type,
+            "ref": ref,
+            "status": gh_status,
         })
 
 
