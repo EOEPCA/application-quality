@@ -2,7 +2,6 @@
   <v-card flat>
     <v-card-title class="d-flex align-center">
       <v-spacer />
-
       <v-select
         v-model="selectedPipeline"
         label="Pipeline"
@@ -12,21 +11,21 @@
         variant="solo"
         density="compact"
         class="pa-1"
-        @update:menu="refreshPipelineExecutions()"
+        @update:menu="refreshPipelineExecutions('pipeline')"
       ></v-select>
 
       <!-- Polling status indicator -->
-      <v-chip class="ml-2" :color="isPolling ? 'success' : 'grey'" size="small">
-        {{ isPolling ? 'Live Updates' : 'Updates Paused' }}
+      <v-chip class="ml-2 mt-0" :color="pipelineStore.isPolling ? 'success' : 'grey'" size="small">
+        {{ pipelineStore.isPolling ? 'Live Updates' : 'Updates Paused' }}
       </v-chip>
       <!-- Polling control button -->
       <v-btn
-        :icon="isPolling ? 'mdi-pause' : 'mdi-play'"
+        :icon="pipelineStore.isPolling ? 'mdi-pause' : 'mdi-play'"
         size="small"
         class="ml-2 mr-2"
-        :__color="isPolling ? 'warning' : 'success'"
-        @click="togglePolling"
-        :title="isPolling ? 'Pause Updates' : 'Start Updates'"
+        :__color="pipelineStore.isPolling ? 'warning' : 'success'"
+        @click="pipelineStore.togglePolling(refreshPipelineExecutions)"
+        :title="pipelineStore.isPolling ? 'Pause automatic updates' : 'Start automatic updates'"
       />
       <!-- Search field -->
       <!-- <v-text-field
@@ -345,13 +344,6 @@ export default {
           align: 'center',
         },
       ],
-      // Polling properties
-      pollingInterval: null,
-      isPolling: false,
-      pollingDelay: 5000, // 5 seconds
-      lastPollTime: null,
-      errorCount: 0,
-      maxErrors: 3, // Stop polling after 3 consecutive errors
       statusColors: {
         "failed": "bg-error",
         "running": "bg-warning",
@@ -380,12 +372,6 @@ export default {
   },
 
   computed: {
-    timeSinceLastPoll() {
-      if (!this.lastPollTime) return 'Never';
-      const seconds = Math.floor((Date.now() - this.lastPollTime) / 1000);
-      return `${seconds}s ago`;
-    },
-
     filteredHeaders() {
       // Filter out columns restricted to admins if necessary
       return this.headers.filter(
@@ -397,23 +383,19 @@ export default {
   mounted() {
     // Called each time the Pipeline Executions page is navigated to
     this.refreshTools();
-    this.pipelineStore.selectedPipelineId = this.$route.query['pipeline'];
-    this.triggerStore.selectedTriggerId = this.$route.query['trigger'];
     if (this.pipelineStore.selectedPipelineId) {
       this.selectedPipeline = this.pipelineStore.pipelineById();
       console.log("Selected pipeline:", this.selectedPipeline);
     } else {
       this.selectedPipeline = undefined;
     }
-    if (this.pipelineStore.selectedTriggerId) {
-      this.selectedTrigger = this.triggerStore.triggerById();
+    if (this.triggerStore.selectedTriggerId) {
+      this.selectedTrigger = this.triggerStore.getTriggerById();
       console.log("Selected trigger:", this.selectedTrigger);
     } else {
       this.selectedTrigger = undefined;
     }
     this.refreshPipelineExecutions();
-    // this.isPolling = false
-    // this.togglePolling()
   },
 
   methods: {
@@ -449,9 +431,13 @@ export default {
       await this.toolStore.fetchTools();
     },
 
-    async refreshPipelineExecutions() {
-      this.pipelineStore.selectedPipelineId = this.selectedPipeline?.id || this.selectedPipeline;
+    async refreshPipelineExecutions(reason) {
+      // console.debug("Refresh pipeline executions, reason:", reason);
       await this.pipelineStore.fetchPipelines();
+      if (reason == 'pipeline') {
+        this.pipelineStore.selectedPipelineId = this.selectedPipeline?.id || this.selectedPipeline;
+        console.debug("Selected pipeline id:", this.pipelineStore.selectedPipelineId);
+      }
       if (this.pipelineStore.selectedPipelineId) {
         console.info('Retrieving executions of pipeline', this.pipelineStore.selectedPipelineId);
         await this.pipelineStore.fetchPipelineExecutions(this.pipelineStore.selectedPipelineId);
@@ -606,45 +592,6 @@ export default {
           text: error,
           type: 'error',
         });
-      }
-    },
-
-    startPolling() {
-      if (this.isPolling) return;
-
-      this.isPolling = true;
-      this.errorCount = 0;
-      this.pollingInterval = setInterval(async () => {
-        await this.refreshPipelineExecutions();
-      }, this.pollingDelay);
-
-      // Initial fetch
-      this.refreshPipelineExecutions();
-    },
-
-    stopPolling() {
-      if (this.pollingInterval) {
-        clearInterval(this.pollingInterval);
-        this.pollingInterval = null;
-      }
-      this.isPolling = false;
-    },
-
-    togglePolling() {
-      if (this.isPolling) {
-        this.stopPolling();
-      } else {
-        this.startPolling();
-      }
-    },
-
-    // Method to adjust polling delay (optional)
-    setPollingDelay(delay) {
-      this.pollingDelay = delay;
-      if (this.isPolling) {
-        // Restart polling with new delay
-        this.stopPolling();
-        this.startPolling();
       }
     },
   },

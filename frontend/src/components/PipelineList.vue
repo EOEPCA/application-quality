@@ -481,10 +481,10 @@ export default {
     },
 
     viewPipelineExecutions(pipeline) {
-      // Store the selected pipeline in the store so it is accessible by the executions page
-      // Navigate to the executions page
+      // Store the selected pipeline so it is used by the executions page
       this.pipelineStore.selectedPipelineId = pipeline.id;
-      this.$router.push('/executions?pipeline=' + pipeline.id);
+      // Navigate to the executions page
+      this.$router.push('/executions');
     },
 
     createPipeline() {

@@ -13,6 +13,10 @@ export const usePipelineStore = defineStore('pipeline', {
     selectedExecutionId: null,
     selectedReport: null,
     error: null,
+    isPolling: false,
+    pollingDelay: 5000, // 5 seconds
+    pollingInterval: null,
+    lastPollTime: null,
   }),
 
   actions: {
@@ -197,7 +201,7 @@ export const usePipelineStore = defineStore('pipeline', {
       // console.debug('Pipelines in store:', this.pipelines);
       if (id == null || id == undefined) id = this.selectedPipelineId;
       if (id == null || id == undefined) {
-        console.warn('Bad request: not pipeline Id provided');
+        console.warn('Bad request: no pipeline Id provided');
         return null;
       }
       const pipelines = this.pipelines.filter((pipeline) => {
@@ -248,6 +252,52 @@ export const usePipelineStore = defineStore('pipeline', {
         execution.id,
         status
       );
+    },
+
+    startPolling(callback) {
+      console.log("Start polling:", this.isPolling);
+      if (this.isPolling) return;
+      this.isPolling = true;
+      //this.errorCount = 0;
+      this.pollingInterval = setInterval(async () => {
+        await callback();
+      }, this.pollingDelay);
+      console.log("Polling interval:", this.pollingInterval);
+    },
+
+    stopPolling() {
+      console.log("Stop polling:", this.isPolling);
+      if (this.pollingInterval) {
+        clearInterval(this.pollingInterval);
+        this.pollingInterval = null;
+      }
+      this.isPolling = false;
+    },
+
+    togglePolling(callback) {
+      console.log("Toggle polling:", this.isPolling);
+      console.log("Polling interval:", this.pollingInterval);
+      if (this.isPolling) {
+        this.stopPolling();
+      } else {
+        this.startPolling(callback);
+      }
+    },
+
+    // Method to adjust polling delay (optional)
+    setPollingDelay(delay) {
+      this.pollingDelay = delay;
+      if (this.isPolling) {
+        // Restart polling with new delay
+        this.stopPolling();
+        this.startPolling();
+      }
+    },
+
+    timeSinceLastPoll() {
+      if (!this.lastPollTime) return 'Never';
+      const seconds = Math.floor((Date.now() - this.lastPollTime) / 1000);
+      return `${seconds}s ago`;
     },
   },
 });
