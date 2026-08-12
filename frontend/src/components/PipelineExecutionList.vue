@@ -11,18 +11,19 @@
         variant="solo"
         density="compact"
         class="pa-1"
+        :messages="pipelineSelectMessage"
         @update:menu="refreshPipelineExecutions('pipeline')"
       ></v-select>
 
       <!-- Polling status indicator -->
-      <v-chip class="ml-2 mt-0" :color="pipelineStore.isPolling ? 'success' : 'grey'" size="small">
+      <v-chip class="ml-2 mt-0 mb-5" :color="pipelineStore.isPolling ? 'success' : 'grey'" size="small">
         {{ pipelineStore.isPolling ? 'Live Updates' : 'Updates Paused' }}
       </v-chip>
       <!-- Polling control button -->
       <v-btn
         :icon="pipelineStore.isPolling ? 'mdi-pause' : 'mdi-play'"
         size="small"
-        class="ml-2 mr-2"
+        class="ml-2 mr-2 mb-5"
         :__color="pipelineStore.isPolling ? 'warning' : 'success'"
         @click="pipelineStore.togglePolling(refreshPipelineExecutions)"
         :title="pipelineStore.isPolling ? 'Pause automatic updates' : 'Start automatic updates'"
@@ -372,6 +373,17 @@ export default {
   },
 
   computed: {
+    pipelineSelectMessage() {
+      if (this.pipelineStore.selectedPipelineId) {
+        return "Showing executions of the selected pipeline";
+      } else if (this.triggerStore.selectedTriggerId) {
+        let trigger = this.triggerStore.getTriggerById();
+        let tr_name = trigger.trigger_type_name + " \u2192 " + trigger.pipeline_name;
+        return "Showing executions triggered by '" + tr_name + "'";
+      }
+      return "Showing all recent pipeline executions";
+    },
+
     filteredHeaders() {
       // Filter out columns restricted to admins if necessary
       return this.headers.filter(
