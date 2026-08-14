@@ -474,8 +474,8 @@ export default {
     renderDigestQuality(execution) {
       const quality = execution.digest_quality;
       const manual_quality = execution.digest?.manual?.digest_quality;
-      if (quality != "undefined" && manual_quality != "undefined" && quality != manual_quality) {
-        // Display the manually set digest quality, if present
+      if (manual_quality && quality != manual_quality) {
+        // Display the manually set digest quality, if present in the digest
         return (quality + ' -> ' + manual_quality).replaceAll("_", " ");
       }
       return quality.replaceAll("_", " ");
