@@ -6,7 +6,7 @@
       "name": "Application Package Validator",
       "description": "Validation tool for checking OGC compliance of CWL files for application packages.",
       "pipeline_step": "ap_validator_subworkflow:\r\n  in:\r\n    ap_validator.detail: ap_validator_subworkflow.ap_validator.detail\r\n    ap_validator.entry_point: ap_validator_subworkflow.ap_validator.entry_point\r\n    filter.regex: ap_validator_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#ap_validator_subworkflow'\r\n  out: []",
-      "definition": "- class: Workflow\r\n\r\n  requirements:\r\n    ScatterFeatureRequirement: {}\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: ap_validator\r\n    ap_validator.detail: string\r\n    ap_validator.entry_point: string\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    []\r\n\r\n  steps:\r\n    filter_ap_validator_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    ap_validator_step:\r\n      in:\r\n        file_path: filter_ap_validator_step/file_list\r\n        source_directory: source_directory\r\n        detail: ap_validator.detail\r\n        entry_point: ap_validator.entry_point\r\n      scatter: file_path\r\n      run: '#ap_validator_tool'\r\n      out:\r\n      - ap_validator_report\r\n    save_ap_validator_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: ap_validator_step/ap_validator_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      scatter: report\r\n      run: '#save_tool'\r\n      out: []\r\n  id: ap_validator_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+      "definition": "# --- This workflow filters the input files then executes the above sub-workflow on each of them (scatter)\r\n- class: Workflow\r\n  id: ap_validator_subworkflow\r\n\r\n  requirements:\r\n    ScatterFeatureRequirement: {}\r\n\r\n  inputs:\r\n    filter.regex: string\r\n    ap_validator.detail: string\r\n    ap_validator.entry_point: string\r\n    name:\r\n      type: string\r\n      default: ap_validator\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    filter_ap_validator_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list # Array of strings (the input for scatter)\r\n\r\n    execute_ap_validator_step:\r\n      # Run the subworkflow defined above\r\n      run: '#ap_validator_execution_subworkflow'\r\n      in:\r\n        # The list of CWL files filtered in the previous step\r\n        file_path: filter_ap_validator_step/file_list\r\n        # Other sub-workflow inputs\r\n        source_directory: source_directory\r\n        detail: ap_validator.detail\r\n        entry_point: ap_validator.entry_point\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        run_id: run_id\r\n        server_url: server_url\r\n      # Scatter the sub-workflow below [AP Validator => Save] over the array of files\r\n      scatter: file_path\r\n      out: []\r\n\r\n# --- This workflow runs the AP Validator on a single CWL file and saves the result.\r\n- class: Workflow\r\n  id: ap_validator_execution_subworkflow\r\n\r\n  inputs:\r\n    file_path: string # Single CWL file\r\n\r\n    # Inputs for ap_validator_tool\r\n    source_directory: Directory\r\n    detail: string\r\n    entry_point: string\r\n\r\n    # Inputs for save_tool\r\n    name: string\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    ap_validator_step:\r\n      in:\r\n        file_path: file_path\r\n        detail: detail\r\n        entry_point: entry_point\r\n        source_directory: source_directory\r\n      run: '#ap_validator_tool'\r\n      out:\r\n      - ap_validator_report\r\n    digest_step:\r\n      run: '#digest_generator'\r\n      in:\r\n        name: name\r\n        instance: file_path\r\n        report_file: ap_validator_step/ap_validator_report\r\n      out:\r\n      - digest_file\r\n    save_step:\r\n      run: '#save_tool'\r\n      in:\r\n        name: name\r\n        instance: file_path\r\n        pipeline_id: pipeline_id\r\n        report_file: ap_validator_step/ap_validator_report\r\n        digest_file: digest_step/digest_file\r\n        run_id: run_id\r\n        server_url: server_url\r\n      out: []\r\n\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
       "user_params": {
         "filter": {
           "regex": {
@@ -23,14 +23,16 @@
             "default": "hints"
           },
           "entry_point": {
-            "doc": "Name of entry point (Workflow or CommandLineTool)",
+            "doc": "Name of entry point (a Workflow or CommandLineTool)",
             "type": "string",
             "label": "Entry point",
             "default": "main"
           }
         }
       },
-      "version": "0.1",
+      "version": "0.2",
+      "status": "Stable",
+      "available": true,
       "tags": [
         3,
         5
@@ -38,7 +40,8 @@
       "tools": [
         "filter",
         "ap_validator",
-        "save"
+        "save_report_and_digest",
+        "_digest"
       ]
     }
   },
@@ -75,10 +78,10 @@
         6
       ],
       "tools": [
-        "filter",
+        "save_report_and_digest",
         "bandit",
-        "_digest",
-        "save_report_and_digest"
+        "filter",
+        "_digest"
       ]
     }
   },
@@ -107,6 +110,8 @@
         }
       },
       "version": "0.1",
+      "status": "Stable",
+      "available": true,
       "tags": [
         2,
         8
@@ -149,10 +154,10 @@
         5
       ],
       "tools": [
-        "_digest",
-        "filter",
         "flake8",
-        "save_report_and_digest"
+        "save_report_and_digest",
+        "filter",
+        "_digest"
       ]
     }
   },
@@ -188,14 +193,16 @@
         }
       },
       "version": "0.1",
+      "status": "Stable",
+      "available": true,
       "tags": [
         4,
         5
       ],
       "tools": [
-        "filter",
         "notebook-bp-validator",
-        "save"
+        "save",
+        "filter"
       ]
     }
   },
@@ -237,14 +244,16 @@
         }
       },
       "version": "0.1",
+      "status": "Stable",
+      "available": true,
       "tags": [
         4,
         7
       ],
       "tools": [
+        "save",
         "filter",
-        "papermill",
-        "save"
+        "papermill"
       ]
     }
   },
@@ -293,10 +302,10 @@
         5
       ],
       "tools": [
-        "filter",
         "pylint",
-        "_digest",
-        "save_report_and_digest"
+        "save_report_and_digest",
+        "filter",
+        "_digest"
       ]
     }
   },
@@ -326,14 +335,16 @@
         }
       },
       "version": "0.1",
+      "status": "Stable",
+      "available": true,
       "tags": [
         4,
         5
       ],
       "tools": [
-        "filter",
+        "save",
         "ruff",
-        "save"
+        "filter"
       ]
     }
   },
@@ -344,7 +355,7 @@
       "name": "Ruff",
       "description": "Ruff - An extremely fast Python linter and code formatter, written in Rust",
       "pipeline_step": "ruff_subworkflow:\r\n  in:\r\n    filter.regex: ruff_subworkflow.filter.regex\r\n    pipeline_id: pipeline_id\r\n    ruff.verbose: ruff_subworkflow.ruff.verbose\r\n    run_id: run_id\r\n    server_url: server_url\r\n    source_directory: clone_step/repo_directory\r\n  run: '#ruff_subworkflow'\r\n  out: []",
-      "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: ruff\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    ruff.verbose: boolean\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    ruff_report:\r\n      type: File\r\n      outputSource: ruff_step/ruff_report\r\n\r\n  steps:\r\n    filter_ruff_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    ruff_step:\r\n      in:\r\n        file_list: filter_ruff_step/file_list\r\n        source_directory: source_directory\r\n        verbose: ruff.verbose\r\n      run: '#ruff_tool'\r\n      out:\r\n      - ruff_report\r\n    save_ruff_step:\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report: ruff_step/ruff_report\r\n        run_id: run_id\r\n        server_url: server_url\r\n      run: '#save_tool'\r\n      out: []\r\n  id: ruff_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+      "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: ruff\r\n    filter.regex: string\r\n    pipeline_id: string\r\n    ruff.verbose: boolean\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    ruff_report:\r\n      type: File\r\n      outputSource: ruff_step/ruff_report\r\n\r\n  steps:\r\n    filter_step:\r\n      in:\r\n        regex: filter.regex\r\n        source_directory: source_directory\r\n      run: '#filter_tool'\r\n      out:\r\n      - file_list\r\n    ruff_step:\r\n      in:\r\n        file_list: filter_step/file_list\r\n        source_directory: source_directory\r\n        verbose: ruff.verbose\r\n      run: '#ruff_tool'\r\n      out:\r\n      - ruff_report\r\n    digest_step:\r\n      run: '#digest_generator'\r\n      in:\r\n        name: name\r\n        report_file: ruff_step/ruff_report\r\n      out:\r\n      - digest_file\r\n    save_step:\r\n      run: '#save_tool'\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report_file: ruff_step/ruff_report\r\n        digest_file: digest_step/digest_file\r\n        run_id: run_id\r\n        server_url: server_url\r\n      out: []\r\n  id: ruff_subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
       "user_params": {
         "ruff": {
           "verbose": {
@@ -363,14 +374,17 @@
         }
       },
       "version": "0.1",
+      "status": "Stable",
+      "available": true,
       "tags": [
         1,
         5
       ],
       "tools": [
-        "filter",
+        "save_report_and_digest",
         "ruff",
-        "save"
+        "filter",
+        "_digest"
       ]
     }
   },
@@ -411,10 +425,10 @@
       "available": true,
       "tags": [],
       "tools": [
-        "save",
-        "sonarqube_get_report",
         "sonarqube_init",
-        "sonarqube_scan"
+        "save",
+        "sonarqube_scan",
+        "sonarqube_get_report"
       ]
     }
   },
@@ -436,13 +450,15 @@
         }
       },
       "version": "0.1",
+      "status": "Stable",
+      "available": true,
       "tags": [
         6,
         9
       ],
       "tools": [
-        "save",
-        "trivy"
+        "trivy",
+        "save"
       ]
     }
   }
