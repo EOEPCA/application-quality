@@ -26,8 +26,8 @@ AQBB_CALRISSIANIMAGE = os.getenv(
     "AQBB_CALRISSIANIMAGE",
     "nexus.spaceapplications.com/repository/docker-eoepca/calrissian:0.18.1"
 )
-AQBB_MAXCORES = os.getenv("AQBB_MAXCORES", "2")
-AQBB_MAXRAM = os.getenv("AQBB_MAXRAM", "2Gi")
+AQBB_MAXCORES = os.getenv("AQBB_MAXCORES", "8")
+AQBB_MAXRAM = os.getenv("AQBB_MAXRAM", "8Gi")
 AQBB_SECRET = os.getenv("AQBB_SECRET", None)
 # Create a ServiceAccount for Calrissian with the right roles and use it here
 AQBB_SERVICEACCOUNT = os.getenv("AQBB_SERVICEACCOUNT", None)
@@ -110,20 +110,20 @@ def _check_digest_rules(pipeline_run: PipelineRun, pr_digest: dict) -> str:
     logger.info("Check quality rules to pipeline run %s", pipeline_run.id)
     quality_rules = pr_digest.get("quality_rules", {})
     logger.info("Quality rules: %s", quality_rules)
-    digest_issues = pr_digest.get("issues", {})
+    digest_counts = pr_digest.get("counts", {})
     result = None
     try:
         # Check the "pass_with_comments" rule, if present
         if "pass_with_comments" in quality_rules:
             rule = Rule(quality_rules["pass_with_comments"])
             logger.debug("Checking pass_with_comments rule: %s", rule)
-            if rule.matches(digest_issues):
+            if rule.matches(digest_counts):
                 result = "pass_with_comments"
         if result is None:
             if "pass" in quality_rules:
                 rule = Rule(quality_rules["pass"])
                 logger.debug("Checking pass rule: %s", rule)
-                if rule.matches(digest_issues):
+                if rule.matches(digest_counts):
                     result = "pass"
                 else:
                     result = "fail"
@@ -144,7 +144,7 @@ def _generate_pipeline_run_digest(pipeline_run: PipelineRun) -> dict:
             "name": "",
             "version": "",
         },
-        "issues": {
+        "counts": {
             "info": 0,
             "convention": 0,
             "warning": 0,
@@ -159,9 +159,9 @@ def _generate_pipeline_run_digest(pipeline_run: PipelineRun) -> dict:
     # Collect the issue counts from the job reports digest
     for job_report in pipeline_run.jobreports.all():
         if job_report.digest:
-            issues = job_report.digest.get("issues", {})
+            digest_counts = job_report.digest.get("counts", {})
             for key in ["info", "convention", "warning", "error", "security", "critical"]:
-                pr_digest["issues"][key] += issues.get(key, 0)
+                pr_digest["counts"][key] += digest_counts.get(key, 0)
     # Retrieve the application quality rules from the pipeline definition
     # "pass": "applications with good quality pass that rule",
     # "pass_with_comments": "applications with minor warnings/comments pass that rule",
