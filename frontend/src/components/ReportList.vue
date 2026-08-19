@@ -121,31 +121,31 @@
                 style: 'white-space: pre-line;'
               }" 
               class="d-flex align-center ga-10 cursor-pointer"
-              v-if="item.digest?.issues"
+              v-if="item.digest?.counts"
             >
               <v-badge
                 color="success"
-                :content="item.digest?.issues?.info"
+                :content="item.digest?.counts?.info"
               />
               <v-badge
                 color="primary"
-                :content="item.digest?.issues?.convention"
+                :content="item.digest?.counts?.convention"
               />
               <v-badge
                 color="warning"
-                :content="item.digest?.issues?.warning"
+                :content="item.digest?.counts?.warning"
               />
               <v-badge
                 color="secondary"
-                :content="item.digest.issues.security"
+                :content="item.digest.counts.security"
               />
               <v-badge
                 color="error"
-                :content="item.digest.issues.error"
+                :content="item.digest.counts.error"
               />
               <v-badge
                 color="error"
-                :content="item.digest.issues.critical"
+                :content="item.digest.counts.critical"
               />
             </div>
             <div v-else>
@@ -361,9 +361,9 @@ export default {
     },
 
     digestTooltip(report) {
-      const issues = report.digest?.issues;
-      const part1 = `Info: ${issues.info}\nConvention: ${issues.convention}\nWarnings: ${issues.warning}`;
-      const part2 = `Security: ${issues.security}\nError: ${issues.error}\nCritical: ${issues.critical}`;
+      const counts = report.digest?.counts;
+      const part1 = `Info: ${counts.info}\nConvention: ${counts.convention}\nWarnings: ${counts.warning}`;
+      const part2 = `Security: ${counts.security}\nError: ${counts.error}\nCritical: ${counts.critical}`;
       return `${part1}\n${part2}`;
     },
 
