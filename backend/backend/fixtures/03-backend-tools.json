@@ -121,6 +121,32 @@
       ]
     }
   },
+  {      
+    "model": "backend.subworkflow",
+    "pk": "coding-best-practices-subworkflow",
+    "fields": {
+      "name": "Coding Best Practices for OSS",
+      "description": "Check Coding Best Practices for Open Source Software.",
+      "pipeline_step": "coding-best-practices-subworkflow:\r\n  in:\r\n    pipeline_id: pipeline_id\r\n    run_id: run_id\r\n    server_url: server_url\r\n    # coding-best-practices-for-oss.action_code_url: coding-best-practices-subworkflow.coding-best-practices-for-oss.action_code_url\r\n    # coding-best-practices-for-oss.path_to_check: coding-best-practices-subworkflow.coding-best-practices-for-oss.path_to_check\r\n    # coding-best-practices-for-oss.default_anchor_file: coding-best-practices-subworkflow.coding-best-practices-for-oss.default_anchor_file\r\n    # coding-best-practices-for-oss.output_file: coding-best-practices-subworkflow.coding-best-practices-for-oss.output_file\r\n    # coding-best-practices-for-oss.output_format: coding-best-practices-subworkflow.coding-best-practices-for-oss.output_format\r\n    source_directory: clone_step/repo_directory\r\n  run: '#coding-best-practices-subworkflow'\r\n  out: []",
+      "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: coding-best-practices-for-oss\r\n    # coding-best-practices-for-oss.action-code-url: string\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    report:\r\n      type: File\r\n      outputSource: coding-best-practices-for-oss_step/report\r\n\r\n  steps:\r\n    coding-best-practices-for-oss_step:\r\n      run: '#coding-best-practices-for-oss'\r\n      in:\r\n        source_directory: source_directory\r\n      out:\r\n      - report\r\n    digest_step:\r\n      run: '#digest_generator'\r\n      in:\r\n        name: name\r\n        report_file: coding-best-practices-for-oss_step/report\r\n      out:\r\n      - digest_file\r\n    save_step:\r\n      run: '#save_tool'\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report_file: coding-best-practices-for-oss_step/report\r\n        digest_file: digest_step/digest_file\r\n        run_id: run_id\r\n        server_url: server_url\r\n      out: []\r\n  id: coding-best-practices-subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+      "user_params": { 
+        "coding-best-practices-for-oss": {}
+      },  
+      "version": "0.1",
+      "status": "Beta",
+      "available": true,
+      "tags": [
+        1,
+        5
+      ],
+      "tools": [ 
+        "coding-best-practices-for-oss",
+        "clone",
+        "_digest",
+        "save_report_and_digest"
+      ] 
+    } 
+  },  
   {
     "model": "backend.subworkflow",
     "pk": "flake8_subworkflow",

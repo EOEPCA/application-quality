@@ -28,6 +28,15 @@
   },
   {
     "model": "backend.commandlinetool",
+    "pk": "coding-best-practices-for-oss",
+    "fields": {
+      "name": "Coding Best Practices for OSS",
+      "definition": "- class: CommandLineTool\r\n\r\n  requirements:\r\n    DockerRequirement:\r\n      dockerPull: python:3.11-slim\r\n    InlineJavascriptRequirement: {}\r\n    InitialWorkDirRequirement:\r\n      listing:\r\n      - entryname: entrypoint.sh\r\n        entry: |-\r\n          #!/usr/bin/bash\r\n          cd /tmp\r\n          echo \"Downloading $(inputs.action_code_url) as file.zip\"\r\n          python3 -c \"import urllib.request; urllib.request.urlretrieve('$(inputs.action_code_url)', 'file.zip')\"\r\n          ls -l\r\n          echo \"Unzipping file.zip\"\r\n          python3 -m zipfile -e file.zip .\r\n          echo \"Done\"\r\n          pwd\r\n          ls -l\r\n          find .\r\n          cd coding-best-practices-for-oss-action-main\r\n          find .\r\n          echo \"Installing requirements\"\r\n          pip3 install --upgrade pip\r\n          pip3 install -r requirements.txt\r\n          echo \"---\"\r\n          export INPUT_PATH_TO_CHECK=\"$(inputs.source_directory.path)\"\r\n          export INPUT_OUTPUT_FILE=\"$(inputs.output_file)\"\r\n          export INPUT_OUTPUT_FORMAT=\"$(inputs.output_format)\"\r\n          export INPUT_DEFAULT_ANCHOR_FILE=\"$(inputs.default_anchor_file)\"\r\n          set | grep INPUT\r\n          echo \"Starting the analysis ...\"\r\n          python3 main.py\r\n          pwd\r\n          ls -l\r\n          echo \"Moving the report file\"\r\n          mv \"$(inputs.output_file)\" $HOME/\r\n          ls -l $HOME\r\n          echo \"Done\"\r\n  inputs:\r\n    action_code_url:\r\n      # description: \"The URL of the code to execute\"\r\n      type: string\r\n      default: \"https://github.com/EOEPCA/coding-best-practices-for-oss-action/archive/refs/heads/main.zip\"\r\n    source_directory:\r\n      # description: \"The directory to check\"\r\n      type: Directory\r\n      #default: \".\"\r\n    default_anchor_file:\r\n      # description: \"Default anchor file for issues not related to specific files\"\r\n      type: string\r\n      default: \"coding-best-practices-issues.md\"\r\n    output_file:\r\n      # description: \"The report (output) file name\"\r\n      type: string\r\n      default: \"coding-best-practices-report.json\"\r\n    output_format:\r\n      #description: \"The output report format: 'generic' (SonarQube) or 'sarif' (v2.1.0)\"\r\n      type: string\r\n      default: \"generic\"\r\n  outputs:\r\n    report:\r\n      type: File\r\n      outputBinding:\r\n        glob: coding-best-practices-report.json\r\n\r\n  baseCommand: bash\r\n  arguments:\r\n  - entrypoint.sh\r\n  id: coding-best-practices-for-oss",
+      "version": "0.1"
+    }
+  },
+  {
+    "model": "backend.commandlinetool",
     "pk": "_digest",
     "fields": {
       "name": "Report Digest Generator",
