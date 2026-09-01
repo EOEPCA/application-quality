@@ -120,6 +120,26 @@ export const triggerService = {
     }
   },
 
+  async getPaginatedPipelineExecutions(trigger, {page, page_size, sort, order}) {
+    const triggerId = trigger?.slug || trigger;
+    console.log("Fetching pipeline runs for trigger", triggerId, page, page_size, sort, order);
+    try {
+      // The backend expects a single "ordering" parameter (e.g. "ordering=-created_at")
+      const ordering = sort ? `${order === 'desc' ? '-' : ''}${sort}` : undefined
+      const response = await triggerApi.get(`/${triggerId}/runs/`, {
+        params: {
+          page,
+          page_size,
+          ordering: ordering,
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching pipeline executions for trigger ${triggerId}:`, error);
+      throw error;
+    }
+  },
+
   async deleteTrigger(trigger) {
     const triggerId = trigger?.slug || trigger;
     try {

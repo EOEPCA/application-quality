@@ -99,6 +99,31 @@ export const pipelineService = {
     }
   },
 
+  async getPaginatedPipelineExecutions(pipelineId, {page, page_size, sort, order}) {
+    console.log("Fetching runs of pipeline", pipelineId, page, page_size, sort, order);
+    try {
+      if (pipelineId === undefined || pipelineId === null) {
+        pipelineId = '_'; // Meaning "all pipelines"
+      }
+      // The backend expects a single "ordering" parameter (e.g. "ordering=-created_at")
+      const ordering = sort ? `${order === 'desc' ? '-' : ''}${sort}` : undefined
+      const response = await pipelineApi.get(`/${pipelineId}/runs/`, {
+        params: {
+          page,
+          page_size,
+          ordering,
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error(
+        `Error fetching executions of pipeline ${pipelineId}:`,
+        error,
+      );
+      throw error;
+    }
+  },
+
   async getPipelineExecutionById(pipelineId, runId) {
     try {
       const response = await pipelineApi.get(`/${pipelineId}/runs/${runId}/`);

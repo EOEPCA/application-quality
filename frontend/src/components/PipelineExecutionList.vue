@@ -11,7 +11,9 @@
         variant="solo"
         density="compact"
         class="pa-1"
+        clearable
         :messages="pipelineSelectMessage"
+        @click:clear="onPipelineSelectionCleared"
         @update:menu="refreshPipelineExecutions('pipeline')"
       ></v-select>
 
@@ -58,13 +60,17 @@
     <v-alert v-if="pipelineStore.error" type="error" :text="pipelineStore.error" closable />
 
     <!-- eslint-disable vue/no-v-model-argument -->
-    <v-data-table
+    <v-data-table-server
       v-model:items-per-page="itemsPerPage"
+      v-model:page="page"
       v-model:sort-by="sortBy"
       :headers="filteredHeaders"
-      :items="pipelineStore.executions"
+      :items="items"
+      :items-length="totalItems"
       :filter-keys="['pipeline']"
+      :loading="loading"
       :custom-filter="filterOnPipelineId"
+      @update:options="refreshPipelineExecutions"
       class="elevation-1"
       hover
     >
@@ -212,19 +218,7 @@
           class="ma-2"
         />
       </template>
-    </v-data-table>
-
-    <!-- <v-alert
-          v-else-if="!pipelineStore.loadingExecutions"
-          type="info"
-          text="No pipeline executions found"
-        />
-  
-        <v-progress-circular
-          v-else
-          indeterminate
-          class="ma-4"
-        /> -->
+    </v-data-table-server>
 
     <!-- Pipeline Execution Details Dialog -->
     <v-dialog v-model="showDetails" max-width="1200px">
@@ -280,6 +274,8 @@ import { useAuthStore } from '@/stores/auth';
 import { useToolStore } from '@/stores/tools';
 import { usePipelineStore } from '@/stores/pipelines';
 import { useTriggerStore } from '@/stores/triggers';
+import { pipelineService } from '@/services/pipelines';
+import { triggerService } from '@/services/triggers';
 import { formatDate } from '@/assets/tools';
 import JSONTableViewer from '@/components/JSONTableViewer.vue';
 
@@ -296,7 +292,11 @@ export default {
       selectedPipeline: null,
       selectedTrigger: null,
       selectedExecution: null,
+      page: 1,
+      items: [],
       itemsPerPage: 10,
+      totalItems: 0,
+      loading: false,
       sortBy: [{ key: 'start_time', order: 'desc' }],
       headers: [
         {
@@ -336,7 +336,7 @@ export default {
         {
           title: 'Quality',
           key: 'digest_quality',
-          sortable: true,
+          sortable: false,
         },
         {
           title: '',
@@ -407,28 +407,10 @@ export default {
     } else {
       this.selectedTrigger = undefined;
     }
-    this.refreshPipelineExecutions();
+    // this.refreshPipelineExecutions();
   },
 
   methods: {
-    progress(execution) {
-      // console.log("Progress of", execution.id, execution.job_reports_count)
-      // console.log("Max progress:", this.pipelineStore.pipelineById(execution.pipeline).tools.length)
-      return execution.job_reports_count;
-    },
-
-    progressMax(execution) {
-      // console.log("Max progress:", this.pipelineStore.pipelineById(execution.pipeline).tools.length)
-      const pipeline = this.pipelineStore.pipelineById(execution.pipeline);
-      // Do not include init tools as they don't generate reports
-      // console.debug('Pipeline tools:', pipeline.tools);
-      const analysisTools = pipeline.tools.filter(
-        (tool) => !this.toolStore.isInitTool(tool),
-      );
-      // console.debug('Analysis tools:', analysisTools);
-      return analysisTools.length;
-    },
-
     filterOnPipelineId(value, query, item) {
       console.info('filterOnPipelineId:', value, query, item);
       return value == query;
@@ -443,22 +425,46 @@ export default {
       await this.toolStore.fetchTools();
     },
 
+    onPipelineSelectionCleared() {
+      this.selectedPipeline = undefined;
+      this.pipelineStore.selectedPipelineId = undefined;
+      this.triggerStore.selectedTriggerId = undefined;
+      this.refreshPipelineExecutions();
+    },
+
     async refreshPipelineExecutions(reason) {
       // console.debug("Refresh pipeline executions, reason:", reason);
-      await this.pipelineStore.fetchPipelines();
-      if (reason == 'pipeline') {
-        this.pipelineStore.selectedPipelineId = this.selectedPipeline?.id || this.selectedPipeline;
-        console.debug("Selected pipeline id:", this.pipelineStore.selectedPipelineId);
+      this.loading = true
+      let page_params = {
+        page: this.page,
+        page_size: this.itemsPerPage,
+        sort: this.sortBy?.[0]?.key,
+        order: this.sortBy?.[0]?.order,
       }
-      if (this.pipelineStore.selectedPipelineId) {
-        console.info('Retrieving executions of pipeline', this.pipelineStore.selectedPipelineId);
-        await this.pipelineStore.fetchPipelineExecutions(this.pipelineStore.selectedPipelineId);
-      } else if (this.triggerStore.selectedTriggerId) {
-        console.info('Retrieving executions triggered by', this.triggerStore.selectedTriggerId);
-        await this.triggerStore.fetchPipelineExecutions(this.triggerStore.selectedTriggerId);
-      } else {
-        console.info('Retrieving all pipeline executions');
-        await this.pipelineStore.fetchPipelineExecutions();
+      try {
+        await this.pipelineStore.fetchPipelines();
+        if (reason == 'pipeline') {
+          this.pipelineStore.selectedPipelineId = this.selectedPipeline?.id || this.selectedPipeline;
+          console.debug("Selected pipeline id:", this.pipelineStore.selectedPipelineId);
+        }
+        if (this.pipelineStore.selectedPipelineId) {
+          console.info('Retrieving executions of pipeline', this.pipelineStore.selectedPipelineId, page_params);
+          let data = await pipelineService.getPaginatedPipelineExecutions(this.pipelineStore.selectedPipelineId, page_params);
+          this.items = data.results
+          this.totalItems = data.count
+        } else if (this.triggerStore.selectedTriggerId) {
+          console.info('Retrieving executions triggered by', this.triggerStore.selectedTriggerId, page_params);
+          let data = await triggerService.getPaginatedPipelineExecutions(this.triggerStore.selectedTriggerId, page_params);
+          this.items = data.results
+          this.totalItems = data.count
+        } else {
+          console.info('Retrieving all pipeline executions', page_params);
+          let data = await pipelineService.getPaginatedPipelineExecutions(null, page_params);
+          this.items = data.results
+          this.totalItems = data.count
+        }
+      } finally {
+        this.loading = false
       }
     },
 
