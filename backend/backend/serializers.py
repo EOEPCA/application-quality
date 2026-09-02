@@ -13,6 +13,18 @@ from backend.models import (
 )
 
 
+class DynamicFieldsMixin:
+    def __init__(self, *args, **kwargs):
+        fields = kwargs.pop("fields", None)
+        super().__init__(*args, **kwargs)
+
+        if fields is not None:
+            allowed = set(fields)
+            existing = set(self.fields)
+            for field_name in existing - allowed:
+                self.fields.pop(field_name)
+
+
 class UserMinifiedSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
 
@@ -45,7 +57,7 @@ class PipelineSerializer(serializers.ModelSerializer):
         ]
 
 
-class PipelineRunSerializer(serializers.ModelSerializer):
+class PipelineRunSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     digest_quality = serializers.SerializerMethodField()
     started_by = serializers.ReadOnlyField(source="started_by.username")
     trigger_event = serializers.SerializerMethodField()

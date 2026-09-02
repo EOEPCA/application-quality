@@ -13,6 +13,8 @@ from jinja2 import Template
 
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -26,6 +28,16 @@ from backend.models import (
     Trigger,
     TriggerEvent,
 )
+from backend.serializers import (
+    PipelineSerializer,
+    PipelineRunSerializer,
+    JobReportSerializer,
+    SubworkflowSerializer,
+    TagSerializer,
+    TriggerTypeSerializer,
+    TriggerSerializer,
+    TriggerEventSerializer,
+)
 from backend.tasks import run_workflow_task
 from backend.utils.cloudevents import encode as ce_encode, decode as ce_decode, is_match
 from backend.utils.github import (
@@ -34,7 +46,6 @@ from backend.utils.github import (
     post_pr_quality_state as gh_post_pr_quality_state,
 )
 from backend.utils.run_workflow import update_quality_status
-from . import serializers
 
 
 logger = logging.getLogger(__name__)
@@ -327,7 +338,7 @@ class IsOwnerOrAdmin(permissions.BasePermission):
 
 
 class PipelineViewSet(viewsets.ModelViewSet):
-    serializer_class = serializers.PipelineSerializer
+    serializer_class = PipelineSerializer
 
     def get_queryset(self):
         if self.request.user.is_staff:
@@ -356,23 +367,49 @@ class PipelineViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
 
+class PipelineRunPagination(PageNumberPagination):
+    page_size = 25
+    page_size_query_param = "page_size"  # Used by the frontend to specify another page size
+    max_page_size = 100
+
+
 class PipelineRunViewSet(viewsets.ModelViewSet):
-    serializer_class = serializers.PipelineRunSerializer
+    serializer_class = PipelineRunSerializer
+    pagination_class = PipelineRunPagination
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [OrderingFilter, SearchFilter]
+    ordering_fields = ["pipeline_id", "started_by", "start_time", "completion_time", "status"]  # whitelist sortable fields
+    ordering = ["-start_time"]  # Most recent first by default
+    search_fields = ["pipeline_id"]
     lookup_url_kwarg = "run_id"
     lookup_field = "id"
+
+    def get_serializer(self, *args, **kwargs):
+        fields_param = self.request.query_params.get("fields")
+        if fields_param:
+            kwargs["fields"] = [f.strip() for f in fields_param.split(",")]
+        return super().get_serializer(*args, **kwargs)
 
     def get_queryset(self):
         user = self.request.user
         logger.info("User %s is requesting pipeline runs (admin=%s)", user, user.is_staff)
         p_id = self.kwargs["pipeline_id"]
+        queryset = PipelineRun.objects.all()
+        fields_param = self.request.query_params.get("fields")
+        logger.debug("Only returning these properties: %s", fields_param)
+        if fields_param:
+            requested = [f.strip() for f in fields_param.split(",")]
+            valid_fields = [f.name for f in PipelineRun._meta.get_fields()]
+            only_fields = [f for f in requested if f in valid_fields]
+            if only_fields:
+                queryset = queryset.only(*only_fields)
         if user.is_staff:
             if p_id in ["_", "-"]:
-                return PipelineRun.objects
-            return PipelineRun.objects.filter(pipeline_id=p_id)
+                return queryset
+            return queryset.filter(pipeline_id=p_id)
         if p_id in ["_", "-"]:
-            return PipelineRun.objects.filter(started_by=self.request.user)
-        return PipelineRun.objects.filter(pipeline_id=p_id, started_by=self.request.user)
+            return queryset.filter(started_by=self.request.user)
+        return queryset.filter(pipeline_id=p_id, started_by=self.request.user)
 
     @staticmethod
     def _create(user: User, pipeline_id: str, data: dict) -> PipelineRun:
@@ -529,7 +566,7 @@ class JobReportViewSet(
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
 ):
-    serializer_class = serializers.JobReportSerializer
+    serializer_class = JobReportSerializer
 
     def get_queryset(self):
         pipeline_id = self.kwargs["pipeline_id"]
@@ -618,7 +655,7 @@ class JobReportViewSet(
 
 
 class SubworkflowViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = serializers.SubworkflowSerializer
+    serializer_class = SubworkflowSerializer
 
     def get_queryset(self):
         user = self.request.user
@@ -635,11 +672,11 @@ class SubworkflowViewSet(viewsets.ReadOnlyModelViewSet):
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
-    serializer_class = serializers.TagSerializer
+    serializer_class = TagSerializer
 
 
 class TriggerTypeViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = serializers.TriggerTypeSerializer
+    serializer_class = TriggerTypeSerializer
 
     def get_queryset(self):
         user = self.request.user
@@ -655,7 +692,7 @@ class TriggerTypeViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class TriggerViewSet(viewsets.ModelViewSet):
-    serializer_class = serializers.TriggerSerializer
+    serializer_class = TriggerSerializer
 
     def get_queryset(self):
         if self.request.user.is_staff:
@@ -703,7 +740,7 @@ class TriggerViewSet(viewsets.ModelViewSet):
 
 
 class TriggerEventViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = serializers.TriggerEventSerializer
+    serializer_class = TriggerEventSerializer
 
     def get_queryset(self):
         trigger_id = self.kwargs["trigger_id"]
@@ -734,8 +771,13 @@ class TriggerEventViewSet(viewsets.ReadOnlyModelViewSet):
 class TriggerRunViewSet(viewsets.ReadOnlyModelViewSet):
     # This viewset returns serialized pipeline runs
     # (same as PipelineRunViewSet but filtered differently)
-    serializer_class = serializers.PipelineRunSerializer
+    serializer_class = PipelineRunSerializer
+    pagination_class = PipelineRunPagination
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [OrderingFilter, SearchFilter]
+    ordering_fields = ["pipeline_id", "started_by", "start_time", "completion_time", "status"]
+    ordering = ["-start_time"]  # Most recent first by default
+    search_fields = ["trigger_id"]
 
     @staticmethod
     def _get_matching_runs(trigger_events):
