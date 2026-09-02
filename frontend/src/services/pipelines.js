@@ -83,12 +83,16 @@ export const pipelineService = {
     }
   },
 
-  async getPipelineExecutions(pipelineId) {
+  async getPipelineExecutions(pipelineId, brief=false) {
     try {
       if (pipelineId === undefined || pipelineId === null) {
         pipelineId = '_'; // Meaning "all pipelines"
       }
-      const response = await pipelineApi.get(`/${pipelineId}/runs/`);
+      let params = ''
+      if (brief) {
+        params = `?fields=id,started_by,start_time,completion_time,status,job_reports_count`;
+      }
+      const response = await pipelineApi.get(`/${pipelineId}/runs/${params}`);
       return response.data;
     } catch (error) {
       console.error(

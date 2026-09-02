@@ -4,35 +4,34 @@
       <v-spacer />
 
       <v-select
-        v-model="store.selectedPipelineId"
+        v-model="pipelineStore.selectedPipelineId"
         label="Pipeline"
-        :items="store.pipelines"
+        :items="pipelineStore.pipelines"
         item-title="name"
         item-value="id"
         variant="solo"
         density="compact"
         class="pa-1"
-        @update:menu="refreshReports()"
+        @update:model-value="refreshPipelineExecutionTimes()"
       ></v-select>
 
       <v-select
-        v-model="store.selectedExecutionId"
-        label="Execution Time"
-        :items="filteredExecutions"
-        item-title="start_time"
+        v-model="pipelineStore.selectedExecutionId"
+        label="Execution"
+        :items="executionTimes"
         item-value="id"
         variant="solo"
         density="compact"
         class="pa-1"
-        @update:menu="refreshReports()"
+        @update:model-value="refreshReports()"
       >
         <template v-slot:selection="{ item }">
-          {{ formatDate(item.props.title) }}
+          {{ formatExecution(item.props.title) }}
         </template>
         <template v-slot:item="{ item, props }">
           <v-list-item
             v-bind="props"
-            :title="formatDate(item.props.title)"
+            :title="formatExecution(item.props.title)"
           ></v-list-item>
         </template>
       </v-select>
@@ -58,19 +57,19 @@
         size="small"
         __class="mx-2"
         @click="refreshReports"
-        :loading="store.loadingReports"
+        :loading="pipelineStore.loadingReports"
       / -->
     </v-card-title>
 
-    <v-alert v-if="store.error" type="error" :text="store.error" closable />
+    <v-alert v-if="pipelineStore.error" type="error" :text="pipelineStore.error" closable />
 
     <!-- eslint-disable vue/no-v-model-argument -->
     <v-data-table
-      v-if="store.reports.length"
+      v-if="pipelineStore.reports.length"
       v-model:items-per-page="itemsPerPage"
       v-model:sort-by="sortBy"
       :headers="headers"
-      :items="store.reports"
+      :items="pipelineStore.reports"
       :search="search"
       class="elevation-1"
       hover
@@ -88,7 +87,7 @@
             <v-btn
               color="primary"
               @click="openExecutionDialog"
-              :disabled="!store.reports.length"
+              :disabled="!pipelineStore.reports.length"
             >
               New Execution
             </v-btn>
@@ -99,17 +98,17 @@
         <tr>
           <td>
             {{
-              store.pipelineById(store.executionById(item.run).pipeline).name ||
+              pipelineStore.pipelineById(pipelineStore.executionById(item.run)?.pipeline)?.name ||
               '-'
             }}
           </td>
           <!-- <td>
             {{
-              store.pipelineById(store.executionById(item.run).pipeline)
+              pipelineStore.pipelineById(pipelineStore.executionById(item.run).pipeline)
                 .version || '-'
             }}
           </td> -->
-          <!-- <td>{{ formatDate(store.executionById(item.run).start_time) }}</td> -->
+          <!-- <td>{{ formatDate(pipelineStore.executionById(item.run).start_time) }}</td> -->
           <td>{{ item.name || 'No name' }}</td>
           <td>{{ item.instance || '' }}</td>
           <td>{{ formatDate(item.created_at) }}</td>
@@ -185,7 +184,7 @@
     </v-data-table>
 
     <v-alert
-      v-else-if="!store.loading"
+      v-else-if="!pipelineStore.loading"
       type="info"
       text="No analysis reports found"
     />
@@ -220,7 +219,7 @@
 import { useSettingsStore } from '@/stores/settings';
 import { usePipelineStore } from '@/stores/pipelines';
 import JSONTableViewer from '@/components/JSONTableViewer.vue';
-import { formatDate } from '@/assets/tools';
+import { formatDate, formatTime } from '@/assets/tools';
 
 export default {
   name: 'ReportList',
@@ -231,8 +230,7 @@ export default {
     return {
       search: '',
       showDetails: false,
-      //selectedPipelineId: null,
-      //selectedExecutionId: null,
+      executionTimes: [],
       selectedReport: null,
       itemsPerPage: 10,
       sortBy: [{ key: 'created_at', order: 'desc' }],
@@ -244,18 +242,6 @@ export default {
           sortable: false,
           align: 'start',
         },
-        // {
-        //   title: 'Version',
-        //   key: 'version',
-        //   sortable: true,
-        //   align: 'start',
-        // },
-        // {
-        //   title: 'Pipeline Start Time',
-        //   key: 'pipeline_start_time',
-        //   sortable: true,
-        //   align: 'start',
-        // },
         {
           title: 'Tool',
           key: 'name',
@@ -290,66 +276,58 @@ export default {
 
   setup() {
     const settings = useSettingsStore();
-    const store = usePipelineStore();
-    return { settings, store };
-  },
-
-  computed: {
-    filteredExecutions() {
-      if (!this.store.selectedPipelineId) return [];
-      // console.log("Filtering the executions ...")
-      const executions = this.store.executions.filter((execution) => {
-        return (
-          execution.job_reports_count != 0 &&
-          execution.pipeline == this.store.selectedPipelineId
-        );
-      });
-      // console.log("Sorting the executions ...")
-      return executions.sort((a, b) =>
-        b.start_time.localeCompare(a.start_time),
-      );
-    },
-
-    // filteredReports() {
-    //   if (!this.search) return this.store.tools
-    //   const searchTerm = this.search.toLowerCase()
-    //   return this.store.reports.filter(report => {
-    //     return (
-    //       (report.description && report.description.toLowerCase().includes(searchTerm)) ||
-    //       report.slug.toLowerCase().includes(searchTerm)
-    //     )
-    //   })
-    // },
+    const pipelineStore = usePipelineStore();
+    return { settings, pipelineStore };
   },
 
   mounted() {
     this.refreshPipelines();
-    this.refreshPipelineExecutions();
+    this.refreshPipelineExecutionTimes();
     this.refreshReports();
   },
 
   methods: {
     async refreshPipelines() {
       console.info('Retrieving pipelines');
-      await this.store.fetchPipelines();
+      await this.pipelineStore.fetchPipelines();
     },
-    async refreshPipelineExecutions() {
-      console.info('Retrieving pipeline executions');
-      await this.store.fetchPipelineExecutions();
+    async refreshPipelineExecutionTimes() {
+      console.info('Retrieving pipeline execution times');
+      if (this.pipelineStore.selectedPipelineId != undefined){
+        await this.pipelineStore.fetchPipelineExecutionTimes(this.pipelineStore.selectedPipelineId);
+        // Filter out the executions with no reports
+        const executions = this.pipelineStore.executionTimes?.filter((execution) => {
+          return (execution.job_reports_count != 0);
+        });
+        // Sort the reports to display the most recent at the top
+        this.executionTimes = executions?.sort((a, b) =>
+          b.start_time.localeCompare(a.start_time),
+        );
+        if (this.executionTimes.length == 0) {
+          this.pipelineStore.reports = [];
+          this.pipelineStore.selectedExecutionId = undefined;
+        } else {
+          console.log("Checking if in the list", this.pipelineStore.selectedExecutionId);
+          // If the execution selected in the store is not in the list, select the most recent one
+          const execution = this.executionTimes.find((exec) => exec.id === this.pipelineStore.selectedExecutionId);
+          if (execution == undefined) {
+            this.pipelineStore.selectedExecutionId = this.executionTimes[0]?.id;
+          }
+          this.refreshReports();
+        }
+      }
     },
     async refreshReports() {
       console.info('Retrieving pipeline execution reports');
-      //this.store.selectedPipeline = this.pipelineById(this.selectedPipelineId)
-      //this.store.selectedExecution = this.executionById(this.selectedExecutionId)
-      if (this.store.selectedExecutionId) {
+      if (this.pipelineStore.selectedExecutionId) {
         console.info(
           'Retrieving reports for pipeline execution',
-          this.store.selectedPipelineId,
-          this.store.selectedExecutionId,
+          this.pipelineStore.selectedPipelineId,
+          this.pipelineStore.selectedExecutionId,
         );
-        await this.store.fetchPipelineExecutionReports(
-          this.store.selectedPipelineId,
-          this.store.selectedExecutionId,
+        await this.pipelineStore.fetchPipelineExecutionReports(
+          this.pipelineStore.selectedPipelineId,
+          this.pipelineStore.selectedExecutionId,
         );
       } else {
         console.warn('No execution selected for fetching reports');
@@ -358,6 +336,10 @@ export default {
 
     formatDate(date) {
       return formatDate(date);
+    },
+
+    formatExecution(data) {
+      return `${formatDate(data.start_time)} - ${formatTime(data.completion_time)} (${data.job_reports_count} reports)`;
     },
 
     digestTooltip(report) {
@@ -395,8 +377,8 @@ export default {
     viewPipelineExecutionReportDashboard(report) {
       console.debug('Selected report:', report);
       const url = this.settings.getGrafanaPipelineExecutionReportURL(
-        this.store.selectedPipelineId,
-        this.store.selectedExecutionId,
+        this.pipelineStore.selectedPipelineId,
+        this.pipelineStore.selectedExecutionId,
         report.name,
         report.id,
       );

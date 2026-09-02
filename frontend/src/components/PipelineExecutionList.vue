@@ -14,7 +14,7 @@
         clearable
         :messages="pipelineSelectMessage"
         @click:clear="onPipelineSelectionCleared"
-        @update:menu="refreshPipelineExecutions('pipeline')"
+        @update:model-value="refreshPipelineExecutions('pipeline')"
       ></v-select>
 
       <!-- Polling status indicator -->

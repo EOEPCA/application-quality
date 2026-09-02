@@ -5,6 +5,7 @@ export const usePipelineStore = defineStore('pipeline', {
   state: () => ({
     pipelines: [],
     executions: [],
+    executionTimes: [],
     reports: [],
     loadingPipelines: false,
     loadingExecutions: false,
@@ -75,10 +76,34 @@ export const usePipelineStore = defineStore('pipeline', {
       this.loadingExecutions = true;
       this.error = null;
       try {
-        this.executions = await pipelineService.getPipelineExecutions(id);
+        // getPipelineExecutions returns a paginated response
+        let data = await pipelineService.getPipelineExecutions(id);
+        this.executions = data.results;
         // console.log('Executions:', this.executions);
       } catch (error) {
         const msg_prefix = 'Error fetching pipeline executions: ';
+        if (error.response?.data?.detail) {
+          console.error(msg_prefix, error, error.response.data.detail);
+          this.error = msg_prefix + error.response.data.detail;
+        } else {
+          console.error(msg_prefix, error);
+          this.error = msg_prefix + error.message;
+        }
+      } finally {
+        this.loadingExecutions = false;
+      }
+    },
+
+    async fetchPipelineExecutionTimes(id) {
+      this.loadingExecutions = true;
+      this.error = null;
+      try {
+        // getPipelineExecutionTimes() returns a paginated response
+        let data = await pipelineService.getPipelineExecutions(id, true);
+        this.executionTimes = data.results;
+        // console.log('Executions:', this.executions);
+      } catch (error) {
+        const msg_prefix = 'Error fetching pipeline execution times: ';
         if (error.response?.data?.detail) {
           console.error(msg_prefix, error, error.response.data.detail);
           this.error = msg_prefix + error.response.data.detail;
@@ -188,7 +213,7 @@ export const usePipelineStore = defineStore('pipeline', {
     },
 
     executionById(id) {
-      if (!this.executions) this.refreshPipelineExecutions();
+      if (!this.executions || this.executions.length == 0) this.fetchPipelineExecutions();
       const executions = this.executions.filter((execution) => {
         return execution.id == id;
       });
