@@ -308,7 +308,7 @@
           }
         }
       },
-      "owner": 1,
+      "owner": null,
       "created_at": "2026-08-14T14:48:50.513Z",
       "edited_at": "2026-08-19T11:08:42.150Z",
       "version": "0.1",
@@ -350,7 +350,7 @@
           "coding-best-practices-for-oss": {}
         }
       },
-      "owner": 1,
+      "owner": null,
       "created_at": "2026-08-21T12:05:00.697Z",
       "edited_at": "2026-08-21T21:05:49.172Z",
       "version": "0.1",
