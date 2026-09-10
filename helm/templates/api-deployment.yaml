@@ -53,6 +53,10 @@ spec:
             - secretRef:
                 name: application-quality-github-api-tokens
             {{- end }}
+          volumeMounts:
+            - name: settings-volume
+              mountPath: /app/settings.yaml  # prevents hiding existing /app content
+              subPath: settings.yaml
           resources:
             requests:
               memory: "256Mi"
@@ -60,6 +64,14 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "1000m"
+                  volumes:
+      volumes:
+      - name: settings-volume
+        configMap:
+          name: {{ include "application-quality.fullname" . }}-api-env
+          items:
+            - key: settings.yaml
+              path: settings.yaml
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

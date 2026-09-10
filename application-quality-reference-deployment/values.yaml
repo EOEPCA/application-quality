@@ -17,7 +17,12 @@ global:
 application-quality:
   # Values for deploying the Application Quality Building Block in the EOEPCA Develop cluster.
 
-  publicUrl: "https://application-quality.develop.eoepca.org"
+  app:
+    name: "EOEPCA - Application Quality Service"
+    version: ""
+    date: ""
+    theme: "default"
+    debug: false
 
   namespace:
     application-quality

@@ -95,3 +95,21 @@ data:
   GITHUB_STATUS_DESCRIPTION: {{ .Values.github.statusDescription }}
   GITHUB_STATUS_TARGET_URL: {{ .Values.github.statusTargetURL }}
   {{- end }}
+
+  settings.yaml: |
+    instance.name: {{ .Values.app.name | default "EOEPCA - Application Quality Service" | quote }}
+    instance.version: {{ .Values.app.version | default "-" | quote }}
+    instance.date: {{ .Values.app.date | default "-" | quote }}
+    instance.theme: {{ .Values.app.theme | default "default" | quote }}
+    debug.enabled: {{ .Values.app.debug | default false }}
+    user_manual.url: "https://eoepca.readthedocs.io/projects/application-quality/en/latest/usage/user-manual/"
+    source.url: "https://github.com/EOEPCA/application-quality/"
+    deployment_guide.url: ""
+    design.url: "https://eoepca.readthedocs.io/projects/architecture/en/latest/reference-architecture/application-quality-BB/"
+    sso.enabled: {{ .Values.oidc.enabled | default false }}
+    workspace.enabled: {{ .Values.workspace.enabled | default false }}
+    grafana.enabled: {{ .Values.grafana.enabled | default false }}
+    grafana.url: "{{ .Values.web.publicUrl }}/dashboards"
+    grafana.pipeline_executions.path: "/d/pipeline-executions/pipeline-executions?from=now-90d&to=now"
+    grafana.pipeline_execution.path: "/d/pipeline-execution/pipeline-execution?var-execution_id={execution_id}&var-pipeline_id={pipeline_name}"
+    grafana.pipeline_execution_report.path: "/d/default-{tool_name}-report/{tool_name}-report?var-pipeline_id={pipeline_name}&var-execution_id={execution_id}&var-report_id={report_id}&var-tool_name={tool_name}"
