@@ -64,7 +64,6 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "1000m"
-                  volumes:
       volumes:
       - name: settings-volume
         configMap:
