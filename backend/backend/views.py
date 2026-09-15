@@ -8,11 +8,10 @@ from django.utils import timezone
 from django.db.models import Count, Q
 from django.db.utils import IntegrityError
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
 from jinja2 import Template
 
 from rest_framework import mixins, permissions, status, viewsets
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -589,7 +588,7 @@ class JobReportViewSet(
 
         tool_name = request.query_params.get("name")
         if not tool_name:
-            raise ValidationError("Tool 'name' is required as a query parameter.")
+            raise ValidationError( {"detail": "Tool 'name' is required as a query parameter."} )
         
         # The (optional) instance parameter allows to distinguish reports from scattered steps
         instance = request.query_params.get("instance", "")
