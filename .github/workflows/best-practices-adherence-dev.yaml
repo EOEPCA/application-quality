@@ -43,6 +43,11 @@ jobs:
           output-file: 'reports/coding-best-practices-report.json'
           output-format: 'generic'
           default-anchor-file: 'backend/coding-best-practices-issues.md'
+          #config-file:
+          ai-model-provider: '${{ vars.CBP4OSS_AI_MODEL_PROVIDER }}'
+          ai-model-base-url: '${{ vars.CBP4OSS_AI_MODEL_BASE_URL }}'
+          ai-model-api-key: '${{ secrets.CBP4OSS_AI_MODEL_API_KEY }}'
+          ai-model-name: '${{ vars.CBP4OSS_AI_MODEL_NAME }}'
 
       # Generate the SonarQube project properties
       - name: SonarQube Project properties
