@@ -37,7 +37,7 @@ application-quality:
   web:
     image:
       repository: nexus.spaceapplications.com/repository/docker-asb-public/eoepca/eoepca-appquality-frontend
-      tag: 2026-08-19a
+      tag: 2026-09-28a
     publicUrl: "https://application-quality.develop.eoepca.org"
 
   persistence:
