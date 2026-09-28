@@ -15,7 +15,6 @@
     <v-app-bar color="primary">
       <v-app-bar-nav-icon @click="rail = !rail"></v-app-bar-nav-icon>
       <v-app-bar-title>{{ settings.instance__name }}</v-app-bar-title>
-      <!-- Login / Logout button -->
       <v-spacer></v-spacer>
 
       <v-btn
@@ -29,6 +28,7 @@
       </v-btn>
 
       <v-btn
+        v-if="settings.isGrafanaEnabled()"
         style="padding: 0px"
         min-width="0px"
         v-tooltip:bottom-end="'Dashboards (new page)'"
@@ -106,7 +106,6 @@ export default {
     return {
       rail: true, // Show only icons in the side menu by default
       isLoggedIn: false,
-      //loginDialog: false, // Control the visibility of the login dialog
       menuItems: [
         { title: 'Home', path: '/', icon: 'mdi-home' },
         { title: 'Analysis Tools', path: '/tools', icon: 'mdi-tools' },
@@ -148,19 +147,11 @@ export default {
     toggleLogin() {
       console.log('Toggle Login. Is logged in:', this.isLoggedIn);
       if (this.authStore.isLoggedIn) {
-        // TODO: Navigate to the logout URL
         this.authStore.logout();
       } else {
-        // Navigate to the login URL
         this.authStore.login();
-
-        //this.loginDialog = true; // Open the login dialog
       }
     },
-    // handleLoginSuccess() {
-    //   this.isLoggedIn = true;
-    //   this.loginDialog = false; // Close the login dialog on successful login
-    // },
   },
 };
 </script>
