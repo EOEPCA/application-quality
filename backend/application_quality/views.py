@@ -1,16 +1,18 @@
 import logging
 
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import JsonResponse
-
+from django.http import JsonResponse, HTTPStatus
 
 logger = logging.getLogger(__name__)
 
 
-@login_required
 def user_details(request):
-    user_id = request.session["_auth_user_id"]
+    user_id = request.session.get("_auth_user_id", None)
+    if user_id is None:
+        message = "User not authenticated"
+        logging.error(message)
+        return JsonResponse({"error": message}, status=HTTPStatus.UNAUTHORIZED)
+    
     logging.info("Retrieving details of user with ID %s", user_id)
     user = User.objects.get(pk=user_id)
     user_info = {
