@@ -31,7 +31,7 @@ application-quality:
   api:
     image:
       repository: nexus.spaceapplications.com/repository/docker-asb-public/eoepca/eoepca-appquality-backend
-      tag: 2026-09-10a
+      tag: 2026-09-29a
 
   # Application Quality frontend
   web:
