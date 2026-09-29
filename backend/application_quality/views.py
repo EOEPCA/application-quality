@@ -1,7 +1,9 @@
 import logging
 
 from django.contrib.auth.models import User
-from django.http import JsonResponse, HTTPStatus
+from django.http import JsonResponse
+from http import HTTPStatus
+
 
 logger = logging.getLogger(__name__)
 
