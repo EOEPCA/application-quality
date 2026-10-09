@@ -1,20 +1,3 @@
-"""
-URL configuration for application_quality project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.1/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-
 import os
 
 from django.conf import settings
@@ -38,10 +21,12 @@ urlpatterns = [
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ]
 
-if settings.IS_OIDC_ENABLED == "true":
-    urlpatterns.append(path("oidc/user-details/", user_details, name="user_details"))
-    # Overwrite the default logout function to prevent ending the local user session
-    # in the case the user decides not to log out ("Back to Application" link)
-    urlpatterns.append(path("oidc/logout/", logout, name="oidc_logout")),
-    urlpatterns.append(path("oidc/post-logout/", post_logout, name="oidc_post_logout")),
-    urlpatterns.append(path("oidc/", include("mozilla_django_oidc.urls")))
+if settings.IS_OIDC_ENABLED:
+    urlpatterns.extend([
+        path("oidc/user-details/", user_details, name="user_details"),
+        # Overwrite the default logout function to prevent ending the local user session
+        # in the case the user decides not to log out ("Back to Application" link)
+        path("oidc/logout/", logout, name="oidc_logout"),
+        path("oidc/post-logout/", post_logout, name="oidc_post_logout"),
+        path("oidc/", include("mozilla_django_oidc.urls")),
+    ])
