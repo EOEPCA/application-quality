@@ -48,7 +48,7 @@ data:
   OIDC_RP_SIGN_ALGO: {{ .Values.oidc.rpSignAlgo }}
   OIDC_LOGOUT_ENDPOINT_PATH: {{ .Values.oidc.logoutEndpointPath }}
   OIDC_LOGOUT_REDIRECT_URI_PARAMETER_NAME: {{ .Values.oidc.logoutRedirectUrlParameterName }}
-  OIDC_POST_LOGOUT_REDIRECT_URL: {{ .Values.oidc.postLogoutRedirectUrl }}
+  OIDC_POST_LOGOUT_REDIRECT_URL: {{ .Values.web.publicUrl }}/oidc/post-logout
   # TODO: The following values must be obtained from the OpenID configuration
   OIDC_OP_AUTHORIZATION_ENDPOINT: {{ .Values.oidc.realmBaseUrl }}/protocol/openid-connect/auth
   OIDC_OP_TOKEN_ENDPOINT: {{ .Values.oidc.realmBaseUrl }}/protocol/openid-connect/token

@@ -26,7 +26,9 @@ web:
   containerPort: 80
   replicaCount: 1
   # The full URL of the frontend
-  # Also used by the backend to authorize the requests (see also api.additionalAllowedHosts, below)
+  # Also used by
+  # - the backend to authorize the requests (see also api.additionalAllowedHosts, below)
+  # - the OIDC provider to redirect after login/logout (see oidc.*, below)
   publicUrl: ""
 
 api:
@@ -125,7 +127,6 @@ oidc:
   preferredUsernameClaimField: "preferred_username"
   logoutEndpointPath: "end_session"
   logoutRedirectUrlParameterName: "post_logout_redirect_url"
-  postLogoutRedirectUrl: ""
   loginUrl: "/oidc/authenticate"
   loginRedirectUrl: ""
   logoutRedirectUrl: "/"
