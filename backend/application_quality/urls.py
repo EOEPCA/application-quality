@@ -17,6 +17,7 @@ Including another URLconf
 
 import os
 
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path, include
@@ -25,7 +26,8 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
-from application_quality.views import user_details
+from application_quality.views import user_details, logout, post_logout
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -36,6 +38,10 @@ urlpatterns = [
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ]
 
-if os.getenv("OIDC_ENABLED", "false").lower() == "true":
-    urlpatterns.append(path("oidc/", include("mozilla_django_oidc.urls")))
+if settings.IS_OIDC_ENABLED == "true":
     urlpatterns.append(path("oidc/user-details/", user_details, name="user_details"))
+    # Overwrite the default logout function to prevent ending the local user session
+    # in the case the user decides not to log out ("Back to Application" link)
+    urlpatterns.append(path("oidc/logout/", logout, name="oidc_logout")),
+    urlpatterns.append(path("oidc/post-logout/", post_logout, name="oidc_post_logout")),
+    urlpatterns.append(path("oidc/", include("mozilla_django_oidc.urls")))

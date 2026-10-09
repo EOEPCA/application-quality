@@ -40,7 +40,7 @@ def logout_next_url(request):
         f"{settings.OIDC_OP_USER_ENDPOINT.replace('userinfo', 'logout')}"
         "?response_type=code"
         f"&client_id={settings.OIDC_RP_CLIENT_ID}"
-        f"&post_logout_redirect_uri={settings.OIDC_POST_LOGOUT_REDIRECT_URL}"
+        f"&{settings.OIDC_LOGOUT_REDIRECT_URI_PARAMETER_NAME}={settings.OIDC_POST_LOGOUT_REDIRECT_URL}"
         f"&state={get_random_string(32)}"
     )
     logger.info("Logout next URL: %s", url)

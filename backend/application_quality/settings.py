@@ -53,16 +53,20 @@ LOGGING = {
             "level": "DEBUG",
             "propagate": False,
         },
+        "mozilla_django_oidc": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
     },
 }
 
 # Build the ALLOWED_HOSTS variable
 
 # PUBLIC_URL should contain a scheme, and possibly a port number
-public_url = os.getenv("PUBLIC_URL")
-if "://" not in public_url:
-    public_url = "http://" + public_url
-parsed_public_url = urlparse(public_url)
+PUBLIC_URL = os.getenv("PUBLIC_URL")
+if "://" not in PUBLIC_URL:
+    PUBLIC_URL = "http://" + PUBLIC_URL
+parsed_public_url = urlparse(PUBLIC_URL)
 public_domain = parsed_public_url.netloc
 if ":" in public_domain:
     # Remove the port number, if any
@@ -236,13 +240,17 @@ CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
 CELERY_WORKER_REDIRECT_STDOUTS = False
 
 # OpenID Connect configuration
-OIDC_ENABLED = os.getenv("OIDC_ENABLED", 'false')
-if OIDC_ENABLED.lower() == "true":
+OIDC_ENABLED = os.getenv("OIDC_ENABLED", "false").lower()
+IS_OIDC_ENABLED = OIDC_ENABLED == "true"
+if IS_OIDC_ENABLED:
     OIDC_CONNECT_CONFIG_URL = os.getenv("OIDC_CONNECT_CONFIG_URL")
     OIDC_RP_CLIENT_ID = os.getenv("OIDC_RP_CLIENT_ID")
     OIDC_RP_CLIENT_SECRET = os.getenv("OIDC_RP_CLIENT_SECRET")
     OIDC_LOGOUT_ENDPOINT_PATH = os.getenv("OIDC_LOGOUT_ENDPOINT_PATH")
-    OIDC_LOGOUT_REDIRECT_URI_PARAMETER_NAME = os.getenv("OIDC_LOGOUT_REDIRECT_URI_PARAMETER_NAME")
+    OIDC_LOGOUT_REDIRECT_URI_PARAMETER_NAME = os.getenv(
+        "OIDC_LOGOUT_REDIRECT_URI_PARAMETER_NAME",
+        "post_logout_redirect_uri"
+    )
     OIDC_OP_LOGOUT_URL_METHOD = "backend.auth_backends.logout_next_url"
     OIDC_POST_LOGOUT_REDIRECT_URL = os.getenv("OIDC_POST_LOGOUT_REDIRECT_URL")
     OIDC_OP_AUTHORIZATION_ENDPOINT = os.getenv("OIDC_OP_AUTHORIZATION_ENDPOINT")
@@ -268,11 +276,11 @@ if OIDC_ENABLED.lower() == "true":
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_HEADERS = "*"
-CORS_ALLOWED_ORIGINS = [os.getenv("PUBLIC_URL")]  # Frontend URL
+CORS_ALLOWED_ORIGINS = [PUBLIC_URL]  # Frontend URL
 
 #CSRF_COOKIE_SECURE = False
 #CSRF_USE_SESSIONS = True
-CSRF_TRUSTED_ORIGINS = [os.getenv("PUBLIC_URL")]  # API Base URL
+CSRF_TRUSTED_ORIGINS = [PUBLIC_URL]  # API Base URL
 
 add_hosts_raw = os.getenv("ADDITIONAL_ALLOWED_HOSTS")
 if add_hosts_raw:
