@@ -13,6 +13,57 @@ from backend.models import (
 )
 
 
+def mask_secrets(data: object, secret_keys: set[str], mask: str = "********") -> object:
+    """Masks values whose key is in the provided 'secret_keys' list."""
+    if isinstance(data, dict):
+        return {
+            key: (
+                mask
+                if key.lower() in secret_keys
+                else mask_secrets(value, secret_keys, mask)
+            )
+            for key, value in data.items()
+        }
+    elif isinstance(data, list):
+        return [mask_secrets(item, secret_keys, mask) for item in data]
+    return data
+
+
+def mask_dot_keys(data: object, mask: str = "********") -> object:
+    """Recursively walks a dictionary and masks values for keys starting with '.'."""
+    if isinstance(data, dict):
+        new_dict: dict[str, object] = {}
+        for key, value in data.items():
+            if key.startswith("."):
+                new_dict[key[1:]] = mask
+            else:
+                new_dict[key] = mask_dot_keys(value, mask)
+        return new_dict
+    elif isinstance(data, list):
+        return [mask_dot_keys(item, mask) for item in data]
+    return data
+
+
+def mask_secret_defaults(data: object, mask: str = "********") -> object:
+    """Recursively walks nested structures and masks 'default' values
+    whenever 'secret' is set to True at the same dictionary level.
+    """
+    if isinstance(data, dict):
+        # Check if the current dictionary node has secret: True
+        is_secret = data.get("secret", False) is True
+        new_dict: dict[str, object] = {}
+        for key, value in data.items():
+            if key == "default" and is_secret:
+                new_dict[key] = mask
+            else:
+                # Recursively traverse nested children
+                new_dict[key] = mask_secret_defaults(value, mask)
+        return new_dict
+    elif isinstance(data, list):
+        return [mask_secret_defaults(item, mask) for item in data]
+    return data
+
+
 class DynamicFieldsMixin:
     def __init__(self, *args, **kwargs):
         fields = kwargs.pop("fields", None)
@@ -56,6 +107,11 @@ class PipelineSerializer(serializers.ModelSerializer):
             "version",
         ]
 
+    def to_representation(self, instance):
+        # Get standard representation then mask the secrets default values
+        ret = super().to_representation(instance)
+        return mask_secret_defaults(ret)
+
 
 class PipelineRunSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     digest_quality = serializers.SerializerMethodField()
@@ -77,7 +133,7 @@ class PipelineRunSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
             "output",
             "digest",
             "digest_quality",
-            "executed_cwl",
+            # "executed_cwl", - Potentially include secrets default values
             "started_by",
             "trigger_event",
             "job_reports_count",
@@ -93,6 +149,11 @@ class PipelineRunSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         # Fetch the first trigger event from the relation if it exists
         first_event = obj.triggered_by.first()
         return first_event.id if first_event else None
+
+    def to_representation(self, instance):
+        # Get standard representation then mask the dotted keys values
+        ret = super().to_representation(instance)
+        return mask_dot_keys(ret)
 
 
 class JobReportSerializer(serializers.ModelSerializer):
@@ -116,6 +177,11 @@ class SubworkflowSerializer(serializers.ModelSerializer):
             "status",
             "available",
         ]
+
+    def to_representation(self, instance):
+        # Get standard representation then mask the secrets default values
+        ret = super().to_representation(instance)
+        return mask_secret_defaults(ret)
 
 
 class TagSerializer(serializers.ModelSerializer):

@@ -536,6 +536,10 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
 
     @staticmethod
     def _render_cwl(pipeline):
+        """
+        Use the master CWL template to generate a unique CWL document with all the 
+        steps, subworkflows, CLTs, etc.
+        """
         logger.debug("Rendering CWL for pipeline '%s'", pipeline.id)
         rendered_subworkflows = []
 
