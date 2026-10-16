@@ -7,6 +7,7 @@ from json.decoder import JSONDecodeError
 from kubernetes import config
 
 from backend.models import PipelineRun
+from backend.utils.cwl import get_all_secret_params
 from backend.utils.github import (
     GH_CONTEXT_STATUS,
     post_quality_state as gh_post_quality_state,
@@ -304,6 +305,10 @@ def run_workflow(
     # If cluster_config_file is None here, the ultimate option (if vclusters are not required)
     # is running the pipeline in the host cluster
 
+    # Identify the parameters that must be provided secretly, if any
+    secret_params = get_all_secret_params(cwl)
+    logger.debug("CWL workflow secret parameters: %s", secret_params)
+
     # TODO: Remove Sonarqube parameters
     sonarqube_project = f"{username}-{pipeline_run.pipeline.pk}-{str(run_id)}"
     params = {
@@ -321,7 +326,15 @@ def run_workflow(
         for input, value in inputs.items()
     }
 
-    pipeline_run.inputs = params
+    # Prepend secret keys with a '.' before saving them in the database
+    dotted_params: dict[str, str] = {}
+    for param in params:
+        if any(secret in param for secret in secret_params):
+            dotted_params["." + param] = params[param]
+        else:
+            dotted_params[param] = params[param]
+    logger.debug("CWL workflow dotted parameters: %s", dotted_params)
+    pipeline_run.inputs = dotted_params
     pipeline_run.save(update_fields=['inputs'])  # Overwrite previous value because of server_url
     logger.debug("Run %s updated with server url", pipeline_run.id)
     logger.debug("Pipeline parameters: %s", params)
