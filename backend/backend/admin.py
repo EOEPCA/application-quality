@@ -1,13 +1,14 @@
-from backend import models
-
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.sessions.models import Session
-from django.utils import timezone
 from django.db.models import JSONField
+from django.utils import timezone
+
 # https://django-svelte-jsoneditor.readthedocs.io/en/latest/index.html
 # Customised using SVELTE_JSONEDITOR_PROPS in the Django settings
 from django_svelte_jsoneditor.widgets import SvelteJSONEditorWidget
+
+from backend import models
 
 
 class PipelineSettings(admin.ModelAdmin):
@@ -84,10 +85,10 @@ class SessionAdmin(admin.ModelAdmin):
         user_id = obj.get_decoded().get("_auth_user_id")
         if user_id is None:
             return "-"
-        User = get_user_model()
+        user_model = get_user_model()
         try:
-            return User.objects.get(pk=user_id)
-        except User.DoesNotExist:
+            return user_model.objects.get(pk=user_id)
+        except user_model.DoesNotExist:
             return f"(deleted user {user_id})"
 
     @admin.display(description="Active", boolean=True)

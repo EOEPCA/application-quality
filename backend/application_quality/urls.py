@@ -1,16 +1,13 @@
-import os
-
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.views import LoginView, LogoutView
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
 
-from application_quality.views import user_details, logout, post_logout
-
+from application_quality.views import logout, post_logout, user_details
 
 urlpatterns = [
     path("admin/", admin.site.urls),

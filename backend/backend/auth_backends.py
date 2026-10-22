@@ -4,7 +4,6 @@ from django.conf import settings
 from django.utils.crypto import get_random_string
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 
-
 logger = logging.getLogger(__name__)
 
 

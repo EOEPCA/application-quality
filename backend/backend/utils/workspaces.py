@@ -1,8 +1,8 @@
 import logging
 import os
-import requests
 import subprocess
 
+import requests
 
 WORKSPACE_API_SERVICE_URL = os.getenv(
     "WORKSPACE_API_SERVICE_URL",

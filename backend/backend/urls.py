@@ -1,5 +1,7 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
+
+# ruff: noqa: I001
 from backend.views import (
     PipelineViewSet,
     PipelineRunViewSet,

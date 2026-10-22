@@ -1,6 +1,7 @@
-from rest_framework import serializers
 from django.contrib.auth.models import User
+from rest_framework import serializers
 
+# ruff: noqa: I001
 from backend.models import (
     Pipeline,
     PipelineRun,
@@ -12,8 +13,10 @@ from backend.models import (
     TriggerEvent,
 )
 
+DEFAULT_SECRET_MASK = "********"
 
-def mask_secrets(data: object, secret_keys: set[str], mask: str = "********") -> object:
+
+def mask_secrets(data: object, secret_keys: set[str], mask: str = DEFAULT_SECRET_MASK) -> object:
     """Masks values whose key is in the provided 'secret_keys' list."""
     if isinstance(data, dict):
         return {
@@ -29,7 +32,7 @@ def mask_secrets(data: object, secret_keys: set[str], mask: str = "********") ->
     return data
 
 
-def mask_dot_keys(data: object, mask: str = "********") -> object:
+def mask_dot_keys(data: object, mask: str = DEFAULT_SECRET_MASK) -> object:
     """Recursively walks a dictionary and masks values for keys starting with '.'."""
     if isinstance(data, dict):
         new_dict: dict[str, object] = {}
@@ -44,7 +47,7 @@ def mask_dot_keys(data: object, mask: str = "********") -> object:
     return data
 
 
-def mask_secret_defaults(data: object, mask: str = "********") -> object:
+def mask_secret_defaults(data: object, mask: str = DEFAULT_SECRET_MASK) -> object:
     """Recursively walks nested structures and masks 'default' values
     whenever 'secret' is set to True at the same dictionary level.
     """

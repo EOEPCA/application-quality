@@ -4,10 +4,10 @@ import os
 import time
 import yaml
 
-from django.utils import timezone
+from django.contrib.auth.models import User
 from django.db.models import Count, Q
 from django.db.utils import IntegrityError
-from django.contrib.auth.models import User
+from django.utils import timezone
 from jinja2 import Template
 
 from rest_framework import mixins, permissions, status, viewsets
@@ -17,6 +17,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+# ruff: noqa: I001
 from backend.models import (
     Pipeline,
     PipelineRun,

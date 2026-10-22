@@ -4,7 +4,6 @@ import logging
 from cloudevents.conversion import to_structured
 from cloudevents.http import CloudEvent
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -16,7 +15,7 @@ def decode(body: str, headers: dict) -> tuple[dict, dict]:
     payload_dict = {}
     try:
         # Extract the event headers
-        for key, value in headers:
+        for key, value in headers.items():
             if key.startswith('HTTP_'):
                 # Convert 'HTTP_X_FORWARDED_FOR' to 'X-Forwarded-For'
                 header_name = key[5:].replace('_', '-').title()

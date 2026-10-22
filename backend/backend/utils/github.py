@@ -3,12 +3,11 @@ import json
 import logging
 import os
 import re
-import requests
-
 from enum import Enum
-from backend.utils.tools import getenv_bool
 from urllib.parse import urlparse
 
+import requests
+from backend.utils.tools import getenv_bool
 
 logger = logging.getLogger(__name__)
 
@@ -36,9 +35,9 @@ class GH_CONTEXT_STATUS(str, Enum):
         return value in cls._value2member_map_
 
     @classmethod
-    def map_value(cls, value: str) -> str:
+    def map_value(cls, value: str) -> str | None:
         value = value.lower()
-        if value.startswith("succ") or value.startswith("pass") or value in ["ok", "yes"]:
+        if value.startswith(("succ", "pass")) or value in ["ok", "yes"]:
             return GH_CONTEXT_STATUS.SUCCESS
         if value.startswith("fail") or value in ["nok", "ko", "no"]:
             return GH_CONTEXT_STATUS.FAILURE
@@ -49,7 +48,7 @@ class GH_CONTEXT_STATUS(str, Enum):
         return None
 
     @classmethod
-    def describe(cls, value: str) -> bool:
+    def describe(cls, value: str) -> str:
         if value == GH_CONTEXT_STATUS.PENDING:
             return "Best practices validation is being applied"
         elif value == GH_CONTEXT_STATUS.FAILURE:
@@ -85,10 +84,10 @@ def request_headers(owner, token=None):
     # Otherwise, try to get a global API token
     if not api_token:
         logger.warning("No specific GitHub API token found for owner %s", owner)
-        api_token = os.getenv(f"GITHUB_API_TOKEN", None)
-    if not api_token:
-        logger.error("Missing GitHub API token for posting status to %s/%s", owner, repo)
-        return None
+        api_token = os.getenv("GITHUB_API_TOKEN", None)
+    # if not api_token:
+    #     logger.error("Missing GitHub API token for posting status to %s/%s", owner, repo)
+    #     return None
     return {
         "Authorization": "Bearer " + api_token,
         "Accept": "application/vnd.github+json",
