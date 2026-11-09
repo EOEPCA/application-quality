@@ -38,9 +38,9 @@
         5
       ],
       "tools": [
-        "filter",
         "ap_validator",
         "save_report_and_digest",
+        "filter",
         "_digest"
       ]
     }
@@ -79,9 +79,9 @@
       ],
       "tools": [
         "save_report_and_digest",
-        "bandit",
         "filter",
-        "_digest"
+        "_digest",
+        "bandit"
       ]
     }
   },
@@ -113,40 +113,80 @@
       "status": "Stable",
       "available": true,
       "tags": [
-        2,
-        8
+        8,
+        2
       ],
       "tools": [
         "clone"
       ]
     }
   },
-  {      
+  {
     "model": "backend.subworkflow",
     "pk": "coding-best-practices-subworkflow",
     "fields": {
       "name": "Coding Best Practices for OSS",
       "description": "Check Coding Best Practices for Open Source Software.",
-      "pipeline_step": "coding-best-practices-subworkflow:\r\n  in:\r\n    pipeline_id: pipeline_id\r\n    run_id: run_id\r\n    server_url: server_url\r\n    # coding-best-practices-for-oss.action_code_url: coding-best-practices-subworkflow.coding-best-practices-for-oss.action_code_url\r\n    # coding-best-practices-for-oss.path_to_check: coding-best-practices-subworkflow.coding-best-practices-for-oss.path_to_check\r\n    # coding-best-practices-for-oss.default_anchor_file: coding-best-practices-subworkflow.coding-best-practices-for-oss.default_anchor_file\r\n    # coding-best-practices-for-oss.output_file: coding-best-practices-subworkflow.coding-best-practices-for-oss.output_file\r\n    # coding-best-practices-for-oss.output_format: coding-best-practices-subworkflow.coding-best-practices-for-oss.output_format\r\n    source_directory: clone_step/repo_directory\r\n  run: '#coding-best-practices-subworkflow'\r\n  out: []",
-      "definition": "- class: Workflow\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: coding-best-practices-for-oss\r\n    # coding-best-practices-for-oss.action-code-url: string\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n\r\n  outputs:\r\n    report:\r\n      type: File\r\n      outputSource: coding-best-practices-for-oss_step/report\r\n\r\n  steps:\r\n    coding-best-practices-for-oss_step:\r\n      run: '#coding-best-practices-for-oss'\r\n      in:\r\n        source_directory: source_directory\r\n      out:\r\n      - report\r\n    digest_step:\r\n      run: '#digest_generator'\r\n      in:\r\n        name: name\r\n        report_file: coding-best-practices-for-oss_step/report\r\n      out:\r\n      - digest_file\r\n    save_step:\r\n      run: '#save_tool'\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report_file: coding-best-practices-for-oss_step/report\r\n        digest_file: digest_step/digest_file\r\n        run_id: run_id\r\n        server_url: server_url\r\n      out: []\r\n  id: coding-best-practices-subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
-      "user_params": { 
-        "coding-best-practices-for-oss": {}
-      },  
+      "pipeline_step": "coding-best-practices-subworkflow:\r\n  in:\r\n    pipeline_id: pipeline_id\r\n    run_id: run_id\r\n    server_url: server_url\r\n    # coding-best-practices-for-oss.action_code_url: coding-best-practices-subworkflow.coding-best-practices-for-oss.action_code_url\r\n    coding-best-practices-for-oss.path_to_check: coding-best-practices-subworkflow.coding-best-practices-for-oss.path_to_check\r\n    coding-best-practices-for-oss.default_anchor_file: coding-best-practices-subworkflow.coding-best-practices-for-oss.default_anchor_file\r\n    # coding-best-practices-for-oss.output_file: coding-best-practices-subworkflow.coding-best-practices-for-oss.output_file\r\n    # coding-best-practices-for-oss.output_format: coding-best-practices-subworkflow.coding-best-practices-for-oss.output_format\r\n    # coding-best-practices-for-oss.config_file: coding-best-practices-subworkflow.coding-best-practices-for-oss.config_file\r\n    coding-best-practices-for-oss.ai_model_provider: coding-best-practices-subworkflow.coding-best-practices-for-oss.ai_model_provider\r\n    coding-best-practices-for-oss.ai_model_base_url: coding-best-practices-subworkflow.coding-best-practices-for-oss.ai_model_base_url\r\n    coding-best-practices-for-oss.ai_model_api_key: coding-best-practices-subworkflow.coding-best-practices-for-oss.ai_model_api_key\r\n    coding-best-practices-for-oss.ai_model_name: coding-best-practices-subworkflow.coding-best-practices-for-oss.ai_model_name\r\n    source_directory: clone_step/repo_directory\r\n  run: '#coding-best-practices-subworkflow'\r\n  out: []",
+      "definition": "- class: Workflow\r\n\r\n  $namespaces:\r\n    cwltool: http://commonwl.org/cwltool#\r\n  hints:\r\n    \"cwltool:Secrets\":\r\n      secrets:\r\n      - coding-best-practices-for-oss.ai_model_api_key\r\n\r\n  inputs:\r\n    name:\r\n      type: string\r\n      default: coding-bp-for-oss\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n    source_directory: Directory\r\n    # coding-best-practices-for-oss.action_code_url: string\r\n    coding-best-practices-for-oss.path_to_check: string\r\n    coding-best-practices-for-oss.default_anchor_file: string\r\n    # coding-best-practices-for-oss.output_file: string\r\n    # coding-best-practices-for-oss.output_format: string\r\n    # coding-best-practices-for-oss.config_file: string\r\n    coding-best-practices-for-oss.ai_model_provider: string\r\n    coding-best-practices-for-oss.ai_model_base_url: string\r\n    coding-best-practices-for-oss.ai_model_api_key: string\r\n    coding-best-practices-for-oss.ai_model_name: string\r\n\r\n  outputs:\r\n    report:\r\n      type: File\r\n      outputSource: coding-best-practices-for-oss_step/report\r\n\r\n  steps:\r\n    coding-best-practices-for-oss_step:\r\n      run: '#coding-best-practices-for-oss'\r\n      in:\r\n        source_directory: source_directory\r\n      out:\r\n      - report\r\n    digest_step:\r\n      run: '#digest_generator'\r\n      in:\r\n        name: name\r\n        report_file: coding-best-practices-for-oss_step/report\r\n      out:\r\n      - digest_file\r\n    save_step:\r\n      run: '#save_tool'\r\n      in:\r\n        name: name\r\n        pipeline_id: pipeline_id\r\n        report_file: coding-best-practices-for-oss_step/report\r\n        digest_file: digest_step/digest_file\r\n        run_id: run_id\r\n        server_url: server_url\r\n      out: []\r\n  id: coding-best-practices-subworkflow\r\n{% for tool in tools %}{{ tool.definition }}\r\n{% endfor %}",
+      "user_params": {
+        "coding-best-practices-for-oss": {
+          "ai_model_name": {
+            "doc": "Name of the model to use within the provider (e.g. claude-sonnet-4.6, gpt-4o, qwen2.5-coder:14B)",
+            "type": "string",
+            "label": "AI model name",
+            "required": false
+          },
+          "path_to_check": {
+            "doc": "",
+            "type": "string",
+            "label": "Path to check",
+            "default": ".",
+            "required": true
+          },
+          "ai_model_api_key": {
+            "doc": "API key giving access to the model",
+            "type": "string",
+            "label": "AI model API key",
+            "secret": true,
+            "default": "changeme",
+            "required": false
+          },
+          "ai_model_base_url": {
+            "doc": "OpenAI SDK compliant base URL (e.g. https://api.anthropic.com/v1)",
+            "type": "string",
+            "label": "AI model base URL",
+            "required": false
+          },
+          "ai_model_provider": {
+            "doc": "Free name of the model provider (e.g. Google, OpenAPI, Anthropic, Ollama)",
+            "type": "string",
+            "label": "AI model provider",
+            "required": false
+          },
+          "default_anchor_file": {
+            "doc": "",
+            "type": "string",
+            "label": "Default anchor file",
+            "default": "coding-best-practices-issues.md",
+            "required": true
+          }
+        }
+      },
       "version": "0.1",
-      "status": "Beta",
+      "status": "Candidate",
       "available": true,
       "tags": [
         1,
         5
       ],
-      "tools": [ 
+      "tools": [
+        "save_report_and_digest",
         "coding-best-practices-for-oss",
-        "clone",
-        "_digest",
-        "save_report_and_digest"
-      ] 
-    } 
-  },  
+        "_digest"
+      ]
+    }
+  },
   {
     "model": "backend.subworkflow",
     "pk": "flake8_subworkflow",
@@ -180,10 +220,10 @@
         5
       ],
       "tools": [
-        "flake8",
         "save_report_and_digest",
         "filter",
-        "_digest"
+        "_digest",
+        "flake8"
       ]
     }
   },
@@ -226,9 +266,9 @@
         5
       ],
       "tools": [
-        "notebook-bp-validator",
+        "filter",
         "save",
-        "filter"
+        "notebook-bp-validator"
       ]
     }
   },
@@ -277,9 +317,9 @@
         7
       ],
       "tools": [
-        "save",
+        "papermill",
         "filter",
-        "papermill"
+        "save"
       ]
     }
   },
@@ -328,10 +368,10 @@
         5
       ],
       "tools": [
-        "pylint",
         "save_report_and_digest",
         "filter",
-        "_digest"
+        "_digest",
+        "pylint"
       ]
     }
   },
@@ -368,9 +408,9 @@
         5
       ],
       "tools": [
+        "filter",
         "save",
-        "ruff",
-        "filter"
+        "ruff"
       ]
     }
   },
@@ -408,9 +448,9 @@
       ],
       "tools": [
         "save_report_and_digest",
-        "ruff",
         "filter",
-        "_digest"
+        "_digest",
+        "ruff"
       ]
     }
   },
@@ -479,8 +519,8 @@
       "status": "Stable",
       "available": true,
       "tags": [
-        6,
-        9
+        9,
+        6
       ],
       "tools": [
         "trivy",
