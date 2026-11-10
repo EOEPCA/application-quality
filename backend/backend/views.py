@@ -4,18 +4,20 @@ import os
 import time
 import yaml
 
-from django.utils import timezone
+from django.contrib.auth.models import User
 from django.db.models import Count, Q
 from django.db.utils import IntegrityError
-from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
+from django.utils import timezone
 from jinja2 import Template
 
 from rest_framework import mixins, permissions, status, viewsets
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+# ruff: noqa: I001
 from backend.models import (
     Pipeline,
     PipelineRun,
@@ -24,12 +26,26 @@ from backend.models import (
     Tag,
     TriggerType,
     Trigger,
-    TriggerEvent
+    TriggerEvent,
+)
+from backend.serializers import (
+    PipelineSerializer,
+    PipelineRunSerializer,
+    JobReportSerializer,
+    SubworkflowSerializer,
+    TagSerializer,
+    TriggerTypeSerializer,
+    TriggerSerializer,
+    TriggerEventSerializer,
 )
 from backend.tasks import run_workflow_task
 from backend.utils.cloudevents import encode as ce_encode, decode as ce_decode, is_match
+from backend.utils.github import (
+    parse_repo_url as gh_parse_repo_url,
+    post_quality_state as gh_post_quality_state,
+    post_pr_quality_state as gh_post_pr_quality_state,
+)
 from backend.utils.run_workflow import update_quality_status
-from . import serializers
 
 
 logger = logging.getLogger(__name__)
@@ -61,6 +77,67 @@ class SettingsView(APIView):
             logger.info("Not found: %s", settings_file)
             settings = None
         return Response(settings)
+
+
+class ActionsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, action_name):
+        if not request.user.is_staff:
+            logger.warning(f"Unauthorized action attempt by user {request.user} on '{action_name}'")
+            return Response(
+                {"error": "You do not have permission to perform this action"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        logger.info(f"Actions view: {action_name}")
+        handler = self.get_handler(action_name)
+        if handler is None:
+            return Response(
+                {"error": f'Unknown action "{action_name}"'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return handler(request)
+
+    def get_handler(self, action_name):
+        handlers = {
+            "github-quality-check-status": self.handle_github_quality_check_status,
+        }
+        return handlers.get(action_name)
+
+    def handle_github_quality_check_status(self, request):
+        data = request.data
+        repo_url = data.get("repoUrl")
+        ref_type = data.get("refType")  # "pull_request" | "commit"
+        ref = data.get("ref")
+        gh_status = data.get("status")  # "pending" | "failure" | "success"
+        # Extract the owner and repo from the URL
+        owner, repo = gh_parse_repo_url(repo_url)
+        logger.info(f"Updating {owner}/{repo} {ref_type}={ref} to status={gh_status}")
+        if ref_type == "commit":
+            response = gh_post_quality_state(owner, repo, ref, gh_status)
+        elif ref_type == "pull_request":
+            response = gh_post_pr_quality_state(owner, repo, ref, gh_status)
+        else:
+            return Response(
+                { "error": f'Unknown reference type: {ref_type} (must be "commit" or "pull_request")' },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if response.status_code >= 400:
+            res = response.json()
+            return Response(
+                {
+                    "error": res.get("message"),
+                    "response": res,
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return Response({
+            "message": "Quality Check status update received",
+            "repoUrl": repo_url,
+            "refType": ref_type,
+            "ref": ref,
+            "status": gh_status,
+        })
 
 
 RESPONSE_SOURCE = os.getenv("NOTIF_RESPONSE_SOURCE", "/eoepca/application-quality")
@@ -261,7 +338,7 @@ class IsOwnerOrAdmin(permissions.BasePermission):
 
 
 class PipelineViewSet(viewsets.ModelViewSet):
-    serializer_class = serializers.PipelineSerializer
+    serializer_class = PipelineSerializer
 
     def get_queryset(self):
         if self.request.user.is_staff:
@@ -290,23 +367,49 @@ class PipelineViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
 
+class PipelineRunPagination(PageNumberPagination):
+    page_size = 25
+    page_size_query_param = "page_size"  # Used by the frontend to specify another page size
+    max_page_size = 100
+
+
 class PipelineRunViewSet(viewsets.ModelViewSet):
-    serializer_class = serializers.PipelineRunSerializer
+    serializer_class = PipelineRunSerializer
+    pagination_class = PipelineRunPagination
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [OrderingFilter, SearchFilter]
+    ordering_fields = ["pipeline_id", "started_by", "start_time", "completion_time", "status"]  # whitelist sortable fields
+    ordering = ["-start_time"]  # Most recent first by default
+    search_fields = ["pipeline_id"]
     lookup_url_kwarg = "run_id"
     lookup_field = "id"
+
+    def get_serializer(self, *args, **kwargs):
+        fields_param = self.request.query_params.get("fields")
+        if fields_param:
+            kwargs["fields"] = [f.strip() for f in fields_param.split(",")]
+        return super().get_serializer(*args, **kwargs)
 
     def get_queryset(self):
         user = self.request.user
         logger.info("User %s is requesting pipeline runs (admin=%s)", user, user.is_staff)
         p_id = self.kwargs["pipeline_id"]
+        queryset = PipelineRun.objects.all()
+        fields_param = self.request.query_params.get("fields")
+        logger.debug("Only returning these properties: %s", fields_param)
+        if fields_param:
+            requested = [f.strip() for f in fields_param.split(",")]
+            valid_fields = [f.name for f in PipelineRun._meta.get_fields()]
+            only_fields = [f for f in requested if f in valid_fields]
+            if only_fields:
+                queryset = queryset.only(*only_fields)
         if user.is_staff:
             if p_id in ["_", "-"]:
-                return PipelineRun.objects
-            return PipelineRun.objects.filter(pipeline_id=p_id)
+                return queryset
+            return queryset.filter(pipeline_id=p_id)
         if p_id in ["_", "-"]:
-            return PipelineRun.objects.filter(started_by=self.request.user)
-        return PipelineRun.objects.filter(pipeline_id=p_id, started_by=self.request.user)
+            return queryset.filter(started_by=self.request.user)
+        return queryset.filter(pipeline_id=p_id, started_by=self.request.user)
 
     @staticmethod
     def _create(user: User, pipeline_id: str, data: dict) -> PipelineRun:
@@ -434,6 +537,10 @@ class PipelineRunViewSet(viewsets.ModelViewSet):
 
     @staticmethod
     def _render_cwl(pipeline):
+        """
+        Use the master CWL template to generate a unique CWL document with all the 
+        steps, subworkflows, CLTs, etc.
+        """
         logger.debug("Rendering CWL for pipeline '%s'", pipeline.id)
         rendered_subworkflows = []
 
@@ -463,7 +570,7 @@ class JobReportViewSet(
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
 ):
-    serializer_class = serializers.JobReportSerializer
+    serializer_class = JobReportSerializer
 
     def get_queryset(self):
         pipeline_id = self.kwargs["pipeline_id"]
@@ -486,7 +593,7 @@ class JobReportViewSet(
 
         tool_name = request.query_params.get("name")
         if not tool_name:
-            raise ValidationError("Tool 'name' is required as a query parameter.")
+            raise ValidationError( {"detail": "Tool 'name' is required as a query parameter."} )
         
         # The (optional) instance parameter allows to distinguish reports from scattered steps
         instance = request.query_params.get("instance", "")
@@ -552,7 +659,7 @@ class JobReportViewSet(
 
 
 class SubworkflowViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = serializers.SubworkflowSerializer
+    serializer_class = SubworkflowSerializer
 
     def get_queryset(self):
         user = self.request.user
@@ -569,11 +676,11 @@ class SubworkflowViewSet(viewsets.ReadOnlyModelViewSet):
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
-    serializer_class = serializers.TagSerializer
+    serializer_class = TagSerializer
 
 
 class TriggerTypeViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = serializers.TriggerTypeSerializer
+    serializer_class = TriggerTypeSerializer
 
     def get_queryset(self):
         user = self.request.user
@@ -589,7 +696,7 @@ class TriggerTypeViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class TriggerViewSet(viewsets.ModelViewSet):
-    serializer_class = serializers.TriggerSerializer
+    serializer_class = TriggerSerializer
 
     def get_queryset(self):
         if self.request.user.is_staff:
@@ -616,7 +723,7 @@ class TriggerViewSet(viewsets.ModelViewSet):
             return
         if not self.request.user.is_staff:
             # Current user is not staff => The trigger may only be assigned to himself
-            if requested_owner != self.request.user:--
+            if requested_owner != self.request.user:
                 raise ValidationError({
                     "owner": [f"You may not assign a trigger to user '{requested_owner.name}'."],
                 })
@@ -637,7 +744,7 @@ class TriggerViewSet(viewsets.ModelViewSet):
 
 
 class TriggerEventViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = serializers.TriggerEventSerializer
+    serializer_class = TriggerEventSerializer
 
     def get_queryset(self):
         trigger_id = self.kwargs["trigger_id"]
@@ -668,8 +775,13 @@ class TriggerEventViewSet(viewsets.ReadOnlyModelViewSet):
 class TriggerRunViewSet(viewsets.ReadOnlyModelViewSet):
     # This viewset returns serialized pipeline runs
     # (same as PipelineRunViewSet but filtered differently)
-    serializer_class = serializers.PipelineRunSerializer
+    serializer_class = PipelineRunSerializer
+    pagination_class = PipelineRunPagination
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [OrderingFilter, SearchFilter]
+    ordering_fields = ["pipeline_id", "started_by", "start_time", "completion_time", "status"]
+    ordering = ["-start_time"]  # Most recent first by default
+    search_fields = ["trigger_id"]
 
     @staticmethod
     def _get_matching_runs(trigger_events):

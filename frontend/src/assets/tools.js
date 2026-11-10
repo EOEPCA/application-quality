@@ -10,6 +10,15 @@ export const formatDate = (date) => {
   });
 };
 
+export const formatTime = (date) => {
+  if (!date) return 'N/A';
+  return new Date(date).toLocaleTimeString('en-UK', {
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+  });
+};
+
 /**
  * Converts a string into a URL-friendly slug
  * @param {string} str - The string to slugify

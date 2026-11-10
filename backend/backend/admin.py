@@ -1,10 +1,14 @@
-from backend import models
-
 from django.contrib import admin
+from django.contrib.auth import get_user_model
+from django.contrib.sessions.models import Session
 from django.db.models import JSONField
+from django.utils import timezone
+
 # https://django-svelte-jsoneditor.readthedocs.io/en/latest/index.html
 # Customised using SVELTE_JSONEDITOR_PROPS in the Django settings
 from django_svelte_jsoneditor.widgets import SvelteJSONEditorWidget
+
+from backend import models
 
 
 class PipelineSettings(admin.ModelAdmin):
@@ -65,3 +69,35 @@ admin.site.register(models.TriggerType, TriggerTypeSettings)
 admin.site.register(models.Trigger, TriggerSettings)
 admin.site.register(models.TriggerEvent, TriggerEventSettings)
 admin.site.register(models.Tag)
+
+
+@admin.register(Session)
+class SessionAdmin(admin.ModelAdmin):
+    list_display = ["session_key", "user", "expire_date", "is_active"]
+    list_filter = ["expire_date"]
+    search_fields = ["session_key"]
+    readonly_fields = ["session_key", "expire_date", "decoded_data"]
+    exclude = ["session_data"]
+    ordering = ["-expire_date"]
+
+    @admin.display(description="User")
+    def user(self, obj):
+        user_id = obj.get_decoded().get("_auth_user_id")
+        if user_id is None:
+            return "-"
+        user_model = get_user_model()
+        try:
+            return user_model.objects.get(pk=user_id)
+        except user_model.DoesNotExist:
+            return f"(deleted user {user_id})"
+
+    @admin.display(description="Active", boolean=True)
+    def is_active(self, obj):
+        return obj.expire_date > timezone.now()
+
+    @admin.display(description="Decoded data")
+    def decoded_data(self, obj):
+        return obj.get_decoded()
+
+    def has_add_permission(self, request):
+        return False

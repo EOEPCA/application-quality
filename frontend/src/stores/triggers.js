@@ -60,12 +60,16 @@ export const useTriggerStore = defineStore('trigger', {
       }
     },
 
-    // async getTriggerById(id) {
     getTriggerById(id) {
+      // console.debug('Triggers in store:', this.triggers);
+      if (id == null || id == undefined) id = this.selectedTriggerId;
+      if (id == null || id == undefined) {
+        console.warn('Bad request: no trigger Id provided');
+        return null;
+      }
       var index = this.triggers.findIndex((p) => p.slug === id);
       if (index == -1) {
         // console.log("Trigger not found in store => Fetching it", id)
-        // await this.fetchTriggerById(id)
         this.fetchTriggerById(id);
       }
       index = this.triggers.findIndex((p) => p.slug === id);

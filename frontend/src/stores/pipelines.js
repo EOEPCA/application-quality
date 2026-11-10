@@ -5,6 +5,7 @@ export const usePipelineStore = defineStore('pipeline', {
   state: () => ({
     pipelines: [],
     executions: [],
+    executionTimes: [],
     reports: [],
     loadingPipelines: false,
     loadingExecutions: false,
@@ -13,6 +14,10 @@ export const usePipelineStore = defineStore('pipeline', {
     selectedExecutionId: null,
     selectedReport: null,
     error: null,
+    isPolling: false,
+    pollingDelay: 5000, // 5 seconds
+    pollingInterval: null,
+    lastPollTime: null,
   }),
 
   actions: {
@@ -71,10 +76,34 @@ export const usePipelineStore = defineStore('pipeline', {
       this.loadingExecutions = true;
       this.error = null;
       try {
-        this.executions = await pipelineService.getPipelineExecutions(id);
+        // getPipelineExecutions returns a paginated response
+        let data = await pipelineService.getPipelineExecutions(id);
+        this.executions = data.results;
         // console.log('Executions:', this.executions);
       } catch (error) {
         const msg_prefix = 'Error fetching pipeline executions: ';
+        if (error.response?.data?.detail) {
+          console.error(msg_prefix, error, error.response.data.detail);
+          this.error = msg_prefix + error.response.data.detail;
+        } else {
+          console.error(msg_prefix, error);
+          this.error = msg_prefix + error.message;
+        }
+      } finally {
+        this.loadingExecutions = false;
+      }
+    },
+
+    async fetchPipelineExecutionTimes(id) {
+      this.loadingExecutions = true;
+      this.error = null;
+      try {
+        // getPipelineExecutionTimes() returns a paginated response
+        let data = await pipelineService.getPipelineExecutions(id, true);
+        this.executionTimes = data.results;
+        // console.log('Executions:', this.executions);
+      } catch (error) {
+        const msg_prefix = 'Error fetching pipeline execution times: ';
         if (error.response?.data?.detail) {
           console.error(msg_prefix, error, error.response.data.detail);
           this.error = msg_prefix + error.response.data.detail;
@@ -184,7 +213,7 @@ export const usePipelineStore = defineStore('pipeline', {
     },
 
     executionById(id) {
-      if (!this.executions) this.refreshPipelineExecutions();
+      if (!this.executions || this.executions.length == 0) this.fetchPipelineExecutions();
       const executions = this.executions.filter((execution) => {
         return execution.id == id;
       });
@@ -197,7 +226,7 @@ export const usePipelineStore = defineStore('pipeline', {
       // console.debug('Pipelines in store:', this.pipelines);
       if (id == null || id == undefined) id = this.selectedPipelineId;
       if (id == null || id == undefined) {
-        console.warn('Bad request: not pipeline Id provided');
+        console.warn('Bad request: no pipeline Id provided');
         return null;
       }
       const pipelines = this.pipelines.filter((pipeline) => {
@@ -248,6 +277,52 @@ export const usePipelineStore = defineStore('pipeline', {
         execution.id,
         status
       );
+    },
+
+    startPolling(callback) {
+      console.log("Start polling:", this.isPolling);
+      if (this.isPolling) return;
+      this.isPolling = true;
+      //this.errorCount = 0;
+      this.pollingInterval = setInterval(async () => {
+        await callback();
+      }, this.pollingDelay);
+      console.log("Polling interval:", this.pollingInterval);
+    },
+
+    stopPolling() {
+      console.log("Stop polling:", this.isPolling);
+      if (this.pollingInterval) {
+        clearInterval(this.pollingInterval);
+        this.pollingInterval = null;
+      }
+      this.isPolling = false;
+    },
+
+    togglePolling(callback) {
+      console.log("Toggle polling:", this.isPolling);
+      console.log("Polling interval:", this.pollingInterval);
+      if (this.isPolling) {
+        this.stopPolling();
+      } else {
+        this.startPolling(callback);
+      }
+    },
+
+    // Method to adjust polling delay (optional)
+    setPollingDelay(delay) {
+      this.pollingDelay = delay;
+      if (this.isPolling) {
+        // Restart polling with new delay
+        this.stopPolling();
+        this.startPolling();
+      }
+    },
+
+    timeSinceLastPoll() {
+      if (!this.lastPollTime) return 'Never';
+      const seconds = Math.floor((Date.now() - this.lastPollTime) / 1000);
+      return `${seconds}s ago`;
     },
   },
 });

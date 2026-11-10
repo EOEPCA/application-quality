@@ -83,12 +83,41 @@ export const pipelineService = {
     }
   },
 
-  async getPipelineExecutions(pipelineId) {
+  async getPipelineExecutions(pipelineId, brief=false) {
     try {
       if (pipelineId === undefined || pipelineId === null) {
         pipelineId = '_'; // Meaning "all pipelines"
       }
-      const response = await pipelineApi.get(`/${pipelineId}/runs/`);
+      let params = ''
+      if (brief) {
+        params = `?fields=id,started_by,start_time,completion_time,status,job_reports_count`;
+      }
+      const response = await pipelineApi.get(`/${pipelineId}/runs/${params}`);
+      return response.data;
+    } catch (error) {
+      console.error(
+        `Error fetching executions of pipeline ${pipelineId}:`,
+        error,
+      );
+      throw error;
+    }
+  },
+
+  async getPaginatedPipelineExecutions(pipelineId, {page, page_size, sort, order}) {
+    console.log("Fetching runs of pipeline", pipelineId, page, page_size, sort, order);
+    try {
+      if (pipelineId === undefined || pipelineId === null) {
+        pipelineId = '_'; // Meaning "all pipelines"
+      }
+      // The backend expects a single "ordering" parameter (e.g. "ordering=-created_at")
+      const ordering = sort ? `${order === 'desc' ? '-' : ''}${sort}` : undefined
+      const response = await pipelineApi.get(`/${pipelineId}/runs/`, {
+        params: {
+          page,
+          page_size,
+          ordering,
+        }
+      });
       return response.data;
     } catch (error) {
       console.error(

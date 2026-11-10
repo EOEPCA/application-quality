@@ -443,10 +443,11 @@ export default {
     },
 
     viewPipelineExecutions(trigger) {
-      // Store the selected trigger in the store so it is accessible by the executions page
-      // Navigate to the executions page
+      // Store the selected trigger so it is used by the executions page
+      this.pipelineStore.selectedPipelineId = undefined;
       this.triggerStore.selectedTriggerId = trigger.slug;
-      this.$router.push('/executions?trigger=' + trigger.slug);
+      // Navigate to the executions page
+      this.$router.push('/executions');
     },
 
     createTrigger() {
