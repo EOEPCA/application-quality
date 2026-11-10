@@ -1,24 +1,21 @@
 import base64
 import logging
 import os
-
 from datetime import datetime
 from json.decoder import JSONDecodeError
-from kubernetes import config
 
 from backend.models import PipelineRun
-from backend.utils.github import (
-    GH_CONTEXT_STATUS,
-    post_quality_state as gh_post_quality_state,
-    get_properties as gh_get_properties,
-)
+from backend.utils.cwl import get_all_secret_params
+from backend.utils.github import GH_CONTEXT_STATUS
+from backend.utils.github import get_properties as gh_get_properties
+from backend.utils.github import post_quality_state as gh_post_quality_state
 from backend.utils.tools import getenv_bool
 from backend.utils.workspaces import get_vcluster_config_file
+from kubernetes import config
 from pycalrissian.context import CalrissianContext
 from pycalrissian.execution import CalrissianExecution
 from pycalrissian.job import CalrissianJob
 from rule_engine import Rule
-
 
 AQBB_STORAGECLASS = os.getenv("AQBB_STORAGECLASS", "standard")
 AQBB_VOLUMESIZE = os.getenv("AQBB_VOLUMESIZE", "5Gi")
@@ -26,8 +23,8 @@ AQBB_CALRISSIANIMAGE = os.getenv(
     "AQBB_CALRISSIANIMAGE",
     "nexus.spaceapplications.com/repository/docker-eoepca/calrissian:0.18.1"
 )
-AQBB_MAXCORES = os.getenv("AQBB_MAXCORES", "2")
-AQBB_MAXRAM = os.getenv("AQBB_MAXRAM", "2Gi")
+AQBB_MAXCORES = os.getenv("AQBB_MAXCORES", "8")
+AQBB_MAXRAM = os.getenv("AQBB_MAXRAM", "8Gi")
 AQBB_SECRET = os.getenv("AQBB_SECRET", None)
 # Create a ServiceAccount for Calrissian with the right roles and use it here
 AQBB_SERVICEACCOUNT = os.getenv("AQBB_SERVICEACCOUNT", None)
@@ -53,7 +50,7 @@ PUBLIC_URL = os.getenv("PUBLIC_URL", None)
 logger = logging.getLogger(__name__)
 
 
-def _get_cluster_config_file(callback_url: str, username: str = "") -> str:
+def _get_cluster_config_file(callback_url: str, username: str = "") -> tuple[str, object]:
     cluster_config_file = None
 
     if WORKSPACE_VCLUSTER_ENABLED:
@@ -110,20 +107,20 @@ def _check_digest_rules(pipeline_run: PipelineRun, pr_digest: dict) -> str:
     logger.info("Check quality rules to pipeline run %s", pipeline_run.id)
     quality_rules = pr_digest.get("quality_rules", {})
     logger.info("Quality rules: %s", quality_rules)
-    digest_issues = pr_digest.get("issues", {})
+    digest_counts = pr_digest.get("counts", {})
     result = None
     try:
         # Check the "pass_with_comments" rule, if present
         if "pass_with_comments" in quality_rules:
             rule = Rule(quality_rules["pass_with_comments"])
             logger.debug("Checking pass_with_comments rule: %s", rule)
-            if rule.matches(digest_issues):
+            if rule.matches(digest_counts):
                 result = "pass_with_comments"
         if result is None:
             if "pass" in quality_rules:
                 rule = Rule(quality_rules["pass"])
                 logger.debug("Checking pass rule: %s", rule)
-                if rule.matches(digest_issues):
+                if rule.matches(digest_counts):
                     result = "pass"
                 else:
                     result = "fail"
@@ -144,7 +141,7 @@ def _generate_pipeline_run_digest(pipeline_run: PipelineRun) -> dict:
             "name": "",
             "version": "",
         },
-        "issues": {
+        "counts": {
             "info": 0,
             "convention": 0,
             "warning": 0,
@@ -159,9 +156,9 @@ def _generate_pipeline_run_digest(pipeline_run: PipelineRun) -> dict:
     # Collect the issue counts from the job reports digest
     for job_report in pipeline_run.jobreports.all():
         if job_report.digest:
-            issues = job_report.digest.get("issues", {})
+            digest_counts = job_report.digest.get("counts", {})
             for key in ["info", "convention", "warning", "error", "security", "critical"]:
-                pr_digest["issues"][key] += issues.get(key, 0)
+                pr_digest["counts"][key] += digest_counts.get(key, 0)
     # Retrieve the application quality rules from the pipeline definition
     # "pass": "applications with good quality pass that rule",
     # "pass_with_comments": "applications with minor warnings/comments pass that rule",
@@ -304,6 +301,10 @@ def run_workflow(
     # If cluster_config_file is None here, the ultimate option (if vclusters are not required)
     # is running the pipeline in the host cluster
 
+    # Identify the parameters that must be provided secretly, if any
+    secret_params = get_all_secret_params(cwl)
+    logger.debug("CWL workflow secret parameters: %s", secret_params)
+
     # TODO: Remove Sonarqube parameters
     sonarqube_project = f"{username}-{pipeline_run.pipeline.pk}-{str(run_id)}"
     params = {
@@ -321,7 +322,15 @@ def run_workflow(
         for input, value in inputs.items()
     }
 
-    pipeline_run.inputs = params
+    # Prepend secret keys with a '.' before saving them in the database
+    dotted_params: dict[str, str] = {}
+    for param in params:
+        if any(secret in param for secret in secret_params):
+            dotted_params["." + param] = params[param]
+        else:
+            dotted_params[param] = params[param]
+    logger.debug("CWL workflow dotted parameters: %s", dotted_params)
+    pipeline_run.inputs = dotted_params
     pipeline_run.save(update_fields=['inputs'])  # Overwrite previous value because of server_url
     logger.debug("Run %s updated with server url", pipeline_run.id)
     logger.debug("Pipeline parameters: %s", params)

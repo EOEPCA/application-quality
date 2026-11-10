@@ -5,15 +5,19 @@
     "fields": {
       "name": "Python pipeline",
       "description": "Runs a series of static analysis tools on python files",
-      "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n{%- for tool in subworkflows %}\r\n  {%- for tool_name, params in tool.user_params.items() %}\r\n    {%- for param_name, param in params.items() %}\r\n    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:\r\n      label: \"{{ param.label or param_name }}\"\r\n      {%- if param.doc %}\r\n      doc: |-\r\n        {{ param.doc }}\r\n      {%- endif %}\r\n      type: {{ param.type }}\r\n      default: {{ param.default | tojson }}\r\n    {%- endfor %}\r\n  {%- endfor %}\r\n{%- endfor %}\r\n    branch:\r\n      type: string\r\n      default: ''\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n  id: main\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.2",
+      "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n{%- for tool in subworkflows %}\r\n  {%- for tool_name, params in tool.user_params.items() %}\r\n    {%- for param_name, param in params.items() %}\r\n    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:\r\n      label: \"{{ param.label or param_name }}\"\r\n      {%- if param.doc %}\r\n      doc: |-\r\n        {{ param.doc }}\r\n      {%- endif %}\r\n      type: {{ param.type }}\r\n      {%- if param.default %}\r\n      default: {{ param.default | tojson }}\r\n      {%- endif %}\r\n    {%- endfor %}\r\n  {%- endfor %}\r\n{%- endfor %}\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n  steps:\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n\r\n  id: main\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.2",
       "default_inputs": {},
       "owner": null,
       "created_at": null,
       "edited_at": null,
       "version": "0.1",
+      "quality_rules": {
+        "pass": "error == 0 and critical == 0 and security == 0 and warning == 0",
+        "pass_with_comments": "error == 0 and critical == 0 and security == 0 and (info > 0 or warning > 0 or convention > 0)"
+      },
       "tools": [
-        "clone_subworkflow",
         "bandit_subworkflow",
+        "clone_subworkflow",
         "flake8_subworkflow",
         "pylint_subworkflow",
         "ruff_subworkflow"
@@ -32,11 +36,15 @@
       "created_at": null,
       "edited_at": null,
       "version": "0.1",
+      "quality_rules": {
+        "pass": "error == 0 and critical == 0 and security == 0 and warning == 0",
+        "pass_with_comments": "error == 0 and critical == 0 and security == 0 and (info > 0 or warning > 0 or convention > 0)"
+      },
       "tools": [
-        "clone_subworkflow",
-        "notebook-bp-validator_subworkflow",
+        "ruff_ipynb_subworkflow",
         "papermill_subworkflow",
-        "ruff_ipynb_subworkflow"
+        "clone_subworkflow",
+        "notebook-bp-validator_subworkflow"
       ]
     }
   },
@@ -52,6 +60,10 @@
       "created_at": null,
       "edited_at": null,
       "version": "0.1",
+      "quality_rules": {
+        "pass": "error == 0 and critical == 0 and security == 0 and warning == 0",
+        "pass_with_comments": "error == 0 and critical == 0 and security == 0 and (info > 0 or warning > 0 or convention > 0)"
+      },
       "tools": [
         "trivy_subworkflow"
       ]
@@ -69,9 +81,13 @@
       "created_at": "2025-09-16T07:47:34.320Z",
       "edited_at": "2025-11-18T10:55:05.144Z",
       "version": "0.1",
+      "quality_rules": {
+        "pass": "error == 0 and critical == 0 and security == 0 and warning == 0",
+        "pass_with_comments": "error == 0 and critical == 0 and security == 0 and (info > 0 or warning > 0 or convention > 0)"
+      },
       "tools": [
-        "clone_subworkflow",
-        "notebook-bp-validator_subworkflow"
+        "notebook-bp-validator_subworkflow",
+        "clone_subworkflow"
       ]
     }
   },
@@ -87,9 +103,13 @@
       "created_at": "2025-10-21T00:42:55.449Z",
       "edited_at": "2025-10-21T00:42:55.449Z",
       "version": "0.1",
+      "quality_rules": {
+        "pass": "error == 0 and critical == 0 and security == 0 and warning == 0",
+        "pass_with_comments": "error == 0 and critical == 0 and security == 0 and (info > 0 or warning > 0 or convention > 0)"
+      },
       "tools": [
-        "clone_subworkflow",
-        "ruff_subworkflow"
+        "ruff_subworkflow",
+        "clone_subworkflow"
       ]
     }
   },
@@ -105,9 +125,13 @@
       "created_at": "2025-11-04T11:59:57.031Z",
       "edited_at": "2025-11-25T12:05:05.664Z",
       "version": "0.1",
+      "quality_rules": {
+        "pass": "error == 0 and critical == 0 and security == 0 and warning == 0",
+        "pass_with_comments": "error == 0 and critical == 0 and security == 0 and (info > 0 or warning > 0 or convention > 0)"
+      },
       "tools": [
-        "papermill_subworkflow",
-        "clone_subworkflow"
+        "clone_subworkflow",
+        "papermill_subworkflow"
       ]
     }
   },
@@ -163,6 +187,10 @@
       "created_at": "2025-05-12T12:05:00.360Z",
       "edited_at": "2025-05-13T08:29:18.845Z",
       "version": "0.1",
+      "quality_rules": {
+        "pass": "error == 0 and critical == 0 and security == 0 and warning == 0",
+        "pass_with_comments": "error == 0 and critical == 0 and security == 0 and (info > 0 or warning > 0 or convention > 0)"
+      },
       "tools": [
         "clone_subworkflow",
         "notebook-bp-validator_subworkflow"
@@ -222,9 +250,265 @@
       "created_at": "2026-03-24T10:59:05.290Z",
       "edited_at": "2026-03-25T19:10:55.447Z",
       "version": "0.1",
+      "quality_rules": {
+        "pass": "error == 0 and critical == 0 and security == 0 and warning == 0",
+        "pass_with_comments": "error == 0 and critical == 0 and security == 0 and (info > 0 or warning > 0 or convention > 0)"
+      },
       "tools": [
         "clone_subworkflow",
         "sonarqube_subworkflow"
+      ]
+    }
+  },
+  {
+    "model": "backend.pipeline",
+    "pk": 35,
+    "fields": {
+      "name": "Python pipeline with digests",
+      "description": "Python pipeline with digests",
+      "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n{%- for tool in subworkflows %}\r\n  {%- for tool_name, params in tool.user_params.items() %}\r\n    {%- for param_name, param in params.items() %}\r\n    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:\r\n      label: \"{{ param.label or param_name }}\"\r\n      {%- if param.doc %}\r\n      doc: |-\r\n        {{ param.doc }}\r\n      {%- endif %}\r\n      type: {{ param.type }}\r\n      default: {{ param.default | tojson }}\r\n    {%- endfor %}\r\n  {%- endfor %}\r\n{%- endfor %}\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n  id: main\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.2",
+      "default_inputs": {
+        "clone_subworkflow": {
+          "clone": {
+            "repo_url": {
+              "doc": "URL to the repository to clone.",
+              "type": "string",
+              "label": "Repo URL",
+              "default": "https://github.com/EOEPCA/application-quality"
+            },
+            "repo_branch": {
+              "doc": "Branch to checkout instead of the remote HEAD.",
+              "type": "string",
+              "label": "Repo branch",
+              "default": "backend"
+            }
+          }
+        },
+        "bandit_subworkflow": {
+          "bandit": {
+            "verbose": {
+              "doc": "Output extra information like excluded and included files.",
+              "type": "boolean",
+              "label": "Verbose",
+              "default": false
+            }
+          },
+          "filter": {
+            "regex": {
+              "type": "string",
+              "label": "regex",
+              "default": ".*\\.py"
+            }
+          }
+        },
+        "flake8_subworkflow": {
+          "filter": {
+            "regex": {
+              "type": "string",
+              "label": "regex",
+              "default": ".*\\.py"
+            }
+          },
+          "flake8": {
+            "verbose": {
+              "doc": "Increase the verbosity of Flake8’s output.",
+              "type": "boolean",
+              "label": "Verbose",
+              "default": false
+            }
+          }
+        },
+        "pylint_subworkflow": {
+          "filter": {
+            "regex": {
+              "type": "string",
+              "label": "regex",
+              "default": ".*\\.py"
+            }
+          },
+          "pylint": {
+            "disable": {
+              "doc": "Disable the message, report, category or checker with the given id(s).",
+              "type": "string",
+              "label": "Disable IDs",
+              "default": "E0401"
+            },
+            "verbose": {
+              "doc": "In verbose mode, extra non-checker-related info will be displayed.",
+              "type": "boolean",
+              "label": "Verbose",
+              "default": false
+            },
+            "errors_only": {
+              "doc": "In error mode, messages with a category besides ERROR or FATAL are suppressed, and no reports are done by default. Error mode is compatible with disabling specific errors.",
+              "type": "boolean",
+              "label": "Errors only",
+              "default": false
+            }
+          }
+        }
+      },
+      "owner": 1,
+      "created_at": "2026-08-03T17:37:39.568Z",
+      "edited_at": "2026-08-03T17:37:39.568Z",
+      "version": "0.1",
+      "quality_rules": {
+        "pass": "error == 0 and critical == 0 and security == 0 and warning == 0",
+        "pass_with_comments": "error == 0 and critical == 0 and security == 0 and (info > 0 or warning > 0 or convention > 0)"
+      },
+      "tools": [
+        "clone_subworkflow",
+        "bandit_subworkflow",
+        "pylint_subworkflow",
+        "flake8_subworkflow"
+      ]
+    }
+  },
+  {
+    "model": "backend.pipeline",
+    "pk": 37,
+    "fields": {
+      "name": "EO Application Package Validation pipeline",
+      "description": "Static analysis of CWL files against the OGC Best Practices",
+      "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n{%- for tool in subworkflows %}\r\n  {%- for tool_name, params in tool.user_params.items() %}\r\n    {%- for param_name, param in params.items() %}\r\n    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:\r\n      label: \"{{ param.label or param_name }}\"\r\n      {%- if param.doc %}\r\n      doc: |-\r\n        {{ param.doc }}\r\n      {%- endif %}\r\n      type: {{ param.type }}\r\n      default: {{ param.default | tojson }}\r\n    {%- endfor %}\r\n  {%- endfor %}\r\n{%- endfor %}\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n\r\n  steps:\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n  id: main\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.2",
+      "default_inputs": {
+        "clone_subworkflow": {
+          "clone": {
+            "repo_url": {
+              "doc": "URL to the repository to clone.",
+              "type": "string",
+              "label": "Repo URL",
+              "default": "https://github.com/EOEPCA/app-package-validation"
+            },
+            "repo_branch": {
+              "doc": "Branch to checkout instead of the remote HEAD.",
+              "type": "string",
+              "label": "Repo branch",
+              "default": "main"
+            }
+          }
+        },
+        "ap_validator_subworkflow": {
+          "filter": {
+            "regex": {
+              "type": "string",
+              "label": "regex",
+              "default": ".*\\.cwl"
+            }
+          },
+          "ap_validator": {
+            "detail": {
+              "doc": "Output detail (none|errors|hints|all). Default: hints",
+              "type": "string",
+              "label": "Detail",
+              "default": "hints"
+            },
+            "entry_point": {
+              "doc": "Name of entry point (a Workflow or CommandLineTool)",
+              "type": "string",
+              "label": "Entry point",
+              "default": "main"
+            }
+          }
+        }
+      },
+      "owner": null,
+      "created_at": "2026-08-14T14:48:50.513Z",
+      "edited_at": "2026-08-19T11:08:42.150Z",
+      "version": "0.1",
+      "quality_rules": {
+        "pass": "error == 0 and critical == 0 and security == 0 and warning == 0",
+        "pass_with_comments": "error == 0 and critical == 0 and security == 0 and (info > 0 or warning > 0 or convention > 0)"
+      },
+      "tools": [
+        "clone_subworkflow",
+        "ap_validator_subworkflow"
+      ]
+    }
+  },
+  {
+    "model": "backend.pipeline",
+    "pk": 38,
+    "fields": {
+      "name": "Coding Best Practices for OSS",
+      "description": "Coding Best Practices for OSS",
+      "template": "#!/usr/bin/env cwltool\r\n\r\n$graph:\r\n- class: Workflow\r\n\r\n  requirements:\r\n    SubworkflowFeatureRequirement: {}\r\n\r\n  inputs:\r\n{%- for tool in subworkflows %}\r\n  {%- for tool_name, params in tool.user_params.items() %}\r\n    {%- for param_name, param in params.items() %}\r\n    {{ tool.slug }}.{{ tool_name }}.{{ param_name }}:\r\n      label: \"{{ param.label or param_name }}\"\r\n      {%- if param.doc %}\r\n      doc: |-\r\n        {{ param.doc }}\r\n      {%- endif %}\r\n      type: {{ param.type }}\r\n      {%- if param.default %}\r\n      default: {{ param.default | tojson }}\r\n      {%- endif %}\r\n    {%- endfor %}\r\n  {%- endfor %}\r\n{%- endfor %}\r\n    pipeline_id: string\r\n    run_id: string\r\n    server_url: string\r\n\r\n  outputs: []\r\n  steps:\r\n    {% for tool in subworkflows %}{{ tool.pipeline_step | indent(4) }}\r\n    {% endfor %}\r\n\r\n  id: main\r\n{% for tool in subworkflows %}\r\n{{ tool.definition }}\r\n{% endfor %}\r\ncwlVersion: v1.2",
+      "default_inputs": {
+        "clone_subworkflow": {
+          "clone": {
+            "repo_url": {
+              "doc": "URL to the repository to clone.",
+              "type": "string",
+              "label": "Repo URL",
+              "default": "https://github.com/EOEPCA/coding-best-practices-for-oss-action"
+            },
+            "repo_branch": {
+              "doc": "Branch to checkout instead of the remote HEAD.",
+              "type": "string",
+              "label": "Repo branch",
+              "default": "main"
+            }
+          }
+        },
+        "coding-best-practices-subworkflow": {
+          "coding-best-practices-for-oss": {
+            "ai_model_name": {
+              "doc": "Name of the model to use within the provider (e.g. claude-sonnet-4.6, gpt-4o, qwen2.5-coder:14B)",
+              "type": "string",
+              "label": "AI model name",
+              "default": "qwen2.5-coder:14B",
+              "required": false
+            },
+            "path_to_check": {
+              "doc": "Path to check",
+              "type": "string",
+              "label": "Path to check",
+              "default": ".",
+              "required": true
+            },
+            "ai_model_api_key": {
+              "doc": "API key giving access to the model",
+              "type": "string",
+              "label": "AI model API key",
+              "secret": true,
+              "default": "ollama",
+              "required": false
+            },
+            "ai_model_base_url": {
+              "doc": "OpenAI SDK compliant base URL (e.g. https://api.anthropic.com/v1)",
+              "type": "string",
+              "label": "AI model base URL",
+              "default": "http://yoda:11434/v1",
+              "required": false
+            },
+            "ai_model_provider": {
+              "doc": "Free name of the model provider (e.g. Google, OpenAPI, Anthropic, Ollama)",
+              "type": "string",
+              "label": "AI model provider",
+              "default": "Ollama",
+              "required": false
+            },
+            "default_anchor_file": {
+              "doc": "Anchor file",
+              "type": "string",
+              "label": "Default anchor file",
+              "default": "coding-best-practices-issues.md",
+              "required": true
+            }
+          }
+        }
+      },
+      "owner": 15,
+      "created_at": "2026-08-21T12:05:00.697Z",
+      "edited_at": "2026-10-27T12:14:10.445Z",
+      "version": "0.1",
+      "quality_rules": {
+        "pass": "error == 0 and critical == 0 and security == 0 and warning == 0",
+        "pass_with_comments": "error == 0 and critical == 0 and security == 0 and (info > 0 or warning > 0 or convention > 0)"
+      },
+      "tools": [
+        "clone_subworkflow",
+        "coding-best-practices-subworkflow"
       ]
     }
   }
