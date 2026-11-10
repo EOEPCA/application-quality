@@ -1,0 +1,65 @@
+[
+  {
+    "model": "backend.tag",
+    "pk": 1,
+    "fields": {
+      "name": "asset: python"
+    }
+  },
+  {
+    "model": "backend.tag",
+    "pk": 2,
+    "fields": {
+      "name": "asset: other"
+    }
+  },
+  {
+    "model": "backend.tag",
+    "pk": 3,
+    "fields": {
+      "name": "asset: cwl"
+    }
+  },
+  {
+    "model": "backend.tag",
+    "pk": 4,
+    "fields": {
+      "name": "asset: notebook"
+    }
+  },
+  {
+    "model": "backend.tag",
+    "pk": 5,
+    "fields": {
+      "name": "type: best practice"
+    }
+  },
+  {
+    "model": "backend.tag",
+    "pk": 6,
+    "fields": {
+      "name": "type: app quality"
+    }
+  },
+  {
+    "model": "backend.tag",
+    "pk": 7,
+    "fields": {
+      "name": "type: app performance"
+    }
+  },
+  {
+    "model": "backend.tag",
+    "pk": 8,
+    "fields": {
+      "name": "type: init"
+    }
+  },
+  {
+    "model": "backend.tag",
+    "pk": 9,
+    "fields": {
+      "name": "asset: docker"
+    }
+  }
+]

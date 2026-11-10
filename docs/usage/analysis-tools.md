@@ -6,7 +6,7 @@ This chapter introduces the analysis tools integrated, or candidate for integrat
 
 Each of these tools allows analysing and validating application code or execution artefacts from the quality, security, or performance perspective.
 
-The analysis tools are pre-loaded in the database at deployment time (from an embedded fixture document). They may be edited directly in the database using the backend (Django) administration interface however this require a proper understanding of how pipelines and tools are defined.
+The analysis tools are pre-loaded in the database at deployment time (from an embedded fixture document). They may be edited directly in the database using the backend (Django) administration interface however this requires a proper understanding of how tools, workflows and pipelines are defined.
 
 The available tools are listed with their details in the *Application Quality* Web interface. The same interface allows authenticated users to integrate the tools in custom pipelines. You will find the instructions in the Application Quality [User Manual](user-manual.md).
 
@@ -18,7 +18,7 @@ Each tool is defined as a CWL `CommandLineTool` (CLT). These tools are typically
 
 ### How Tools are Parameterised
 
-Most of the integrated tools support many command line parameters that allow controlling their behaviour.
+Most of the integrated tools support command line parameters that allow controlling their behaviour.
 
 To allow using these parameters in analysis pipelines (through the UI or the API), the CLT in which the tool is integrated must define the corresponding inputs and use these inputs in the embedded scripts.
 
@@ -34,10 +34,11 @@ As can be seen, a number of tools are readily available. Feedback and requiremen
 
 |                       |                                                          Best Practices                                                          | Application Quality |                        Application Performance                         |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------- | ---------------------------------------------------------------------- |
-| **Python scripts**    | [Pylint](#pylint), [Ruff](#ruff), [Flake8](#flake8),<br>[SonarQube](#sonarqube) <sup>1</sup>                                     | [Bandit](#bandit)   | [Pytest](#pytest) <sup>2</sup>                                         |
+| **Python scripts**    | [Pylint](#pylint), [Ruff](#ruff), [Flake8](#flake8),<br>[SonarQube](#sonarqube) <sup>1</sup>,<br>[Coding BP for OSS](#coding-best-practices-for-open-source-software-development)                                     | [Bandit](#bandit)   | [Pytest](#pytest) <sup>2</sup>                                         |
 | **Jupyter Notebooks** | [Ruff](#ruff), [SonarQube](#sonarqube) <sup>1</sup>,<br>[Notebook Best Practices Validator](#jupyter-notebook-best-practices-validator) |                     | [Papermill](#papermill)                                                |
 | **AP CWL**            | [Application Package Validator](#application-package-validator)                                                                  |                     | [Calrissian](#calrissian) <sup>2</sup>                                 |
 | **Docker**            |                                                                                                                                  | [Trivy](#trivy)     | [Kaniko](https://docs.gitlab.com/ci/docker/using_kaniko/) <sup>2</sup> |
+| **Projects**          | [Coding BP for OSS](#coding-best-practices-for-open-source-software-development) |                     |                                                                        |
 | **openEO**            |                                                                                                                                  |                     |                                                                        |
 
 <sup>1</sup> Implementation in progress
@@ -127,6 +128,35 @@ SonarQube Server is an on-premise analysis tool designed to detect coding issues
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| -    | -    | -           |
+
+#### Coding Best Practices for Open Source Software Development
+
+The main purpose of coding best practices is to achieve efficient and consistent results by providing proven, optimal methods for writing and organising source code (and related files).
+
+Best practices specify rules that should be applied to reach a good level of readability, maintainability and performances.
+
+The validation tool is implemented in the scope of EOEPCA. It is published in its own GitHub repository:
+
+[🔗 Sources and Documentation](https://github.com/EOEPCA/coding-best-practices-for-oss-action/)
+
+**Exposed parameters**
+
+|   Name                |   Type    |                  Description                  |  Default  |
+| --------------------- | --------- | --------------------------------------------- | --------- |
+| `path-to-check`       | *string*  | Directory to check.                           | `.`       |
+| `default-anchor-file` | *string*  | Default anchor file for issues not related to specific files. | `coding-best-practices-issues.md`        |
+| `otuput-file`         | *string*  | Report (output) file name. The extension depends on `output-format`.                   |  `coding-best-practices-report.[json\|txt]`            |
+| `output-format`       | *string*  | Output report format: `generic` (SonarQube), `sarif` (v2.1.0), or `text` (for humans).                |  `generic`             |
+| `config-file`         | *string*  | YAML file for enabling/disabling and configuring rules. |  *none*             |
+| `verbose`             | *boolean* | Enable debug logging.                         | `false`   |
+| `ai-model-provider`   | *string*  | Free name of the model provider (e.g. Google, OpenAPI, Anthropic, Ollama).                | *none*    |
+| `ai-model-base-url`   | *string*  | OpenAI SDK compliant base URL (e.g. https://api.anthropic.com/v1).                | *none*    |
+| `ai-model-api-key`    | *string*  | API key giving access to the model.           | *none*    |
+| `ai-model-name`       | *string*  | Name of the model to use within the provider (e.g. `claude-sonnet-4.6`, `gpt-4o`, `qwen2.5-coder:14B`).                | *none*    |
+
+Note: If the `ai-model-*` parameters are not provided, the rules that rely on the availability of an LLM are disabled.
+
 
 ### Application Quality
 

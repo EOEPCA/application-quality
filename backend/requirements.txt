@@ -13,4 +13,7 @@ kubernetes==28.1.0
 loguru==0.7.3
 mozilla-django-oidc==4.0.1
 psycopg2==2.9.11
+# To encode and decode cloudevents in the views
 cloudevents==1.12
+# To apply rules to digest issues
+rule-engine==5.0.1

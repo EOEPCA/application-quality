@@ -17,7 +17,9 @@ $graph:
         {{ param.doc }}
       {%- endif %}
       type: {{ param.type }}
+      {%- if param.default %}
       default: {{ param.default | tojson }}
+      {%- endif %}
     {%- endfor %}
   {%- endfor %}
 {%- endfor %}

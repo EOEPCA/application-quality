@@ -1,0 +1,74 @@
+[
+  {
+    "model": "backend.triggertype",
+    "pk": "github_webhook_ping",
+    "fields": {
+      "description": "Ping events originating from a GitHub repository",
+      "name": "GitHub Ping Event (for testing webhooks)",
+      "event_type_prefix": "org.eoepca.webhook.github.ping",
+      "data": {},
+      "status": "Testing",
+      "available": true
+    }
+  },
+  {
+    "model": "backend.triggertype",
+    "pk": "github_webhook_pull_request",
+    "fields": {
+      "description": "Pull Request events (open and synchronize) originating from a GitHub repository",
+      "name": "GitHub Pull Request",
+      "event_type_prefix": "org.eoepca.webhook.github.pull_request",
+      "data": {},
+      "status": "Testing",
+      "available": true
+    }
+  },
+  {
+    "model": "backend.triggertype",
+    "pk": "github_webhook_push",
+    "fields": {
+      "description": "Push events originating from a GitHub repository",
+      "name": "GitHub Push Event",
+      "event_type_prefix": "org.eoepca.webhook.github.push",
+      "data": {},
+      "status": "Testing",
+      "available": true
+    }
+  },
+  {
+    "model": "backend.triggertype",
+    "pk": "gitlab_webhook_merge_request",
+    "fields": {
+      "description": "Merge Request events originating from a GitLab repository",
+      "name": "GitLab Push Event",
+      "event_type_prefix": "org.eoepca.webhook.gitlab.merge_request",
+      "data": {},
+      "status": "Testing",
+      "available": true
+    }
+  },
+  {
+    "model": "backend.triggertype",
+    "pk": "gitlab_webhook_ping",
+    "fields": {
+      "description": "Ping events originating from a GitLab repository",
+      "name": "GitLab Ping Event (for testing webhooks)",
+      "event_type_prefix": "org.eoepca.webhook.gitlab.ping",
+      "data": {},
+      "status": "Testing",
+      "available": true
+    }
+  },
+  {
+    "model": "backend.triggertype",
+    "pk": "gitlab_webhook_push",
+    "fields": {
+      "description": "Push events originating from a GitLab repository",
+      "name": "GitLab Push Event",
+      "event_type_prefix": "org.eoepca.webhook.gitlab.push",
+      "data": {},
+      "status": "Testing",
+      "available": true
+    }
+  }
+]
