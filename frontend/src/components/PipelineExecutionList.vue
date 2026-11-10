@@ -2,7 +2,6 @@
   <v-card flat>
     <v-card-title class="d-flex align-center">
       <v-spacer />
-
       <v-select
         v-model="selectedPipeline"
         label="Pipeline"
@@ -12,21 +11,24 @@
         variant="solo"
         density="compact"
         class="pa-1"
-        @update:menu="refreshPipelineExecutions()"
+        clearable
+        :messages="pipelineSelectMessage"
+        @click:clear="onPipelineSelectionCleared"
+        @update:model-value="refreshPipelineExecutions('pipeline')"
       ></v-select>
 
       <!-- Polling status indicator -->
-      <v-chip class="ml-2" :color="isPolling ? 'success' : 'grey'" size="small">
-        {{ isPolling ? 'Live Updates' : 'Updates Paused' }}
+      <v-chip class="ml-2 mt-0 mb-5" :color="pipelineStore.isPolling ? 'success' : 'grey'" size="small">
+        {{ pipelineStore.isPolling ? 'Live Updates' : 'Updates Paused' }}
       </v-chip>
       <!-- Polling control button -->
       <v-btn
-        :icon="isPolling ? 'mdi-pause' : 'mdi-play'"
+        :icon="pipelineStore.isPolling ? 'mdi-pause' : 'mdi-play'"
         size="small"
-        class="ml-2 mr-2"
-        :__color="isPolling ? 'warning' : 'success'"
-        @click="togglePolling"
-        :title="isPolling ? 'Pause Updates' : 'Start Updates'"
+        class="ml-2 mr-2 mb-5"
+        :__color="pipelineStore.isPolling ? 'warning' : 'success'"
+        @click="pipelineStore.togglePolling(refreshPipelineExecutions)"
+        :title="pipelineStore.isPolling ? 'Pause automatic updates' : 'Start automatic updates'"
       />
       <!-- Search field -->
       <!-- <v-text-field
@@ -58,13 +60,17 @@
     <v-alert v-if="pipelineStore.error" type="error" :text="pipelineStore.error" closable />
 
     <!-- eslint-disable vue/no-v-model-argument -->
-    <v-data-table
+    <v-data-table-server
       v-model:items-per-page="itemsPerPage"
+      v-model:page="page"
       v-model:sort-by="sortBy"
       :headers="filteredHeaders"
-      :items="pipelineStore.executions"
+      :items="items"
+      :items-length="totalItems"
       :filter-keys="['pipeline']"
+      :loading="loading"
       :custom-filter="filterOnPipelineId"
+      @update:options="refreshPipelineExecutions"
       class="elevation-1"
       hover
     >
@@ -212,19 +218,7 @@
           class="ma-2"
         />
       </template>
-    </v-data-table>
-
-    <!-- <v-alert
-          v-else-if="!pipelineStore.loadingExecutions"
-          type="info"
-          text="No pipeline executions found"
-        />
-  
-        <v-progress-circular
-          v-else
-          indeterminate
-          class="ma-4"
-        /> -->
+    </v-data-table-server>
 
     <!-- Pipeline Execution Details Dialog -->
     <v-dialog v-model="showDetails" max-width="1200px">
@@ -280,6 +274,8 @@ import { useAuthStore } from '@/stores/auth';
 import { useToolStore } from '@/stores/tools';
 import { usePipelineStore } from '@/stores/pipelines';
 import { useTriggerStore } from '@/stores/triggers';
+import { pipelineService } from '@/services/pipelines';
+import { triggerService } from '@/services/triggers';
 import { formatDate } from '@/assets/tools';
 import JSONTableViewer from '@/components/JSONTableViewer.vue';
 
@@ -296,7 +292,11 @@ export default {
       selectedPipeline: null,
       selectedTrigger: null,
       selectedExecution: null,
+      page: 1,
+      items: [],
       itemsPerPage: 10,
+      totalItems: 0,
+      loading: false,
       sortBy: [{ key: 'start_time', order: 'desc' }],
       headers: [
         {
@@ -336,7 +336,7 @@ export default {
         {
           title: 'Quality',
           key: 'digest_quality',
-          sortable: true,
+          sortable: false,
         },
         {
           title: '',
@@ -345,13 +345,6 @@ export default {
           align: 'center',
         },
       ],
-      // Polling properties
-      pollingInterval: null,
-      isPolling: false,
-      pollingDelay: 5000, // 5 seconds
-      lastPollTime: null,
-      errorCount: 0,
-      maxErrors: 3, // Stop polling after 3 consecutive errors
       statusColors: {
         "failed": "bg-error",
         "running": "bg-warning",
@@ -380,10 +373,15 @@ export default {
   },
 
   computed: {
-    timeSinceLastPoll() {
-      if (!this.lastPollTime) return 'Never';
-      const seconds = Math.floor((Date.now() - this.lastPollTime) / 1000);
-      return `${seconds}s ago`;
+    pipelineSelectMessage() {
+      if (this.pipelineStore.selectedPipelineId) {
+        return "Showing executions of the selected pipeline";
+      } else if (this.triggerStore.selectedTriggerId) {
+        let trigger = this.triggerStore.getTriggerById();
+        let tr_name = trigger.trigger_type_name + " \u2192 " + trigger.pipeline_name;
+        return "Showing executions triggered by '" + tr_name + "'";
+      }
+      return "Showing all recent pipeline executions";
     },
 
     filteredHeaders() {
@@ -397,44 +395,22 @@ export default {
   mounted() {
     // Called each time the Pipeline Executions page is navigated to
     this.refreshTools();
-    this.pipelineStore.selectedPipelineId = this.$route.query['pipeline'];
-    this.triggerStore.selectedTriggerId = this.$route.query['trigger'];
     if (this.pipelineStore.selectedPipelineId) {
       this.selectedPipeline = this.pipelineStore.pipelineById();
       console.log("Selected pipeline:", this.selectedPipeline);
     } else {
       this.selectedPipeline = undefined;
     }
-    if (this.pipelineStore.selectedTriggerId) {
-      this.selectedTrigger = this.triggerStore.triggerById();
+    if (this.triggerStore.selectedTriggerId) {
+      this.selectedTrigger = this.triggerStore.getTriggerById();
       console.log("Selected trigger:", this.selectedTrigger);
     } else {
       this.selectedTrigger = undefined;
     }
-    this.refreshPipelineExecutions();
-    // this.isPolling = false
-    // this.togglePolling()
+    // this.refreshPipelineExecutions();
   },
 
   methods: {
-    progress(execution) {
-      // console.log("Progress of", execution.id, execution.job_reports_count)
-      // console.log("Max progress:", this.pipelineStore.pipelineById(execution.pipeline).tools.length)
-      return execution.job_reports_count;
-    },
-
-    progressMax(execution) {
-      // console.log("Max progress:", this.pipelineStore.pipelineById(execution.pipeline).tools.length)
-      const pipeline = this.pipelineStore.pipelineById(execution.pipeline);
-      // Do not include init tools as they don't generate reports
-      // console.debug('Pipeline tools:', pipeline.tools);
-      const analysisTools = pipeline.tools.filter(
-        (tool) => !this.toolStore.isInitTool(tool),
-      );
-      // console.debug('Analysis tools:', analysisTools);
-      return analysisTools.length;
-    },
-
     filterOnPipelineId(value, query, item) {
       console.info('filterOnPipelineId:', value, query, item);
       return value == query;
@@ -449,18 +425,46 @@ export default {
       await this.toolStore.fetchTools();
     },
 
-    async refreshPipelineExecutions() {
-      this.pipelineStore.selectedPipelineId = this.selectedPipeline?.id || this.selectedPipeline;
-      await this.pipelineStore.fetchPipelines();
-      if (this.pipelineStore.selectedPipelineId) {
-        console.info('Retrieving executions of pipeline', this.pipelineStore.selectedPipelineId);
-        await this.pipelineStore.fetchPipelineExecutions(this.pipelineStore.selectedPipelineId);
-      } else if (this.triggerStore.selectedTriggerId) {
-        console.info('Retrieving executions triggered by', this.triggerStore.selectedTriggerId);
-        await this.triggerStore.fetchPipelineExecutions(this.triggerStore.selectedTriggerId);
-      } else {
-        console.info('Retrieving all pipeline executions');
-        await this.pipelineStore.fetchPipelineExecutions();
+    onPipelineSelectionCleared() {
+      this.selectedPipeline = undefined;
+      this.pipelineStore.selectedPipelineId = undefined;
+      this.triggerStore.selectedTriggerId = undefined;
+      this.refreshPipelineExecutions();
+    },
+
+    async refreshPipelineExecutions(reason) {
+      // console.debug("Refresh pipeline executions, reason:", reason);
+      this.loading = true
+      let page_params = {
+        page: this.page,
+        page_size: this.itemsPerPage,
+        sort: this.sortBy?.[0]?.key,
+        order: this.sortBy?.[0]?.order,
+      }
+      try {
+        await this.pipelineStore.fetchPipelines();
+        if (reason == 'pipeline') {
+          this.pipelineStore.selectedPipelineId = this.selectedPipeline?.id || this.selectedPipeline;
+          console.debug("Selected pipeline id:", this.pipelineStore.selectedPipelineId);
+        }
+        if (this.pipelineStore.selectedPipelineId) {
+          console.info('Retrieving executions of pipeline', this.pipelineStore.selectedPipelineId, page_params);
+          let data = await pipelineService.getPaginatedPipelineExecutions(this.pipelineStore.selectedPipelineId, page_params);
+          this.items = data.results
+          this.totalItems = data.count
+        } else if (this.triggerStore.selectedTriggerId) {
+          console.info('Retrieving executions triggered by', this.triggerStore.selectedTriggerId, page_params);
+          let data = await triggerService.getPaginatedPipelineExecutions(this.triggerStore.selectedTriggerId, page_params);
+          this.items = data.results
+          this.totalItems = data.count
+        } else {
+          console.info('Retrieving all pipeline executions', page_params);
+          let data = await pipelineService.getPaginatedPipelineExecutions(null, page_params);
+          this.items = data.results
+          this.totalItems = data.count
+        }
+      } finally {
+        this.loading = false
       }
     },
 
@@ -476,8 +480,8 @@ export default {
     renderDigestQuality(execution) {
       const quality = execution.digest_quality;
       const manual_quality = execution.digest?.manual?.digest_quality;
-      if (quality != "undefined" && manual_quality != "undefined" && quality != manual_quality) {
-        // Display the manually set digest quality, if present
+      if (manual_quality && quality != manual_quality) {
+        // Display the manually set digest quality, if present in the digest
         return (quality + ' -> ' + manual_quality).replaceAll("_", " ");
       }
       return quality.replaceAll("_", " ");
@@ -606,45 +610,6 @@ export default {
           text: error,
           type: 'error',
         });
-      }
-    },
-
-    startPolling() {
-      if (this.isPolling) return;
-
-      this.isPolling = true;
-      this.errorCount = 0;
-      this.pollingInterval = setInterval(async () => {
-        await this.refreshPipelineExecutions();
-      }, this.pollingDelay);
-
-      // Initial fetch
-      this.refreshPipelineExecutions();
-    },
-
-    stopPolling() {
-      if (this.pollingInterval) {
-        clearInterval(this.pollingInterval);
-        this.pollingInterval = null;
-      }
-      this.isPolling = false;
-    },
-
-    togglePolling() {
-      if (this.isPolling) {
-        this.stopPolling();
-      } else {
-        this.startPolling();
-      }
-    },
-
-    // Method to adjust polling delay (optional)
-    setPollingDelay(delay) {
-      this.pollingDelay = delay;
-      if (this.isPolling) {
-        // Restart polling with new delay
-        this.stopPolling();
-        this.startPolling();
       }
     },
   },
