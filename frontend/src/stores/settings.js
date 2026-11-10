@@ -27,6 +27,7 @@ export const useSettingsStore = defineStore('settings', {
     grafana__pipeline_execution_report__path:
       '/d/default-{tool_name}-report/{tool_name}-report?var-pipeline_id={pipeline_name}&var-execution_id={execution_id}&var-report_id={report_id}&var-tool_name={tool_name}',
     settingsReceived: false,
+    showDeletedTriggers: false,
   }),
 
   actions: {

@@ -136,7 +136,7 @@ class PipelineRunSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
             "output",
             "digest",
             "digest_quality",
-            # "executed_cwl", - Potentially include secrets default values
+            # "executed_cwl", - Potentially includes secrets default values
             "started_by",
             "trigger_event",
             "job_reports_count",

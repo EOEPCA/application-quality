@@ -49,6 +49,10 @@ spec:
             - secretRef:
                 name: application-quality-grafana-dashboards-admin-creds
             {{- end }}
+            {{- if .Values.github.enabled }}
+            - secretRef:
+                name: application-quality-github-api-tokens
+            {{- end }}
           resources:
             requests:
               memory: "256Mi"

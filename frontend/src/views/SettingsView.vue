@@ -39,18 +39,29 @@
         >Grafana Dashboards Pipeline execution report 35</a
       >.
     </p>
+    <label v-if="this.authStore.isAdmin">
+      <span>
+        Show Deleted Triggers:
+      </span>
+      <input 
+        type="checkbox" 
+        v-model="settings.showDeletedTriggers" 
+      />
+    </label>
   </div>
 </template>
 
 <script>
+import { useAuthStore } from '@/stores/auth';
 import { useSettingsStore } from '@/stores/settings';
 
 export default {
   name: 'SettingsView',
 
   setup() {
+    const authStore = useAuthStore();
     const settings = useSettingsStore();
-    return { settings };
+    return { settings, authStore };
   },
 };
 </script>

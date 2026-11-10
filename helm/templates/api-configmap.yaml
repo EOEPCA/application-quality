@@ -55,6 +55,8 @@ data:
   OIDC_OP_USER_ENDPOINT: {{ .Values.oidc.realmBaseUrl }}/protocol/openid-connect/userinfo
   OIDC_OP_JWKS_ENDPOINT: {{ .Values.oidc.realmBaseUrl }}/protocol/openid-connect/certs
   {{- end }}
+
+  # Sonarqube
   {{- if .Values.sonarqube.enabled }}
   SONARQUBE_SERVER: {{ .Values.sonarqube.serverUrl }}
   SONARQUBE_TOKEN: {{ .Values.sonarqube.accessToken }}
@@ -84,4 +86,12 @@ data:
   NOTIF_CHANNEL_PREFIX: {{ .Values.notifications.channelPrefix }}
   NOTIF_RESPONSE_SOURCE: {{ .Values.notifications.responseSource }}
   NOTIF_RESPONSE_TYPE_PREFIX: {{ .Values.notifications.responseTypePrefix }}
+  {{- end }}
+
+  # GitHub Integration
+  GITHUB_STATUS_ENABLED: {{ .Values.github.enabled | default false | quote }}
+  {{- if .Values.github.enabled }}
+  GITHUB_STATUS_CONTEXT: {{ .Values.github.statusContext }}
+  GITHUB_STATUS_DESCRIPTION: {{ .Values.github.statusDescription }}
+  GITHUB_STATUS_TARGET_URL: {{ .Values.github.statusTargetURL }}
   {{- end }}

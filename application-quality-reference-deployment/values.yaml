@@ -26,13 +26,13 @@ application-quality:
   api:
     image:
       repository: eoepca/eoepca-appquality-backend
-      tag: 2.0.0-rc5
+      tag: 2.0.0-rc6
 
   # Application Quality frontend
   web:
     image:
       repository: eoepca/eoepca-appquality-frontend
-      tag: 2.0.0-rc5
+      tag: 2.0.0-rc6
     publicUrl: "https://application-quality.develop.eoepca.org"
 
   persistence:
@@ -121,6 +121,12 @@ application-quality:
 
   automations:
     enabled: false
+
+  github:
+    enabled: true
+    statusContext: "EOEPCA Application Quality / Quality Check"
+    statusDescription: "Application quality metrics met all threshold guidelines."
+    statusTargetURL: "https://application-quality.develop.eoepca.org"
 
 # https://github.com/grafana/helm-charts/blob/main/charts/grafana/values.yaml
 grafana:

@@ -41,11 +41,11 @@
 
     <v-alert
       icon="mdi-check-bold"
-      v-if="pipelineSuccessMessage"
-      :text="pipelineSuccessMessage"
+      v-if="successMessage"
+      :text="successMessage"
       type="success"
       closable
-      @click:close="pipelineSuccessMessage = null"
+      @click:close="successMessage = null"
     />
 
     <v-alert
@@ -55,6 +55,7 @@
       closable
     />
 
+    <!-- eslint-disable vue/no-v-model-argument -->
     <v-data-table
       v-if="pipelineStore.pipelines.length"
       v-model:items-per-page="itemsPerPage"
@@ -65,6 +66,7 @@
       class="elevation-1"
       hover
     >
+    <!-- eslint-enable vue/no-v-model-argument -->
       <template v-slot:item="{ item }">
         <tr>
           <td>
@@ -78,7 +80,7 @@
             <v-btn
               color="primary"
               variant="text"
-              v-tooltip:bottom-end="'Pipeline information (' + item.name + ')'"
+              v-tooltip:bottom-end="'Pipeline details (' + item.name + ')'"
               @click="viewPipelineDetails(item)"
             >
               <v-icon> mdi-information </v-icon>
@@ -135,7 +137,7 @@
                   >
                 </v-list-item>
 
-                <v-list-item
+                <!-- <v-list-item
                   v-if="this.authStore.isAdmin"
                   @click="changePipelineOwner(item)"
                   :disabled="true"
@@ -147,7 +149,7 @@
                     v-tooltip:bottom-end="'Change the pipeline owner'"
                     >Change Owner</v-list-item-title
                   >
-                </v-list-item>
+                </v-list-item> -->
 
                 <v-list-item
                   @click="deletePipeline(item)"
@@ -183,19 +185,21 @@
     <!-- Pipeline Details Dialog -->
     <v-dialog v-model="showDetailsDialog" max-width="1200px">
       <v-card v-if="selectedPipeline">
-        <!-- v-card-title>
-            {{ selectedPipeline.name || selectedPipeline.id }}
-            <v-spacer />
-            <v-btn icon="mdi-close" variant="text" @click="showDetailsDialog = false" />
-        </v-card-title -->
-        <v-card-text>
+        <v-card-title class="d-flex align-center">
           <v-alert
-            v-if="selectedPipeline.name"
             type="info"
-            :text="selectedPipeline.name"
-            class="mb-4"
+            :text="selectedPipeline.name + ' ' + selectedPipeline.version"
+            class="ma-2"
+            icon-size="2rem"
           />
-          <JsonToHtmlTable :data="prunePipelineDetails(selectedPipeline)" />
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="flex-grow-1 overflow-y-auto">
+          <JSONTableViewer
+            :data="prunePipelineDetails(selectedPipeline)"
+            :dont-convert="['default_inputs']"
+            :key-order="['name', 'description', 'version', 'owner_name', 'created_at', 'edited_at', 'tools', 'quality_rules', 'default_inputs']"
+          />
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -203,13 +207,11 @@
     <!-- Pipeline Payload Dialog -->
     <v-dialog v-model="showPayloadDialog" max-width="800px">
       <v-card v-if="selectedPipeline">
-        <!-- v-card-title>
-            {{ selectedPipeline.name || selectedPipeline.id }}
-            <v-spacer />
-            <v-btn icon="mdi-close" variant="text" @click="showDetails = false" />
-          </v-card-title -->
-        <v-card-text>
-          <v-alert v-if="selectedPipeline" type="info" class="mb-4"
+        <v-card-title class="d-flex align-center">
+          <v-alert
+            type="info"
+            class="ma-2"
+            icon-size="2rem"
             >Use the template below to execute the pipeline using cloud events
             or API calls.<br />
             Pipeline name: <b>{{ selectedPipeline.name }}</b
@@ -219,6 +221,9 @@
             See the definition of the parameters in the tool information.<br />
             Change the parameter values as necessary.</v-alert
           >
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text class="flex-grow-1 overflow-y-auto">
           <pre class="report-json">{{
             JSON.stringify(executionPayload, null, 2)
           }}</pre>
@@ -295,7 +300,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useToolStore } from '@/stores/tools';
 import { usePipelineStore } from '@/stores/pipelines';
 import { useSettingsStore } from '@/stores/settings';
-import JsonToHtmlTable from '@/components/JsonToHtmlTable.vue';
+import JSONTableViewer from '@/components/JSONTableViewer.vue';
 import PipelineCreationPanel from './PipelineCreationPanel.vue';
 import PipelineExecutionPanel from './PipelineExecutionPanel.vue';
 import { formatDate } from '@/assets/tools';
@@ -304,7 +309,7 @@ export default {
   name: 'PipelineList',
 
   components: {
-    JsonToHtmlTable,
+    JSONTableViewer,
     PipelineCreationPanel,
     PipelineExecutionPanel,
   },
@@ -317,7 +322,7 @@ export default {
       selectedPipeline: null,
       creationPanelVisible: false,
       creationParameters: {},
-      pipelineSuccessMessage: null,
+      successMessage: null,
       editionPanelVisible: false,
       editionParameters: {},
       executionPanelVisible: false,
@@ -453,6 +458,7 @@ export default {
         'edited_at',
         'tools',
         'default_inputs',
+        'quality_rules',
       ];
       if (this.authStore.isAdmin) {
         // Only display these properties to admin users
@@ -475,10 +481,10 @@ export default {
     },
 
     viewPipelineExecutions(pipeline) {
-      // Store the selected pipeline in the store so it accessible by the executions page
+      // Store the selected pipeline in the store so it is accessible by the executions page
       // Navigate to the executions page
       this.pipelineStore.selectedPipelineId = pipeline.id;
-      this.$router.push('/executions');
+      this.$router.push('/executions?pipeline=' + pipeline.id);
     },
 
     createPipeline() {
@@ -577,12 +583,6 @@ export default {
       return pipeline_params;
     },
 
-    openDeleteDialog(pipeline) {
-      console.log('Delete pipeline:', pipeline);
-      this.selectedPipeline = pipeline;
-      this.showDeleteDialog = true;
-    },
-
     showExecutionPanel(pipeline) {
       console.log('Selected pipeline:', pipeline);
       this.refreshTools();
@@ -618,7 +618,7 @@ export default {
     },
 
     deletePipeline(pipeline) {
-      console.log('Delete pipeline ...');
+      console.log('Delete pipeline:', pipeline);
       this.selectedPipeline = pipeline;
       this.showDeleteDialog = true;
     },
@@ -650,7 +650,7 @@ export default {
     handleExecutionSubmitted(execution) {
       // Handle the new execution
       console.log('New execution created:', execution);
-      // Navigate to the Monitoring page
+      // Navigate to the Executions page
       this.viewPipelineExecutions(execution.pipeline);
       // Show a success message
       this.$notify({

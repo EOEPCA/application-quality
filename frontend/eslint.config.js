@@ -11,6 +11,13 @@ export default [
         //...globals.es6,
         ...globals.node
       }
+    },
+    // Prevents ESLint to complain about unused vars/args whose name starts with '_'
+    rules: {
+      'no-unused-vars': ['error', { 
+        'argsIgnorePattern': '^_',
+        'varsIgnorePattern': '^_' 
+      }]
     }
   },
   {

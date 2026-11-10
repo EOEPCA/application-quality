@@ -4,6 +4,7 @@ import ToolsView from '../views/ToolsView.vue';
 import PipelinesView from '../views/PipelinesView.vue';
 import ExecutionsView from '../views/ExecutionsView.vue';
 import ReportsView from '../views/ReportsView.vue';
+import TriggersView from '../views/TriggersView.vue';
 import SettingsView from '../views/SettingsView.vue';
 
 const router = createRouter({
@@ -41,6 +42,11 @@ const router = createRouter({
       path: '/reports',
       name: 'reports',
       component: ReportsView,
+    },
+    {
+      path: '/triggers',
+      name: 'triggers',
+      component: TriggersView,
     },
     {
       path: '/settings',
